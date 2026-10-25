@@ -18,6 +18,19 @@ Small sellers often piece together order details from customer messages and paym
 4. **Capture and verify payment.** The server checks PayPal's response and the expected amount, currency, and order reference before reporting a verified result.
 5. **Investigate exceptions.** Pending, incomplete, and mismatched payment states should remain visible for human review.
 
+## Planned product capabilities
+
+The complete feature plan and acceptance checklist are documented in **[docs/feature-plan.md](docs/feature-plan.md)**. The target product includes:
+
+- **AI Order Assistant:** Extract a supported product and quantity from a customer message, validate the result, and present it for human review.
+- **AI Payment Investigator:** Explain mismatches using server-verified PayPal evidence. AI can summarize evidence but cannot determine payment status.
+- **Payment Operations Dashboard:** Show orders, verified payments, pending payments, review-required cases, and recent activity from real persisted records once storage is implemented.
+- **PayPal Sandbox Checkout:** Create, approve, capture, and verify a test payment, including negative-path and retry testing.
+- **Evidence and Audit Trail:** Record order/payment identifiers, verification checks, timestamps, and review outcomes without storing unnecessary sensitive data.
+- **Hackathon-ready quality:** Automated tests, honest documentation, accessible responsive UI, and a concise demo showing both a successful payment and a flagged mismatch.
+
+These are target capabilities, not a claim that every feature is already complete. See the status section below and the feature plan for implementation boundaries and required tests.
+
 ## Current implementation status
 
 This is an active prototype. Do not describe it as production-ready.
@@ -25,12 +38,15 @@ This is an active prototype. Do not describe it as production-ready.
 - [x] Next.js dashboard with clearly labelled illustrative records
 - [x] Server-side PayPal OAuth helper and Orders API routes committed
 - [x] Fixed-price Sandbox checkout flow and return/cancel screens committed
-- [x] Initial server-side checks for captured status, amount, currency, and expected reference
-- [ ] Run a successful end-to-end Sandbox payment with locally configured credentials
-- [x] Add a server-side AI Gateway-compatible extraction route with schema checks and advisory-only output
+- [x] Initial server-side checks for captured status, amount, currency, order ID, and expected reference
+- [ ] Run a successful end-to-end Sandbox payment with configured credentials
+- [x] Add a server-side AI Gateway-compatible extraction route with schema checks and advisory-only output on the feature branch
 - [ ] Configure a valid AI Gateway key/model in Vercel and verify live model responses
-- [ ] Add automated tests and persistent order/event records
-- [ ] Review production security, webhook handling, retries, and operational monitoring
+- [ ] Complete a dedicated Payment Investigator interface and its mismatch explanations
+- [ ] Add automated tests and persistent order/event/audit records
+- [ ] Verify retry/idempotency behavior and add signed PayPal webhook handling
+- [ ] Review production security, access control, rate limiting, and operational monitoring
+- [ ] Record a demo showing both successful verification and a mismatch requiring review
 
 A committed integration is not the same as a tested integration. Until the end-to-end test succeeds, the dashboard's sample orders remain illustrative and no production payment processing is claimed.
 
@@ -104,7 +120,7 @@ Never allow model output to set a price, claim a payment succeeded, or bypass Pa
 5. Require human review for ambiguous order details.
 6. Use Sandbox credentials and synthetic records during development.
 7. Treat a browser return URL as a trigger to verify—not proof of payment.
-8. Before production use, add appropriate webhook verification, idempotency, persistence, access control, rate limiting, and operational logging.
+8. Before production use, add appropriate webhook signature verification, idempotency, persistence, access control, rate limiting, and operational logging.
 
 ## Demo preparation
 
@@ -112,6 +128,7 @@ See [docs/demo-script.md](docs/demo-script.md) for a short, honest demonstration
 
 ## Project documents
 
+- [Feature plan and delivery checklist](docs/feature-plan.md)
 - [Scope](scope.md)
 - [Product requirements](prd.md)
 - [Technical specification](spec.md)
