@@ -42,13 +42,17 @@ This is an active prototype. Do not describe it as production-ready.
 - [ ] Run a successful end-to-end Sandbox payment with configured credentials
 - [x] Add a server-side AI Gateway-compatible extraction route with schema checks and advisory-only output on the feature branch
 - [ ] Configure a valid AI Gateway key/model in Vercel and verify live model responses
-- [ ] Complete a dedicated Payment Investigator interface and its mismatch explanations
-- [ ] Add automated tests and persistent order/event/audit records
+- [x] Add a dedicated Payment Investigator interface with deterministic order, capture, amount, currency, and trusted-reference checks
+- [x] Add eight unit tests covering successful evidence and incomplete, pending, mismatched, and unsuccessful payment cases
+- [x] Link the Payment Investigator from the workspace navigation
+- [x] Add stable PayPal capture retry request IDs and reject mismatched orders before attempting capture
+- [x] Add focused unit tests for deterministic payment-evidence rules
+- [ ] Add route-level integration tests and persistent order/event/audit records
 - [ ] Verify retry/idempotency behavior and add signed PayPal webhook handling
 - [ ] Review production security, access control, rate limiting, and operational monitoring
 - [ ] Record a demo showing both successful verification and a mismatch requiring review
 
-A committed integration is not the same as a tested integration. Until the end-to-end test succeeds, the dashboard's sample orders remain illustrative and no production payment processing is claimed.
+A committed integration is not the same as a tested integration. The deterministic payment-rule unit tests, lint, and production build have passed in an isolated test environment. A live end-to-end PayPal Sandbox transaction has not yet been confirmed. The dashboard's sample orders remain illustrative and no production payment processing is claimed.
 
 ## Run locally
 
@@ -99,6 +103,7 @@ If checkout fails, check that the credentials belong to the Sandbox app, the app
 ### 5. Run quality checks
 
 ```bash
+npm run test
 npm run lint
 npm run build
 ```
@@ -107,7 +112,7 @@ Resolve errors before deploying. This README documents the intended workflow; it
 
 ## AI integration
 
-The order-intake UI calls a server-side AI Gateway-compatible route for structured product/quantity extraction and missing-information notes. Configure `AI_GATEWAY_API_KEY` and `AI_MODEL` in `.env.local` and Vercel before using it. The route validates model output against a constrained schema and returns advisory suggestions only. If the provider is unavailable or the response is invalid, the request fails safely and no order is created. Sellers must review the result. Price calculation, PayPal calls, and payment-state decisions remain deterministic server-side operations.
+The order-intake UI calls a server-side AI Gateway-compatible chat-completions endpoint for structured product/quantity extraction and missing-information notes; this is an actual model request, not a local keyword-matching fallback. Configure `AI_GATEWAY_API_KEY` and `AI_MODEL` for the environment being tested before expecting live model responses. The route validates model output against a constrained schema, limits the input length, times out provider requests, and returns advisory suggestions only. If configuration is missing, the provider fails, or the response is invalid, the request fails safely and no order is created. The AI Gateway key/model are not currently confirmed in the Vercel project environment, so live AI operation remains unverified. Sellers must review the result. Price calculation, PayPal calls, and payment-state decisions remain deterministic server-side operations.
 
 Never allow model output to set a price, claim a payment succeeded, or bypass PayPal verification.
 
