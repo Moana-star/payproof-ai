@@ -26,22 +26,32 @@ export async function POST(request: NextRequest) {
     );
     const { verified, checks, failedChecks, capture } = evaluatePaymentEvidence(order, requestedOrderId);
 
+    if (!verified) {
+      return NextResponse.json({
+        status: "REVIEW_REQUIRED",
+        verified: false,
+        summary: "Payment is not verified. One or more required PayPal checks are incomplete or mismatched. Do not fulfil this order.",
+        paypalStatus: order.status ?? "UNKNOWN",
+        checks,
+        failedChecks,
+        sandbox: true
+      }, { status: 409 });
+    }
+
     return NextResponse.json({
-      status: verified ? "VERIFIED" : "REVIEW_REQUIRED",
-      verified,
-      summary: verified
-        ? "PayPal Sandbox confirms the expected completed capture, amount, currency, and order reference."
-        : "Payment is not verified. One or more required PayPal checks are incomplete or mismatched. Do not fulfil this order.",
-      orderId: order.id ?? null,
-      paypalStatus: order.status ?? "UNKNOWN",
-      captureId: capture?.id ?? null,
-      captureStatus: capture?.status ?? "MISSING",
-      amount: capture?.amount?.value ?? null,
-      currency: capture?.amount?.currency_code ?? null,
+      status: "VERIFIED",
+      verified: true,
+      summary: "PayPal Sandbox confirms the expected completed capture, amount, currency, and order reference.",
+      orderId: order.id,
+      paypalStatus: order.status,
+      captureId: capture?.id,
+      captureStatus: capture?.status,
+      amount: capture?.amount?.value,
+      currency: capture?.amount?.currency_code,
       checks,
       failedChecks,
       sandbox: true
-    }, { status: verified ? 200 : 409 });
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     const httpStatus = message.match(/HTTP (\\d{3})/)?.[1];
