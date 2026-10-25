@@ -81,7 +81,7 @@ export default function Home() {
       setNotice("Please resolve the missing product and quantity before confirming this draft.");
       return;
     }
-    setNotice("Draft review passed. PayPal Sandbox checkout will be enabled after credentials and server verification are configured.");
+    setNotice("Draft details passed the local preview check. This draft has not been saved as an order; the fixed-price PayPal Sandbox checkout is a separate demo flow.");
   }
 
   return (
@@ -145,12 +145,12 @@ export default function Home() {
 
           <div className="lower-grid">
             <section className="intake-card" id="intake">
-              <div className="panel-heading"><div><span className="panel-icon">✳</span><div><h2>AI order intake</h2><p>Turn a customer message into a draft.</p></div></div><span className="beta-badge">PREVIEW</span></div>
+              <div className="panel-heading"><div><span className="panel-icon">✳</span><div><h2>AI order intake</h2><p>Turn a customer message into a draft.</p></div></div><span className="beta-badge">RULE-BASED PREVIEW</span></div>
               <label className="field-label" htmlFor="customer-message">CUSTOMER MESSAGE</label>
               <textarea id="customer-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={'Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
-              <div className="field-hint">The assistant may suggest fields, but you review them before saving.</div>
+              <div className="field-hint">Rule-based preview only — no live AI model is connected yet. Review every suggested field; nothing is saved automatically.</div>
               <button className="secondary-button full-button" onClick={prepareDraft}>Prepare order draft <span>→</span></button>
-              {draft && <div className="draft-result"><div className="draft-title">Draft for review <span>NOT SAVED</span></div><div className="draft-line"><span>Product</span><strong>{draft.item}</strong></div><div className="draft-line"><span>Quantity</span><strong>{draft.quantity}</strong></div><p>{draft.note}</p><button className="primary-button full-button" onClick={saveDraft}>Confirm draft details</button></div>}
+              {draft && <div className="draft-result"><div className="draft-title">Draft for review <span>NOT SAVED</span></div><div className="draft-line"><span>Product</span><strong>{draft.item}</strong></div><div className="draft-line"><span>Quantity</span><strong>{draft.quantity}</strong></div><p>{draft.note}</p><button className="primary-button full-button" onClick={saveDraft}>Validate draft details</button></div>}
             </section>
 
             <section className="attention-card" id="activity">
