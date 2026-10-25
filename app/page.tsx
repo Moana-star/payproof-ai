@@ -128,6 +128,34 @@ export default function Home() {
 
           <div className="notice" role="status"><span className="notice-icon">i</span><span>{notice}</span><button onClick={() => setNotice("Demo workspace · Sample records only")} aria-label="Reset notice">×</button></div>
 
+          <section className="value-strip" aria-label="PayProof AI product principles">
+            <article className="value-card">
+              <span className="value-kicker">01 · THE PROBLEM</span>
+              <h2>Orders arrive in conversations.</h2>
+              <p>Customer messages, checkout links, and payment updates can become scattered across tools.</p>
+            </article>
+            <article className="value-card">
+              <span className="value-kicker">02 · THE PROMISE</span>
+              <h2>One clearer review workflow.</h2>
+              <p>Organise order details, surface missing information, and keep exceptions visible before fulfilment.</p>
+            </article>
+            <article className="value-card value-card-proof">
+              <span className="value-kicker">03 · THE PROOF</span>
+              <h2>Evidence over assumptions.</h2>
+              <p>Payment is only considered verified after server-side checks against PayPal—not a screenshot or AI suggestion.</p>
+            </article>
+          </section>
+
+          <div className="workflow-heading">
+            <div><p className="eyebrow">BUILT AROUND TRUST</p><h2>From customer message to payment evidence</h2></div>
+            <span className="workflow-label"><i /> Sandbox prototype</span>
+          </div>
+          <section className="workflow-grid" aria-label="PayProof AI workflow">
+            <article className="workflow-step"><span className="workflow-number">1</span><div><h3>Capture</h3><p>Start with the customer’s original message and identify the details that matter.</p></div></article>
+            <article className="workflow-step"><span className="workflow-number">2</span><div><h3>Review</h3><p>Check suggested product and quantity. Missing or ambiguous details stay flagged.</p></div></article>
+            <article className="workflow-step"><span className="workflow-number">3</span><div><h3>Verify</h3><p>Use PayPal’s server response to verify the fixed-price Sandbox payment before treating it as paid.</p></div></article>
+          </section>
+
           <div className="metrics-grid">
             <article className="metric-card"><div className="metric-top"><span>Total orders</span><span className="metric-icon violet">▤</span></div><div className="metric-value">{orders.length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">Sample workspace</span><span>All orders</span></div></article>
             <article className="metric-card"><div className="metric-top"><span>Verified paid</span><span className="metric-icon green">✓</span></div><div className="metric-value">{paidTotal.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-green">Demo state only</span><span>Needs live verification</span></div></article>
