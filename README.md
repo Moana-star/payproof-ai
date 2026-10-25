@@ -2,59 +2,119 @@
 
 **Know what was paid. Know what needs attention.**
 
-PayProof AI is a payment-operations workspace for small online sellers. It combines structured order intake, PayPal payment workflows, and AI-assisted explanations so a seller can spend less time piecing together customer messages and payment events.
+PayProof AI is a payment-operations workspace concept for small online sellers. It brings order-message intake and PayPal checkout verification into one workflow, with a clear boundary between AI suggestions and payment evidence.
 
-> **Core trust rule:** AI can organise and explain information. PayPal's verified server-side transaction data—not screenshots, customer claims, or model output—determines payment status.
+> **Core trust rule:** AI can organise and explain information. Only server-side verification against PayPal's transaction API can establish payment status. Screenshots, customer claims, and AI output are not proof of payment.
 
-## Why this matters
+## The problem
 
-Small sellers can lose time switching between order messages, checkout records, and customer questions. PayProof AI aims to bring those tasks into one clear workflow while keeping payment decisions auditable.
+Small sellers often piece together order details from customer messages and payment updates from separate tools. That creates avoidable manual work and a risk of fulfilling an order before payment is confirmed.
 
-## Planned experience
+## Product workflow
 
-- **Order intake:** turn a customer message into a proposed order draft; the seller reviews it before saving.
-- **PayPal checkout:** create a sandbox order through PayPal's supported API flow.
-- **Verified status:** retrieve and validate payment state on the server before marking an order paid.
-- **Issue investigation:** explain known order and transaction events in plain language, with references to the underlying facts.
-- **Operations dashboard:** surface unpaid, completed, and attention-needed orders.
+1. **Capture a customer request.** Paste the message into the order-intake panel.
+2. **Prepare a reviewable draft.** Suggested product and quantity must be checked by the seller. Ambiguous or missing details should be resolved before confirmation.
+3. **Create a PayPal Sandbox checkout.** The server—not the browser—sets the demo amount and creates the PayPal order.
+4. **Capture and verify payment.** The server checks PayPal's response and the expected amount, currency, and order reference before reporting a verified result.
+5. **Investigate exceptions.** Pending, incomplete, and mismatched payment states should remain visible for human review.
 
-These are planned capabilities, not claims that the integration is already complete.
+## Current implementation status
 
-## Trust and safety principles
+This is an active prototype. Do not describe it as production-ready.
 
-1. Never store PayPal client secrets in browser code or commit them to Git.
-2. Never treat a screenshot, customer message, or AI-generated response as proof of payment.
-3. Calculate prices and totals in deterministic application code, not with an LLM.
-4. Validate payment status on the server using PayPal's API and the documented capture/verification flow.
-5. Keep AI output advisory; require human review before order details are accepted or changed.
-6. Use sandbox credentials and synthetic test data during development.
+- [x] Next.js dashboard with clearly labelled illustrative records
+- [x] Server-side PayPal OAuth helper and Orders API routes committed
+- [x] Fixed-price Sandbox checkout flow and return/cancel screens committed
+- [x] Initial server-side checks for captured status, amount, currency, and expected reference
+- [ ] Run a successful end-to-end Sandbox payment with locally configured credentials
+- [ ] Connect a real AI provider for structured order extraction and evidence-grounded explanations
+- [ ] Add automated tests and persistent order/event records
+- [ ] Review production security, webhook handling, retries, and operational monitoring
 
-## Planned stack
+A committed integration is not the same as a tested integration. Until the end-to-end test succeeds, the dashboard's sample orders remain illustrative and no production payment processing is claimed.
 
-- TypeScript and Next.js for the web application and server routes
-- PayPal Developer Sandbox for checkout and transaction lifecycle
-- An AI provider behind a server-side adapter for structured order extraction and evidence-grounded explanations
-- Automated tests for totals, order validation, and payment-state transitions
+## Run locally
 
-The exact provider and framework configuration will be recorded as implementation decisions are made.
+### Requirements
 
-## Project status
+- Node.js 20 or a compatible supported Node.js release
+- npm
+- A PayPal Developer account with a **Sandbox** REST app
+- VS Code or another code editor
 
-**Stage:** planning and foundation. The repository is public, and implementation has not yet been verified. No production payment processing is claimed.
+### 1. Install dependencies
 
-## Getting started
+Open a terminal in the repository root (the folder containing `package.json`) and run:
 
-Setup instructions will be added with the first working application slice. For now, see:
+```bash
+npm install
+```
+
+### 2. Add private environment variables
+
+Create a file named `.env.local` in the same folder as `package.json`. Copy the variable names from `.env.example`, then replace the PayPal placeholders with your own Sandbox credentials.
+
+```env
+PAYPAL_CLIENT_ID=your_sandbox_client_id
+PAYPAL_CLIENT_SECRET=your_sandbox_client_secret
+PAYPAL_BASE_URL=https://api-m.sandbox.paypal.com
+APP_URL=http://localhost:3000
+```
+
+Do not commit `.env.local`, paste secrets into issues or chat, or use `NEXT_PUBLIC_` for private credentials. The Sandbox API base URL above is for testing, not live payments.
+
+### 3. Start the development server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### 4. Test the checkout
+
+Use **Test PayPal checkout** to create the fixed-price Sandbox order. Approve it with a PayPal Sandbox personal/test buyer account. Return to the app and inspect the server's verification result.
+
+If checkout fails, check that the credentials belong to the Sandbox app, the app has been restarted after changing `.env.local`, and the local server terminal does not show an API error. Never share credential values when asking for help.
+
+### 5. Run quality checks
+
+```bash
+npm run lint
+npm run build
+```
+
+Resolve errors before deploying. This README documents the intended workflow; it does not mean these commands or the end-to-end checkout have already passed in every environment.
+
+## AI integration
+
+The order-intake UI currently contains an initial deterministic preview and is **not yet a substitute for a connected AI model**. A real model integration should return structured suggestions, identify missing or ambiguous details, and remain advisory. Sellers must review the result. Price calculation, PayPal calls, and payment-state decisions must remain deterministic server-side operations.
+
+Never allow model output to set a price, claim a payment succeeded, or bypass PayPal verification.
+
+## Trust and security principles
+
+1. Keep PayPal client secrets server-side and out of source control.
+2. Never treat screenshots, customer messages, or model output as payment evidence.
+3. Calculate prices and totals in application code, not with an LLM.
+4. Verify payment state against PayPal on the server.
+5. Require human review for ambiguous order details.
+6. Use Sandbox credentials and synthetic records during development.
+7. Treat a browser return URL as a trigger to verify—not proof of payment.
+8. Before production use, add appropriate webhook verification, idempotency, persistence, access control, rate limiting, and operational logging.
+
+## Demo preparation
+
+See [docs/demo-script.md](docs/demo-script.md) for a short, honest demonstration plan and the checks to complete before recording.
+
+## Project documents
 
 - [Scope](scope.md)
 - [Product requirements](prd.md)
 - [Technical specification](spec.md)
 - [Environment variable template](.env.example)
-
-## Local development and secrets
-
-Never paste real credentials into issues, chat, source files, screenshots, or commits. Copy .env.example to .env.local once the application setup is added, then fill it with your own sandbox credentials. Keep .env.local untracked.
+- [MIT License](LICENSE)
 
 ## License
 
-This project is released under the MIT License. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
