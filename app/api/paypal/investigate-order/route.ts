@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       token,
       { method: "GET" }
     );
-    const { verified, checks, failedChecks, unit, capture } = evaluatePaymentEvidence(order, requestedOrderId);
+    const { verified, checks, failedChecks, capture } = evaluatePaymentEvidence(order, requestedOrderId);
 
     return NextResponse.json({
       status: verified ? "VERIFIED" : "REVIEW_REQUIRED",
