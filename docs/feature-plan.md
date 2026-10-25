@@ -68,7 +68,7 @@ AI may summarize the verified check results in plain language. It must not inven
 - Test mismatched order ID, amount, currency, reference, incomplete capture, missing capture, and PayPal API failure.
 - Use recorded evidence for investigation; do not trust an arbitrary user-supplied ID without authorization and ownership checks.
 
-**Status:** The dedicated investigator page is linked from the workspace navigation. Server-side checks require matching PayPal order ID, completed order, existing completed capture, expected amount/currency, and trusted reference/custom ID. The capture endpoint checks order identity/reference/amount/currency before attempting capture and uses a stable per-order request ID for retries. Eight deterministic unit tests pass for successful evidence and incomplete, pending, mismatched, and unsuccessful cases. Live Sandbox end-to-end testing, route-level integration tests, internal order ownership checks, and persistence remain outstanding.
+**Status:** The dedicated investigator page is linked from the workspace navigation. Server-side checks require matching PayPal order ID, completed order, existing completed capture, expected amount/currency, and trusted reference/custom ID. The capture endpoint checks order identity/reference/amount/currency before attempting capture and uses a stable per-order request ID for retries. Eleven deterministic unit tests pass for successful evidence and incomplete, pending, mismatched, and unsuccessful cases. Live Sandbox end-to-end testing, route-level integration tests, internal order ownership checks, and persistence remain outstanding.
 
 ## Feature 3 — Payment Operations Dashboard
 
@@ -152,7 +152,7 @@ AI may summarize the verified check results in plain language. It must not inven
 
 ### Quality checks
 - `npm run test`, `npm run lint`, and `npm run build` passed in an isolated environment after the latest code changes.
-- Eight automated tests cover payment-evidence rules. Route-level tests for AI extraction schema validation, provider timeout/error handling, and real PayPal API failures are still required.
+- Eleven automated tests cover payment-evidence rules. Route-level tests for AI extraction schema validation, provider timeout/error handling, and real PayPal API failures are still required.
 - Confirm no secret is exposed in client bundles, logs, Git history, or public responses.
 - Test mobile and desktop layouts, keyboard focus, form labels, loading states, and accessible error messages.
 - Check server-side validation, request size limits, rate limiting, and error handling.
