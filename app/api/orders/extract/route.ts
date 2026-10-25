@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { MAX_MESSAGE_LENGTH, PRODUCTS, safeDraft } from "@/lib/order-extraction";
 
 export const runtime = "nodejs";
-
-import { MAX_MESSAGE_LENGTH, PRODUCTS, safeDraft, type Draft } from "@/lib/order-extraction";
 
 export async function POST(request: NextRequest) {
   let body: { message?: unknown };
