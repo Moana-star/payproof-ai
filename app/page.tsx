@@ -31,11 +31,28 @@ export default function Home() {
   const [draft, setDraft] = useState<{ item: string; quantity: string; note: string } | null>(null);
   const [notice, setNotice] = useState("Demo workspace · Sample records only");
   const [showGuide, setShowGuide] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const paidTotal = useMemo(
     () => orders.filter((order) => order.status === "Paid").length,
     [orders]
   );
+
+  async function startSandboxCheckout() {
+    setCheckoutLoading(true);
+    setNotice("Creating a fixed-price PayPal Sandbox checkout. No real money will be processed.");
+    try {
+      const response = await fetch("/api/paypal/create-order", { method: "POST" });
+      const data = (await response.json()) as { approvalUrl?: string; error?: string };
+      if (!response.ok || !data.approvalUrl) {
+        throw new Error(data.error || "Could not create a PayPal Sandbox checkout.");
+      }
+      window.location.assign(data.approvalUrl);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "PayPal Sandbox checkout could not be started.");
+      setCheckoutLoading(false);
+    }
+  }
 
   function prepareDraft() {
     if (!message.trim()) {
@@ -98,7 +115,7 @@ export default function Home() {
       <section className="main-area">
         <header className="topbar">
           <div className="breadcrumb">Workspace <span>/</span> Overview</div>
-          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
+          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><button className="sandbox-checkout-button" onClick={startSandboxCheckout} disabled={checkoutLoading}>{checkoutLoading ? "Connecting…" : "Test PayPal checkout"} <span>↗</span></button><button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
 
         <div className="content" id="overview">
