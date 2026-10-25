@@ -86,6 +86,8 @@ APP_URL=http://localhost:3000
 
 Do not commit `.env.local`, paste secrets into issues or chat, or use `NEXT_PUBLIC_` for private credentials. The Sandbox API base URL above is for testing, not live payments.
 
+For the current Vercel preview, PayPal credentials are enabled for Preview and `APP_URL` is scoped to the `feat/ai-order-assistant` branch. The AI Gateway key and model are not present in the project environment yet; add `AI_GATEWAY_API_KEY` and a supported `AI_MODEL` to this branch's Preview environment before expecting live AI extraction. Do not paste either secret into chat or source control.
+
 ### 3. Start the development server
 
 ```bash
