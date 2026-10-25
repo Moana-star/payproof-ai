@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       cache: "no-store",
+      signal: AbortSignal.timeout(15000),
       body: JSON.stringify({
         model,
         temperature: 0.1,
