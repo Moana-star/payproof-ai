@@ -46,7 +46,7 @@ function ReturnContent() {
   return (
     <main className="checkout-page">
       <div className="checkout-card">
-        <a className="brand checkout-brand" href="/"><span className="brand-mark">P<span>✓</span></span><span className="brand-name">payproof<span>ai</span></span></a>
+        <Link className="brand checkout-brand" href="/"><span className="brand-mark">P<span>✓</span></span><span className="brand-name">payproof<span>ai</span></span></Link>
         {loading ? <><div className="checkout-symbol loading-symbol">…</div><h1>Verifying with PayPal</h1><p>We are checking the server-side transaction result. Please keep this page open.</p></>
           : result?.verified ? <><div className="checkout-symbol success-symbol">✓</div><p className="checkout-eyebrow">SANDBOX VERIFICATION</p><h1>Payment verified</h1><p>{result.message}</p><div className="verification-details"><span>Amount</span><strong>{result.transaction?.currency} {result.transaction?.amount}</strong><span>Capture reference</span><strong>{result.transaction?.captureId || "Available in PayPal Sandbox"}</strong></div></>
           : <><div className="checkout-symbol review-symbol">!</div><p className="checkout-eyebrow">NO PAYMENT CONFIRMATION</p><h1>Needs a closer look</h1><p>{result?.error || result?.message || "The transaction did not pass every verification check."}</p><p className="checkout-small">For safety, PayProof AI will not mark this order as paid unless the expected transaction is verified.</p></>}
