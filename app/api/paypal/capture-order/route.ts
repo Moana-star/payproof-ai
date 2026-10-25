@@ -96,11 +96,27 @@ export async function POST(request: NextRequest) {
       checks,
       sandbox: true
     });
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const httpStatus = message.match(/HTTP (\\d{3})/)?.[1];
+    if (message.includes("credentials are not configured") || httpStatus === "401" || httpStatus === "403") {
+      return NextResponse.json({
+        status: "REVIEW_REQUIRED",
+        verified: false,
+        error: "PayPal Sandbox authentication is not available. Check that the matching Sandbox app credentials are configured for this deployment."
+      }, { status: 503 });
+    }
+    if (httpStatus === "404") {
+      return NextResponse.json({
+        status: "REVIEW_REQUIRED",
+        verified: false,
+        error: "PayPal Sandbox did not find this order ID. Check the ID; no payment is verified."
+      }, { status: 404 });
+    }
     return NextResponse.json({
-      verified: false,
       status: "REVIEW_REQUIRED",
-      error: "PayPal Sandbox could not confirm the payment. No verified payment result is available; retry or review the Sandbox configuration.",
+      verified: false,
+      error: "Could not retrieve PayPal Sandbox evidence. Retry later or review the Sandbox configuration. No payment is verified.",
       sandbox: true
     }, { status: 502 });
   }
