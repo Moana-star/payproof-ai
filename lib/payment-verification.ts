@@ -8,6 +8,7 @@ export type PayPalOrderEvidence = {
   purchase_units?: Array<{
     reference_id?: string;
     custom_id?: string;
+    amount?: { value?: string; currency_code?: string };
     payments?: {
       captures?: Array<{
         id?: string;
