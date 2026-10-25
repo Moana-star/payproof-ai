@@ -59,10 +59,10 @@ export default function PaymentInvestigatorPage() {
   return (
     <main className="checkout-page">
       <div className="checkout-card" style={{ maxWidth: 620, textAlign: "left" }}>
-        <a className="brand checkout-brand" href="/">
+        <Link className="brand checkout-brand" href="/">
           <span className="brand-mark">P<span>✓</span></span>
           <span className="brand-name">payproof<span>ai</span></span>
-        </a>
+        </Link>
         <p className="checkout-eyebrow">EVIDENCE-FIRST WORKFLOW</p>
         <h1>Payment Investigator</h1>
         <p>Check a PayPal Sandbox order against the expected demo amount, currency, trusted reference, order status, and capture details. Only deterministic server-side checks can mark it verified.</p>
