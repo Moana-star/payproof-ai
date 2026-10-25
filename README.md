@@ -27,7 +27,8 @@ This is an active prototype. Do not describe it as production-ready.
 - [x] Fixed-price Sandbox checkout flow and return/cancel screens committed
 - [x] Initial server-side checks for captured status, amount, currency, and expected reference
 - [ ] Run a successful end-to-end Sandbox payment with locally configured credentials
-- [ ] Connect a real AI provider for structured order extraction and evidence-grounded explanations
+- [x] Add a server-side AI Gateway-compatible extraction route with schema checks and advisory-only output
+- [ ] Configure a valid AI Gateway key/model in Vercel and verify live model responses
 - [ ] Add automated tests and persistent order/event records
 - [ ] Review production security, webhook handling, retries, and operational monitoring
 
@@ -58,6 +59,8 @@ Create a file named `.env.local` in the same folder as `package.json`. Copy the 
 PAYPAL_CLIENT_ID=your_sandbox_client_id
 PAYPAL_CLIENT_SECRET=your_sandbox_client_secret
 PAYPAL_BASE_URL=https://api-m.sandbox.paypal.com
+AI_GATEWAY_API_KEY=your_vercel_ai_gateway_key
+AI_MODEL=provider/model-name
 APP_URL=http://localhost:3000
 ```
 
@@ -88,7 +91,7 @@ Resolve errors before deploying. This README documents the intended workflow; it
 
 ## AI integration
 
-The order-intake UI currently contains an initial deterministic preview and is **not yet a substitute for a connected AI model**. A real model integration should return structured suggestions, identify missing or ambiguous details, and remain advisory. Sellers must review the result. Price calculation, PayPal calls, and payment-state decisions must remain deterministic server-side operations.
+The order-intake UI calls a server-side AI Gateway-compatible route for structured product/quantity extraction and missing-information notes. Configure `AI_GATEWAY_API_KEY` and `AI_MODEL` in `.env.local` and Vercel before using it. The route validates model output against a constrained schema and returns advisory suggestions only. If the provider is unavailable or the response is invalid, the request fails safely and no order is created. Sellers must review the result. Price calculation, PayPal calls, and payment-state decisions remain deterministic server-side operations.
 
 Never allow model output to set a price, claim a payment succeeded, or bypass PayPal verification.
 
