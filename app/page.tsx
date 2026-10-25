@@ -103,7 +103,7 @@ export default function Home() {
 
         <div className="content" id="overview">
           <div className="welcome-row">
-            <div><p className="eyebrow">MONDAY, OCTOBER 26, 2026</p><h1>Good morning, Moana <span>✳</span></h1><p className="subheading">A clearer view of orders, payments, and what needs your attention.</p></div>
+            <div><p className="eyebrow">YOUR PAYMENT WORKSPACE</p><h1>Good morning, Moana <span>✳</span></h1><p className="subheading">A clearer view of orders, payments, and what needs your attention.</p></div>
             <button className="primary-button" onClick={() => document.getElementById("intake")?.scrollIntoView({ behavior: "smooth" })}><span>＋</span> New order</button>
           </div>
 
