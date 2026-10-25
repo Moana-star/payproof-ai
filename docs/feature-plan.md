@@ -33,7 +33,7 @@
 - Provider timeout, invalid JSON, and unavailable configuration fail safely.
 - Add tests for valid requests, missing product, missing quantity, unknown product, invalid quantity, malformed provider output, and provider errors.
 
-**Status:** Initial server-side extraction route and review UI are committed on the feature branch. Live provider configuration and end-to-end tests remain outstanding.
+**Status:** Server-side extraction calls an AI Gateway-compatible model endpoint, validates structured output, caps input size, and times out after 15 seconds. The UI remains advisory-only. The required AI Gateway key/model are not confirmed in the Vercel project environment, so live model responses remain unverified. Route-level tests and live provider error tests remain outstanding.
 
 ## Feature 2 — AI Payment Investigator
 
@@ -68,7 +68,7 @@ AI may summarize the verified check results in plain language. It must not inven
 - Test mismatched order ID, amount, currency, reference, incomplete capture, missing capture, and PayPal API failure.
 - Use recorded evidence for investigation; do not trust an arbitrary user-supplied ID without authorization and ownership checks.
 
-**Status:** Initial capture verification checks exist. A complete investigation interface and test coverage remain to be built.
+**Status:** The dedicated investigator page is linked from the workspace navigation. Server-side checks require matching PayPal order ID, completed order, existing completed capture, expected amount/currency, and trusted reference/custom ID. The capture endpoint checks order identity/reference/amount/currency before attempting capture and uses a stable per-order request ID for retries. Eight deterministic unit tests pass for successful evidence and incomplete, pending, mismatched, and unsuccessful cases. Live Sandbox end-to-end testing, route-level integration tests, internal order ownership checks, and persistence remain outstanding.
 
 ## Feature 3 — Payment Operations Dashboard
 
@@ -123,7 +123,7 @@ AI may summarize the verified check results in plain language. It must not inven
 - Before production, implement and verify PayPal webhook signatures and event idempotency.
 - Sandbox success is not evidence of production readiness.
 
-**Status:** Sandbox create/capture routes and initial verification checks exist. A successful end-to-end Sandbox test is not yet confirmed.
+**Status:** Sandbox create/capture routes exist. Capture validates the order before state-changing capture and checks the returned evidence deterministically. Unit tests pass, but a successful end-to-end Sandbox payment and real negative-path API tests have not yet been confirmed.
 
 ## Feature 5 — Evidence and Audit Trail
 
@@ -151,8 +151,8 @@ AI may summarize the verified check results in plain language. It must not inven
 ## Feature 6 — Quality, Security, and Hackathon Demo
 
 ### Quality checks
-- Run `npm run lint` and `npm run build`.
-- Add automated tests for order extraction schema validation and payment verification rules.
+- `npm run test`, `npm run lint`, and `npm run build` passed in an isolated environment after the latest code changes.
+- Eight automated tests cover payment-evidence rules. Route-level tests for AI extraction schema validation, provider timeout/error handling, and real PayPal API failures are still required.
 - Confirm no secret is exposed in client bundles, logs, Git history, or public responses.
 - Test mobile and desktop layouts, keyboard focus, form labels, loading states, and accessible error messages.
 - Check server-side validation, request size limits, rate limiting, and error handling.
@@ -182,16 +182,15 @@ Ensure variables are assigned to the environment being tested. Redeploy after ch
 
 ## Delivery order
 
-1. Confirm environment variables and verify the latest preview deployment.
-2. Complete the PayPal Sandbox happy path and negative tests.
-3. Harden order validation and retry/idempotency behavior.
-4. Complete AI Order Assistant tests and live provider validation.
-5. Build the Payment Investigator using verified PayPal evidence.
-6. Connect the dashboard to persisted order and event records.
+1. Configure PayPal Sandbox credentials for the preview environment and confirm the latest preview deployment.
+2. Configure the AI Gateway key/model for the preview environment and verify a live model response.
+3. Complete the PayPal Sandbox happy path and negative tests.
+4. Add route-level tests for AI provider failures and PayPal API failures.
+5. Connect the dashboard to persisted order and event records.
 7. Add audit trail, access control, rate limiting, and webhook verification.
 8. Polish responsive/accessibility states and record the demo.
 9. Review the complete checklist and merge only after tests pass.
 
 ## Current truth
 
-This plan is a product and delivery checklist, not a claim that every feature is implemented. The current prototype has an illustrative dashboard, initial PayPal Sandbox routes, and a feature-branch AI order-extraction route. Live AI configuration, successful end-to-end Sandbox verification, persistence, full investigator UI, audit trail, and production-grade webhook/security work must be validated or built before they are described as complete.
+This plan is a product and delivery checklist, not a claim that every feature is implemented. The current prototype has an illustrative dashboard, PayPal Sandbox create/capture/investigation routes, a linked Payment Investigator, and a feature-branch AI order-extraction route. Eight deterministic payment-evidence tests, lint, and build pass in an isolated environment. Live AI configuration, a successful end-to-end Sandbox transaction, route-level integration tests, persistence, audit trail, and production-grade webhook/access-control/security work must be validated or built before they are described as complete.
