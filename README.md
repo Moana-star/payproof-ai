@@ -43,7 +43,7 @@ This is an active prototype. Do not describe it as production-ready.
 - [x] Add a server-side AI Gateway-compatible extraction route with schema checks and advisory-only output on the feature branch
 - [ ] Configure a valid AI Gateway key/model in Vercel and verify live model responses
 - [x] Add a dedicated Payment Investigator interface with deterministic order, capture, amount, currency, and trusted-reference checks
-- [x] Add eight unit tests covering successful evidence and incomplete, pending, mismatched, and unsuccessful payment cases
+- [x] Add eleven unit tests covering successful evidence and incomplete, pending, mismatched, and unsuccessful payment cases
 - [x] Link the Payment Investigator from the workspace navigation
 - [x] Add stable PayPal capture retry request IDs and reject mismatched orders before attempting capture
 - [x] Add focused unit tests for deterministic payment-evidence rules
