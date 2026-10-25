@@ -4,7 +4,7 @@ export default function CheckoutCancelPage() {
   return (
     <main className="checkout-page">
       <div className="checkout-card">
-        <a className="brand checkout-brand" href="/"><span className="brand-mark">P<span>✓</span></span><span className="brand-name">payproof<span>ai</span></span></a>
+        <Link className="brand checkout-brand" href="/"><span className="brand-mark">P<span>✓</span></span><span className="brand-name">payproof<span>ai</span></span></Link>
         <div className="checkout-symbol review-symbol">↩</div>
         <p className="checkout-eyebrow">CHECKOUT CANCELLED</p>
         <h1>No payment was confirmed</h1>
