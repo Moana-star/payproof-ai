@@ -47,9 +47,11 @@ export async function POST(request: NextRequest) {
     const capture = unit?.payments?.captures?.[0];
     const amountMatches = capture?.amount?.value === EXPECTED_AMOUNT;
     const currencyMatches = capture?.amount?.currency_code === EXPECTED_CURRENCY;
+    const orderIdMatches = result.id === orderId;
     const referenceMatches =
       unit?.reference_id === EXPECTED_REFERENCE && unit?.custom_id === EXPECTED_REFERENCE;
     const verified =
+      orderIdMatches &&
       result.status === "COMPLETED" &&
       capture?.status === "COMPLETED" &&
       amountMatches &&
@@ -62,6 +64,7 @@ export async function POST(request: NextRequest) {
         status: "REVIEW_REQUIRED",
         message: "PayPal did not confirm the expected completed payment. Do not fulfil this demo order.",
         checks: {
+          orderIdMatches,
           orderCompleted: result.status === "COMPLETED",
           captureCompleted: capture?.status === "COMPLETED",
           amountMatches,
