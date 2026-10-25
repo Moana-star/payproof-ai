@@ -2,39 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const MAX_MESSAGE_LENGTH = 2000;
-const PRODUCTS = [
-  { name: "Coffee gift set", aliases: ["coffee", "coffee gift"] },
-  { name: "Ceramic mug pair", aliases: ["mug", "mugs", "ceramic"] },
-  { name: "Handwoven market tote", aliases: ["tote", "bag", "market tote"] }
-] as const;
-
-type Draft = {
-  product: string | null;
-  quantity: number | null;
-  customerNote: string;
-  missingInformation: string[];
-  confidenceNotes: string;
-};
-
-function safeDraft(value: unknown): Draft | null {
-  if (!value || typeof value !== "object") return null;
-  const data = value as Record<string, unknown>;
-  const product = typeof data.product === "string" && PRODUCTS.some((p) => p.name === data.product)
-    ? data.product : null;
-  const quantity = Number.isInteger(data.quantity) && Number(data.quantity) > 0 && Number(data.quantity) <= 100
-    ? Number(data.quantity) : null;
-  const missingInformation = Array.isArray(data.missingInformation)
-    ? data.missingInformation.filter((x): x is string => typeof x === "string").slice(0, 5).map((x) => x.slice(0, 160))
-    : [];
-  return {
-    product,
-    quantity,
-    customerNote: typeof data.customerNote === "string" ? data.customerNote.slice(0, 500) : "",
-    missingInformation,
-    confidenceNotes: typeof data.confidenceNotes === "string" ? data.confidenceNotes.slice(0, 240) : "Review all extracted details."
-  };
-}
+import { MAX_MESSAGE_LENGTH, PRODUCTS, safeDraft, type Draft } from "@/lib/order-extraction";
 
 export async function POST(request: NextRequest) {
   let body: { message?: unknown };
