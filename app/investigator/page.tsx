@@ -65,7 +65,7 @@ export default function PaymentInvestigatorPage() {
         </Link>
         <p className="checkout-eyebrow">EVIDENCE-FIRST WORKFLOW</p>
         <h1>Payment Investigator</h1>
-        <p>Check a PayPal Sandbox order against the expected demo amount, currency, trusted reference, order status, and capture details. Only deterministic server-side checks can mark it verified.</p>
+        <p>Check a PayPal Sandbox order against the expected demo amount, currency, trusted reference, order status, and capture details. This preview uses deterministic server-side checks; AI explanations are not enabled yet.</p>
         <label htmlFor="order-id" className="field-label">PAYPAL SANDBOX ORDER ID</label>
         <input id="order-id" value={orderId} onChange={(event) => setOrderId(event.target.value)} maxLength={40} autoComplete="off" placeholder="Paste the order ID from checkout" style={{ width: "100%", boxSizing: "border-box", padding: "14px", border: "1px solid #ded9e2", borderRadius: 10, margin: "8px 0 14px" }} />
         <button className="primary-button checkout-home" onClick={investigate} disabled={loading} style={{ width: "100%", justifyContent: "center" }}>
