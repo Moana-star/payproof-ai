@@ -1,27 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPayPalAccessToken, paypalRequest } from "@/lib/paypal";
+import { evaluatePaymentEvidence, type PayPalOrderEvidence } from "@/lib/payment-verification";
 
 export const runtime = "nodejs";
-
-const EXPECTED_REFERENCE = "PAYPROOF-DEMO-COFFEE-01";
-const EXPECTED_AMOUNT = "24.50";
-const EXPECTED_CURRENCY = "USD";
-
-type PayPalOrder = {
-  id?: string;
-  status?: string;
-  purchase_units?: Array<{
-    reference_id?: string;
-    custom_id?: string;
-    payments?: {
-      captures?: Array<{
-        id?: string;
-        status?: string;
-        amount?: { value?: string; currency_code?: string };
-      }>;
-    };
-  }>;
-};
 
 export async function POST(request: NextRequest) {
   let body: { orderId?: unknown } | null;
@@ -38,28 +19,12 @@ export async function POST(request: NextRequest) {
   const requestedOrderId = body.orderId;
   try {
     const token = await getPayPalAccessToken();
-    const order = await paypalRequest<PayPalOrder>(
+    const order = await paypalRequest<PayPalOrderEvidence>(
       "/v2/checkout/orders/" + encodeURIComponent(requestedOrderId),
       token,
       { method: "GET" }
     );
-
-    const unit = order.purchase_units?.[0];
-    const capture = unit?.payments?.captures?.[0];
-    const checks = {
-      orderIdMatches: order.id === requestedOrderId,
-      orderCompleted: order.status === "COMPLETED",
-      capturePresent: Boolean(capture?.id),
-      captureCompleted: capture?.status === "COMPLETED",
-      amountMatches: capture?.amount?.value === EXPECTED_AMOUNT,
-      currencyMatches: capture?.amount?.currency_code === EXPECTED_CURRENCY,
-      referenceMatches: unit?.reference_id === EXPECTED_REFERENCE && unit?.custom_id === EXPECTED_REFERENCE
-    };
-    const verified = Object.values(checks).every(Boolean);
-
-    const failedChecks = Object.entries(checks)
-      .filter(([, passed]) => !passed)
-      .map(([name]) => name);
+    const { verified, checks, failedChecks, unit, capture } = evaluatePaymentEvidence(order, requestedOrderId);
 
     return NextResponse.json({
       status: verified ? "VERIFIED" : "REVIEW_REQUIRED",
