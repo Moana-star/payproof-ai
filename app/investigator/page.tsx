@@ -9,7 +9,23 @@ type Investigation = {
   summary?: string;
   error?: string;
   paypalStatus?: string;
-  orderIdMatches?: boolean;
+  orderId?: string | null;
+  captureId?: string | null;
+  captureStatus?: string;
+  amount?: string | null;
+  currency?: string | null;
+  checks?: Record<string, boolean>;
+  failedChecks?: string[];
+};
+
+const checkLabels: Record<string, string> = {
+  orderIdMatches: "PayPal order ID matches",
+  orderCompleted: "Order status is completed",
+  capturePresent: "Capture record exists",
+  captureCompleted: "Capture status is completed",
+  amountMatches: "Captured amount matches $24.50",
+  currencyMatches: "Currency matches USD",
+  referenceMatches: "Trusted order reference matches"
 };
 
 export default function PaymentInvestigatorPage() {
@@ -49,7 +65,7 @@ export default function PaymentInvestigatorPage() {
         </a>
         <p className="checkout-eyebrow">EVIDENCE-FIRST WORKFLOW</p>
         <h1>Payment Investigator</h1>
-        <p>Review a PayPal Sandbox order using server-side evidence. AI can help explain results, but it cannot mark a payment as paid.</p>
+        <p>Check a PayPal Sandbox order against the expected demo amount, currency, trusted reference, order status, and capture details. Only deterministic server-side checks can mark it verified.</p>
         <label htmlFor="order-id" className="field-label">PAYPAL SANDBOX ORDER ID</label>
         <input id="order-id" value={orderId} onChange={(event) => setOrderId(event.target.value)} maxLength={40} autoComplete="off" placeholder="Paste the order ID from checkout" style={{ width: "100%", boxSizing: "border-box", padding: "14px", border: "1px solid #ded9e2", borderRadius: 10, margin: "8px 0 14px" }} />
         <button className="primary-button checkout-home" onClick={investigate} disabled={loading} style={{ width: "100%", justifyContent: "center" }}>
@@ -58,12 +74,18 @@ export default function PaymentInvestigatorPage() {
         {result && <section aria-live="polite" className="draft-result" style={{ marginTop: 20 }}>
           <div className="draft-title">Result <span>{result.status || "REVIEW_REQUIRED"}</span></div>
           <p>{result.summary || result.error || "The evidence could not be verified."}</p>
-          {result.paypalStatus && <div className="draft-line"><span>PayPal status</span><strong>{result.paypalStatus}</strong></div>}
-          {typeof result.orderIdMatches === "boolean" && <div className="draft-line"><span>Order ID match</span><strong>{result.orderIdMatches ? "Matched" : "Mismatch"}</strong></div>}
-          <p className="field-hint">{verified ? "Current demo checks passed. This is Sandbox evidence only." : "Not verified. Do not fulfil this order until the discrepancy is resolved."}</p>
+          {result.paypalStatus && <div className="draft-line"><span>PayPal order status</span><strong>{result.paypalStatus}</strong></div>}
+          {result.captureStatus && <div className="draft-line"><span>Capture status</span><strong>{result.captureStatus}</strong></div>}
+          {result.captureId && <div className="draft-line"><span>Capture ID</span><strong>{result.captureId}</strong></div>}
+          {result.amount && result.currency && <div className="draft-line"><span>Captured amount</span><strong>{result.amount} {result.currency}</strong></div>}
+          {result.checks && <div style={{ marginTop: 12 }}>
+            <strong style={{ fontSize: 11 }}>Verification checks</strong>
+            {Object.entries(result.checks).map(([key, passed]) => <div className="draft-line" key={key}><span>{checkLabels[key] || key}</span><strong style={{ color: passed ? "#188a63" : "#c8515c" }}>{passed ? "PASS" : "FAIL"}</strong></div>)}
+          </div>}
+          <p className="field-hint">{verified ? "All required checks passed for this fixed-price Sandbox demo only. This is not production payment processing." : "Not verified. Do not fulfil this order until every required check passes and the order is matched to a trusted internal record."}</p>
         </section>}
         <div className="evidence-note" style={{ marginTop: 22 }}>
-          <span>✓</span><p><strong>Important</strong><br />A browser redirect, screenshot, customer claim, or AI-generated explanation is not proof of payment. This prototype does not persist investigation history.</p>
+          <span>✓</span><p><strong>Important</strong><br />A browser redirect, screenshot, customer claim, or AI-generated explanation is not proof of payment. This demo checks only its fixed-price reference and does not persist investigation history or authorize arbitrary customer orders.</p>
         </div>
         <Link className="text-button" href="/" style={{ display: "inline-block", marginTop: 20 }}>← Back to dashboard</Link>
       </div>
