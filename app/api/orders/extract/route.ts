@@ -19,10 +19,11 @@ export async function POST(request: NextRequest) {
   }
 
   const apiKey = process.env.AI_GATEWAY_API_KEY || process.env.AI_API_KEY;
-  const model = process.env.AI_MODEL;
-  if (!apiKey || !model || model === "replace_me") {
+  // Prefer the explicit Vercel AI Gateway setting; retain AI_MODEL for compatibility.
+  const model = process.env.AI_GATEWAY_MODEL || process.env.AI_MODEL;
+  if (!apiKey || !model || model === "replace_me" || model === "provider/model-name" || model === "paste_the_exact_model_id_here") {
     return NextResponse.json({
-      error: "The AI assistant is not configured yet. Add AI_GATEWAY_API_KEY and AI_MODEL to the Vercel project environment, then redeploy."
+      error: "The AI assistant is not configured yet. Add AI_GATEWAY_API_KEY and AI_GATEWAY_MODEL to the Vercel project environment, then redeploy."
     }, { status: 503 });
   }
 
