@@ -32,6 +32,7 @@ export default function Home() {
   const [notice, setNotice] = useState("Demo workspace · Sample records only");
   const [showGuide, setShowGuide] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [draftLoading, setDraftLoading] = useState(false);
 
   const paidTotal = useMemo(
     () => orders.filter((order) => order.status === "Paid").length,
@@ -55,10 +56,12 @@ export default function Home() {
   }
 
   async function prepareDraft() {
+    if (draftLoading) return;
     if (!message.trim()) {
       setNotice("Add an order message first so the AI can prepare a draft.");
       return;
     }
+    setDraftLoading(true);
     setDraft(null);
     setNotice("Analysing the message securely. Suggestions remain unconfirmed until you review them.");
     try {
@@ -83,6 +86,8 @@ export default function Home() {
       setNotice("AI draft prepared. Review the product and quantity; nothing has been saved and payment is not verified.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "AI order intake is temporarily unavailable.");
+    } finally {
+      setDraftLoading(false);
     }
   }
 
@@ -187,7 +192,8 @@ export default function Home() {
               <label className="field-label" htmlFor="customer-message">CUSTOMER MESSAGE</label>
               <textarea id="customer-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={'Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
               <div className="field-hint">AI suggestions are advisory only. Confirm every field; nothing is saved automatically and payment status is never inferred.</div>
-              <button className="secondary-button full-button" onClick={prepareDraft}>Prepare order draft <span>→</span></button>
+              <button type="button" className="secondary-button full-button" onClick={prepareDraft} disabled={draftLoading} aria-busy={draftLoading}>{draftLoading ? "Preparing draft…" : "Prepare order draft"} <span>{draftLoading ? "…" : "→"}</span></button>
+              <p className="draft-action-hint" aria-live="polite">{draftLoading ? "Please wait while the message is analysed." : "Enter a customer message above, then select Prepare order draft."}</p>
               {draft && <div className="draft-result"><div className="draft-title">Draft for review <span>NOT SAVED</span></div><div className="draft-line"><span>Product</span><strong>{draft.item}</strong></div><div className="draft-line"><span>Quantity</span><strong>{draft.quantity}</strong></div><p>{draft.note}</p><button className="primary-button full-button" onClick={saveDraft}>Validate draft details</button></div>}
             </section>
 
