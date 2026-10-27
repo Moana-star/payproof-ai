@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "tsc --target ES2020 --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck --strict --outDir .test-build lib/payment-verification.ts tests/payment-verification.test.ts && node --test .test-build/tests/payment-verification.test.js"
   },
   "dependencies": {
     "next": "15.5.9",

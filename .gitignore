@@ -10,3 +10,4 @@ coverage/
 .vercel/
 *.log
 .DS_Store
+.test-build/

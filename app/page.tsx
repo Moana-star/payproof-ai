@@ -54,26 +54,36 @@ export default function Home() {
     }
   }
 
-  function prepareDraft() {
+  async function prepareDraft() {
     if (!message.trim()) {
-      setNotice("Add an order message first so we can prepare a draft.");
+      setNotice("Add an order message first so the AI can prepare a draft.");
       return;
     }
-    const lower = message.toLowerCase();
-    const item = lower.includes("coffee") ? "Coffee gift set"
-      : lower.includes("mug") ? "Ceramic mug pair"
-      : lower.includes("tote") || lower.includes("bag") ? "Handwoven market tote"
-      : "Unmatched item — needs review";
-    const quantityMatch = lower.match(/\b(\d+)\s*(?:x|pieces?|items?)\b/);
-    const quantity = quantityMatch?.[1] ?? "Not specified";
-    setDraft({
-      item,
-      quantity,
-      note: item.startsWith("Unmatched") || quantity === "Not specified"
-        ? "Some details are missing or ambiguous. Confirm the product and quantity before saving."
-        : "Draft prepared from the message. Review every field before confirming."
-    });
-    setNotice("Draft prepared for review. No order or payment has been created.");
+    setDraft(null);
+    setNotice("Analysing the message securely. Suggestions remain unconfirmed until you review them.");
+    try {
+      const response = await fetch("/api/orders/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      });
+      const data = await response.json() as {
+        draft?: { product: string | null; quantity: number | null; missingInformation: string[]; confidenceNotes: string };
+        error?: string;
+      };
+      if (!response.ok || !data.draft) throw new Error(data.error || "The AI could not prepare a valid draft.");
+      const extracted = data.draft;
+      const item = extracted.product || "Unmatched item — needs review";
+      const quantity = extracted.quantity ? String(extracted.quantity) : "Not specified";
+      setDraft({
+        item,
+        quantity,
+        note: [...extracted.missingInformation, extracted.confidenceNotes].filter(Boolean).join(" ")
+      });
+      setNotice("AI draft prepared. Review the product and quantity; nothing has been saved and payment is not verified.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "AI order intake is temporarily unavailable.");
+    }
   }
 
   function saveDraft() {
@@ -97,6 +107,7 @@ export default function Home() {
           <a className="nav-item" href="#orders"><span className="nav-icon">▤</span> Orders <span className="nav-count">{orders.length}</span></a>
           <a className="nav-item" href="#intake"><span className="nav-icon">✳</span> AI order intake</a>
           <a className="nav-item" href="#activity"><span className="nav-icon">↗</span> Payment activity</a>
+          <a className="nav-item" href="/investigator"><span className="nav-icon">✓</span> Payment Investigator</a>
         </nav>
         <div className="sidebar-bottom">
           <div className="trust-card">
@@ -173,10 +184,10 @@ export default function Home() {
 
           <div className="lower-grid">
             <section className="intake-card" id="intake">
-              <div className="panel-heading"><div><span className="panel-icon">✳</span><div><h2>AI order intake</h2><p>Turn a customer message into a draft.</p></div></div><span className="beta-badge">RULE-BASED PREVIEW</span></div>
+              <div className="panel-heading"><div><span className="panel-icon">✳</span><div><h2>AI order intake</h2><p>Extract order details for human review.</p></div></div><span className="beta-badge">AI-ASSISTED · REVIEW REQUIRED</span></div>
               <label className="field-label" htmlFor="customer-message">CUSTOMER MESSAGE</label>
               <textarea id="customer-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={'Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
-              <div className="field-hint">Rule-based preview only — no live AI model is connected yet. Review every suggested field; nothing is saved automatically.</div>
+              <div className="field-hint">AI suggestions are advisory only. Confirm every field; nothing is saved automatically and payment status is never inferred.</div>
               <button className="secondary-button full-button" onClick={prepareDraft}>Prepare order draft <span>→</span></button>
               {draft && <div className="draft-result"><div className="draft-title">Draft for review <span>NOT SAVED</span></div><div className="draft-line"><span>Product</span><strong>{draft.item}</strong></div><div className="draft-line"><span>Quantity</span><strong>{draft.quantity}</strong></div><p>{draft.note}</p><button className="primary-button full-button" onClick={saveDraft}>Validate draft details</button></div>}
             </section>
