@@ -28,13 +28,13 @@ export async function POST(request: NextRequest) {
       await auditReconciliation({ statement_row_id: row.id, order_id: row.matched_order_id, action: "duplicate_post_prevented", actor, details: { transaction_id: row.transaction_id, existing_ledger_entry_id: existing[0].id } });
       return NextResponse.json({ ok: true, alreadyPosted: true, ledgerEntryId: existing[0].id, message: "An existing ledger entry was found. No duplicate was created; the reconciliation status was repaired and audited." });
     }
-    const order = await reconciliationDb<Array<{ id: string; order_number: string; payment_status: string; total_amount: string; currency: string; paypal_capture_id: string | null; verified_at: string | null }>>(
-      `orders?id=eq.${encodeURIComponent(row.matched_order_id)}&select=id,order_number,payment_status,total_amount,currency,paypal_capture_id,verified_at`,
+    const order = await reconciliationDb<Array<{ id: string; order_number: string; payment_status: string; total_amount: string; currency: string; paypal_order_id: string | null; paypal_capture_id: string | null; verified_at: string | null }>>(
+      `orders?id=eq.${encodeURIComponent(row.matched_order_id)}&select=id,order_number,payment_status,total_amount,currency,paypal_order_id,paypal_capture_id,verified_at`,
       { method: "GET" }
     );
     const verified = order[0];
     if (!verified || verified.payment_status !== "paid" || !verified.paypal_capture_id || !verified.verified_at) return NextResponse.json({ error: "The linked order no longer satisfies the verified-payment requirements." }, { status: 409 });
-    if (verified.order_number.toLowerCase() !== (row.reference || "").trim().toLowerCase() || Number(verified.total_amount).toFixed(2) !== Number(row.amount).toFixed(2) || verified.currency !== row.currency) {
+    if (![verified.order_number, verified.paypal_order_id, verified.paypal_capture_id].some((reference) => reference && reference.toLowerCase() === (row.reference || "").trim().toLowerCase()) || Number(verified.total_amount).toFixed(2) !== Number(row.amount).toFixed(2) || verified.currency !== row.currency) {
       return NextResponse.json({ error: "Reference, amount or currency changed since review. Re-run matching and review again." }, { status: 409 });
     }
     const inserted = await reconciliationDb<Array<{ id: string }>>("ledger_entries?on_conflict=statement_row_id&select=id", {
