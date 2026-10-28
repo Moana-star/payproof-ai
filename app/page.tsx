@@ -163,6 +163,7 @@ export default function Home() {
           <a className="nav-item" href="#orders"><span className="nav-icon">▤</span> Orders <span className="nav-count">{orders.length}</span></a>
           <a className="nav-item" href="#intake"><span className="nav-icon">✳</span> AI order intake</a>
           <a className="nav-item" href="#activity"><span className="nav-icon">↗</span> Payment activity</a>
+          <a className="nav-item" href="#reconciliation"><span className="nav-icon">⇄</span> Reconciliation</a>
           <a className="nav-item" href="/payments"><span className="nav-icon">✓</span> Payment evidence</a>
           <a className="nav-item" href="/assistant"><span className="nav-icon">✳</span> AI assistant</a>
           <a className="nav-item" href="/exceptions"><span className="nav-icon">!</span> Exception review</a>
