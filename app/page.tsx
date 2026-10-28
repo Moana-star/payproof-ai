@@ -34,6 +34,7 @@ export default function Home() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
+  const [validationResult, setValidationResult] = useState<{ valid: boolean; message: string } | null>(null);
 
   const paidTotal = useMemo(
     () => orders.filter((order) => order.status === "Paid").length,
@@ -65,6 +66,7 @@ export default function Home() {
     setDraftLoading(true);
     setDraft(null);
     setDraftError(null);
+    setValidationResult(null);
     setNotice("Analysing the message securely. Suggestions remain unconfirmed until you review them.");
     try {
       const response = await fetch("/api/orders/extract", {
@@ -95,12 +97,18 @@ export default function Home() {
     }
   }
 
-  function saveDraft() {
-    if (!draft || draft.item.startsWith("Unmatched") || draft.quantity === "Not specified") {
-      setNotice("Please resolve the missing product and quantity before confirming this draft.");
+  function validateDraftDetails() {
+    if (!draft) return;
+    const issues: string[] = [];
+    if (!draft.item.trim() || draft.item.startsWith("Unmatched")) issues.push("Confirm the product name.");
+    if (draft.quantity === "Not specified" || !Number.isInteger(Number(draft.quantity)) || Number(draft.quantity) < 1) issues.push("Enter a valid quantity of at least 1.");
+    if (issues.length) {
+      setValidationResult({ valid: false, message: issues.join(" ") });
+      setNotice("Draft needs your attention. Resolve the highlighted details before proceeding.");
       return;
     }
-    setNotice("Draft details passed the local preview check. This draft has not been saved as an order; the fixed-price PayPal Sandbox checkout is a separate demo flow.");
+    setValidationResult({ valid: true, message: "Product and quantity are present and pass the basic format check. This is not a saved order and does not verify payment." });
+    setNotice("Draft details checked. Nothing has been saved and payment is not verified.");
   }
 
   return (
@@ -199,7 +207,7 @@ export default function Home() {
               <button type="button" className="secondary-button full-button" onClick={prepareDraft} disabled={draftLoading} aria-busy={draftLoading}>{draftLoading ? "Preparing draft…" : "Prepare order draft"} <span>{draftLoading ? "…" : "→"}</span></button>
               {draftError && <p className="draft-error" role="alert">{draftError}</p>}
               <p className="draft-action-hint" aria-live="polite">{draftLoading ? "Please wait while the message is analysed." : draftError ? "No order was created. You can retry after the AI service issue is resolved." : draft ? "Draft prepared. Review every field before taking any action." : "Enter a customer message above, then select Prepare order draft."}</p>
-              {draft && <div className="draft-result"><div className="draft-title">Draft for review <span>NOT SAVED</span></div><div className="draft-line"><span>Product</span><strong>{draft.item}</strong></div><div className="draft-line"><span>Quantity</span><strong>{draft.quantity}</strong></div><p>{draft.note}</p><button className="primary-button full-button" onClick={saveDraft}>Validate draft details</button></div>}
+              {draft && <div className="draft-result"><div className="draft-title">Draft for review <span>NOT SAVED</span></div><div className="draft-line"><span>Product</span><strong>{draft.item}</strong></div><div className="draft-line"><span>Quantity</span><strong>{draft.quantity}</strong></div><p>{draft.note}</p><button type="button" className="primary-button full-button" onClick={validateDraftDetails}>Validate draft details</button>{validationResult && <div className={`draft-validation ${validationResult.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{validationResult.valid ? "✓ Details checked" : "Review required"}</strong><p>{validationResult.message}</p></div>}</div>}
             </section>
 
             <section className="attention-card" id="activity">
