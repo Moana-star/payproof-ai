@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ReconciliationConsole } from "@/components/reconciliation-console";
 
 type OrderStatus = "Paid" | "Awaiting payment" | "Review needed";
@@ -33,6 +33,17 @@ const statusClass: Record<OrderStatus, string> = {
 };
 
 export default function Home() {
+  const [greeting, setGreeting] = useState("Hello");
+  useEffect(() => {
+    const updateGreeting = () => {
+      const hour = new Date().getHours();
+      setGreeting(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
+    };
+    updateGreeting();
+    const interval = window.setInterval(updateGreeting, 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
   const [orders, setOrders] = useState(initialOrders);
   const [message, setMessage] = useState("");
   const [draft, setDraft] = useState<{ item: string; quantity: string; note: string } | null>(null);
@@ -174,7 +185,7 @@ export default function Home() {
 
         <div className="content" id="overview">
           <div className="welcome-row">
-            <div><p className="eyebrow">YOUR PAYMENT WORKSPACE</p><h1>Good morning, Moana <span>✳</span></h1><p className="subheading">A clearer view of orders, payments, and what needs your attention.</p></div>
+            <div><p className="eyebrow">YOUR PAYMENT WORKSPACE</p><h1>{greeting}, Moana <span>✳</span></h1><p className="subheading">A clearer view of orders, payments, and what needs your attention.</p></div>
             <button className="primary-button" onClick={() => document.getElementById("intake")?.scrollIntoView({ behavior: "smooth" })}><span>＋</span> New order</button>
           </div>
 
