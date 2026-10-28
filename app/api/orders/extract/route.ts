@@ -48,8 +48,14 @@ export async function POST(request: NextRequest) {
       })
     });
     if (!response.ok) {
-      console.error(`[orders/extract] AI Gateway returned HTTP ${response.status}`);
-      return NextResponse.json({ error: "The AI provider could not complete the request. Check the AI Gateway key, model ID, and Vercel runtime logs." }, { status: 502 });
+      // Capture the gateway's short error body in server logs so authentication/access
+      // failures can be distinguished from provider/model errors. Never log the prompt or credentials.
+      const gatewayError = (await response.text()).slice(0, 500);
+      console.error(`[orders/extract] AI Gateway HTTP ${response.status}: ${gatewayError}`);
+      const error = response.status === 403
+        ? "AI Gateway denied access (HTTP 403). No draft was created. This may require a key or team-access fix; please try again shortly."
+        : `The AI provider returned HTTP ${response.status}. No draft was created. Please try again.`;
+      return NextResponse.json({ error }, { status: 502 });
     }
     const payload = await response.json() as { choices?: Array<{ message?: { content?: unknown } }> };
     const content = payload.choices?.[0]?.message?.content;
