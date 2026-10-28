@@ -157,7 +157,7 @@ export function ReconciliationConsole() {
         <td><strong>{row.reference || "No reference"}</strong><small>{row.description || "—"}</small></td>
         <td>{row.amount} {row.currency}</td>
         <td><span className={`recon-status ${row.match_status === "posted" ? "recon-status-good" : row.match_status === "matched_pending_review" || row.match_status === "approved" ? "recon-status-warn" : "recon-status-risk"}`}>{statusLabels[row.match_status]}</span></td>
-        <td className="recon-reason-cell">{row.match_reason || "Run matching to evaluate this record."}</td>
+        <td className="recon-reason-cell">{row.match_status === "posted" ? "Exact reference, amount and currency were verified against a server-verified completed PayPal capture. A human reviewer approved this row and it was posted to the PayProof AI internal demo ledger." : row.match_reason || "Run matching to evaluate this record."}</td>
         <td><div className="recon-row-actions">
           {row.match_status === "matched_pending_review" && <><button onClick={() => approveAndPost(row)} disabled={!!busy} className="recon-post-button">{busy === row.id ? "Working…" : "Approve & post"}</button><button onClick={() => decide(row, "approve")} disabled={!!busy} className="recon-approve-button">Approve only</button><button onClick={() => decide(row, "reject")} disabled={!!busy} className="recon-reject-button">Reject</button></>}
           {row.match_status === "approved" && <button onClick={() => post(row)} disabled={!!busy} className="recon-post-button">{busy === row.id ? "Posting…" : "Post to demo ledger"}</button>}
