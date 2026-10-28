@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { WorkspaceLayout } from "@/components/workspace-layout";
 
@@ -12,6 +12,10 @@ const cases = [
 
 export default function AssistantPage() {
   const [caseId, setCaseId] = useState(cases[0].id);
+  useEffect(() => {
+    const requestedCase = new URLSearchParams(window.location.search).get("case");
+    if (requestedCase && cases.some((item) => item.id === requestedCase)) setCaseId(requestedCase);
+  }, []);
   const [question, setQuestion] = useState("Explain what the evidence shows and what the merchant should do next.");
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState("");
