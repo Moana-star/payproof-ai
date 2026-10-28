@@ -41,6 +41,23 @@ export default function Home() {
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [validationResult, setValidationResult] = useState<{ valid: boolean; message: string } | null>(null);
+  const [reconciliationSearch, setReconciliationSearch] = useState("");
+  const [reconciliationStatus, setReconciliationStatus] = useState("All statuses");
+  const [reconciliationRefreshed, setReconciliationRefreshed] = useState(false);
+
+  const reconciliationRows = [
+    { ref: "TXN-DEMO-2041", source: "PayPal Sandbox", description: "Coffee gift set", expected: "$24.50", received: "$24.50", status: "Matched", note: "Illustrative match" },
+    { ref: "TXN-DEMO-2042", source: "Statement sample", description: "Ceramic mug pair", expected: "$42.00", received: "$40.00", status: "Amount mismatch", note: "Review difference" },
+    { ref: "TXN-DEMO-2043", source: "PayPal Sandbox", description: "Handwoven market tote", expected: "$38.00", received: "Pending", status: "Awaiting evidence", note: "No completed capture" },
+    { ref: "TXN-DEMO-2044", source: "Statement sample", description: "Unidentified incoming payment", expected: "—", received: "$16.00", status: "Unmatched", note: "Needs manual review" }
+  ];
+
+  const visibleReconciliationRows = reconciliationRows.filter((row) => {
+    const query = reconciliationSearch.trim().toLowerCase();
+    const matchesQuery = !query || [row.ref, row.source, row.description, row.status].some((value) => value.toLowerCase().includes(query));
+    const matchesStatus = reconciliationStatus === "All statuses" || row.status === reconciliationStatus;
+    return matchesQuery && matchesStatus;
+  });
 
   const paidTotal = useMemo(
     () => orders.filter((order) => order.status === "Paid").length,
@@ -215,6 +232,63 @@ export default function Home() {
             <article className="metric-card"><div className="metric-top"><span>Awaiting payment</span><span className="metric-icon amber">◷</span></div><div className="metric-value">{orders.filter(o => o.status === "Awaiting payment").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">No action yet</span><span>Checkout pending</span></div></article>
             <article className="metric-card"><div className="metric-top"><span>Needs attention</span><span className="metric-icon red">!</span></div><div className="metric-value">{orders.filter(o => o.status === "Review needed").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-red">Review required</span><span>Before fulfilment</span></div></article>
           </div>
+
+          <section className="reconciliation-panel" id="reconciliation" aria-labelledby="reconciliation-title">
+            <div className="reconciliation-header">
+              <div>
+                <p className="eyebrow">RECONCILIATION WORKSPACE</p>
+                <h2 id="reconciliation-title">Payment matching &amp; reconciliation</h2>
+                <p>Compare expected order totals with payment evidence, surface exceptions, and review records before posting.</p>
+              </div>
+              <div className="reconciliation-actions">
+                <span className="reconciliation-demo-tag"><i /> Demo data · Not a live bank feed</span>
+                <button className="secondary-button" onClick={() => { setReconciliationRefreshed(true); setNotice("Reconciliation preview refreshed from illustrative sample records. No bank feed was imported and no ledger entries were posted."); }}>Refresh preview ↻</button>
+              </div>
+            </div>
+            <div className="reconciliation-flow" aria-label="Reconciliation workflow steps">
+              <div className="reconciliation-flow-step complete"><span>✓</span><div><strong>Capture evidence</strong><small>Source records</small></div></div>
+              <div className="reconciliation-flow-line" />
+              <div className="reconciliation-flow-step complete"><span>✓</span><div><strong>Match transactions</strong><small>Amount &amp; reference</small></div></div>
+              <div className="reconciliation-flow-line" />
+              <div className="reconciliation-flow-step review-step"><span>3</span><div><strong>Review exceptions</strong><small>Human decision</small></div></div>
+              <div className="reconciliation-flow-line" />
+              <div className="reconciliation-flow-step"><span>4</span><div><strong>Post &amp; audit</strong><small>Not enabled in demo</small></div></div>
+            </div>
+            <div className="reconciliation-stats">
+              <div><span>Potential matches</span><strong>1</strong><small>Illustrative only</small></div>
+              <div><span>Amount differences</span><strong className="recon-amber">1</strong><small>Review required</small></div>
+              <div><span>Unmatched records</span><strong className="recon-red">2</strong><small>Not auto-posted</small></div>
+              <div><span>Auto-posting</span><strong className="recon-neutral">Off</strong><small>Approval required</small></div>
+            </div>
+            <div className="reconciliation-table-heading">
+              <div><h3>Transaction matching queue</h3><p>Search the sample queue or filter by match status.</p></div>
+              <div className="reconciliation-filters">
+                <input aria-label="Search reconciliation records" value={reconciliationSearch} onChange={(event) => setReconciliationSearch(event.target.value)} placeholder="Search reference or item…" />
+                <select aria-label="Filter reconciliation status" value={reconciliationStatus} onChange={(event) => setReconciliationStatus(event.target.value)}>
+                  <option>All statuses</option><option>Matched</option><option>Amount mismatch</option><option>Awaiting evidence</option><option>Unmatched</option>
+                </select>
+              </div>
+            </div>
+            <div className="reconciliation-table-wrap">
+              <table className="reconciliation-table">
+                <thead><tr><th>REFERENCE</th><th>SOURCE / DESCRIPTION</th><th>EXPECTED</th><th>RECEIVED</th><th>MATCH STATUS</th><th>NEXT STEP</th></tr></thead>
+                <tbody>
+                  {visibleReconciliationRows.map((row) => <tr key={row.ref}>
+                    <td><span className="recon-ref">{row.ref}</span></td>
+                    <td><strong>{row.description}</strong><small>{row.source}</small></td>
+                    <td>{row.expected}</td><td>{row.received}</td>
+                    <td><span className={row.status === "Matched" ? "recon-status recon-status-good" : row.status === "Amount mismatch" ? "recon-status recon-status-warn" : "recon-status recon-status-risk"}>{row.status}</span></td>
+                    <td>{row.status === "Matched" ? "Verify evidence" : "Manual review"}</td>
+                  </tr>)}
+                  {visibleReconciliationRows.length === 0 && <tr><td colSpan={6} className="recon-empty">No sample records match your search.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+            <div className="reconciliation-footer">
+              <span>{reconciliationRefreshed ? "Preview refreshed just now · Sample records only" : "4 illustrative records · No live bank statement imported"}</span>
+              <a href="/exceptions">Open exception review <span>→</span></a>
+            </div>
+          </section>
 
           <div className="section-heading" id="orders"><div><h2>Recent orders</h2><p>Track each order without guessing about payment status.</p></div><button className="text-button" onClick={() => setNotice("Showing all sample orders in this prototype.")}>View all orders <span>→</span></button></div>
 
