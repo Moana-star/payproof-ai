@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   const actor = reconciliationActor(body.actor);
   try {
     const rows = await reconciliationDb<StatementRow[]>("bank_statement_rows?select=id,transaction_id,amount,currency,reference,match_status&match_status=in.(unmatched,exception)&order=created_at.asc&limit=500", { method: "GET" });
-    const orders = await reconciliationDb<VerifiedOrder[]>("orders?select=id,order_number,total_amount,currency,payment_status,paypal_capture_id,verified_at&payment_status=eq.paid&paypal_capture_id=not.is.null&verified_at=not.is.null&limit=2000", { method: "GET" });
+    const orders = await reconciliationDb<VerifiedOrder[]>("orders?select=id,order_number,total_amount,currency,payment_status,paypal_capture_id,verified_at&payment_status=eq.paid&payment_environment=eq.sandbox&paypal_capture_id=not.is.null&verified_at=not.is.null&limit=2000", { method: "GET" });
     const byReference = new Map(orders.map((order) => [order.order_number.toLowerCase(), order]));
     const totals = { exactMatch: 0, amountOrReferenceException: 0, unmatched: 0 };
     for (const row of rows) {
