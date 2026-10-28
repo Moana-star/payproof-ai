@@ -33,6 +33,7 @@ export default function Home() {
   const [showGuide, setShowGuide] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
 
   const paidTotal = useMemo(
     () => orders.filter((order) => order.status === "Paid").length,
@@ -63,6 +64,7 @@ export default function Home() {
     }
     setDraftLoading(true);
     setDraft(null);
+    setDraftError(null);
     setNotice("Analysing the message securely. Suggestions remain unconfirmed until you review them.");
     try {
       const response = await fetch("/api/orders/extract", {
@@ -85,7 +87,9 @@ export default function Home() {
       });
       setNotice("AI draft prepared. Review the product and quantity; nothing has been saved and payment is not verified.");
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "AI order intake is temporarily unavailable.");
+      const message = error instanceof Error ? error.message : "AI order intake is temporarily unavailable.";
+      setDraftError(message);
+      setNotice(message);
     } finally {
       setDraftLoading(false);
     }
@@ -190,10 +194,11 @@ export default function Home() {
             <section className="intake-card" id="intake">
               <div className="panel-heading"><div><span className="panel-icon">✳</span><div><h2>AI order intake</h2><p>Extract order details for human review.</p></div></div><span className="beta-badge">AI-ASSISTED · REVIEW REQUIRED</span></div>
               <label className="field-label" htmlFor="customer-message">CUSTOMER MESSAGE</label>
-              <textarea id="customer-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={'Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
+              <textarea id="customer-message" value={message} onChange={(event) => { setMessage(event.target.value); if (draftError) setDraftError(null); }} placeholder={'Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
               <div className="field-hint">AI suggestions are advisory only. Confirm every field; nothing is saved automatically and payment status is never inferred.</div>
               <button type="button" className="secondary-button full-button" onClick={prepareDraft} disabled={draftLoading} aria-busy={draftLoading}>{draftLoading ? "Preparing draft…" : "Prepare order draft"} <span>{draftLoading ? "…" : "→"}</span></button>
-              <p className="draft-action-hint" aria-live="polite">{draftLoading ? "Please wait while the message is analysed." : "Enter a customer message above, then select Prepare order draft."}</p>
+              {draftError && <p className="draft-error" role="alert">{draftError}</p>}
+              <p className="draft-action-hint" aria-live="polite">{draftLoading ? "Please wait while the message is analysed." : draftError ? "No order was created. You can retry after the AI service issue is resolved." : draft ? "Draft prepared. Review every field before taking any action." : "Enter a customer message above, then select Prepare order draft."}</p>
               {draft && <div className="draft-result"><div className="draft-title">Draft for review <span>NOT SAVED</span></div><div className="draft-line"><span>Product</span><strong>{draft.item}</strong></div><div className="draft-line"><span>Quantity</span><strong>{draft.quantity}</strong></div><p>{draft.note}</p><button className="primary-button full-button" onClick={saveDraft}>Validate draft details</button></div>}
             </section>
 
