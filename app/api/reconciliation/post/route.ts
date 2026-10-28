@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       const now = new Date().toISOString();
       await reconciliationDb(`bank_statement_rows?id=eq.${encodeURIComponent(row.id)}&match_status=eq.approved`, {
         method: "PATCH", headers: { Prefer: "return=minimal" },
-        body: JSON.stringify({ match_status: "posted", ledger_posted_at: now, updated_at: now })
+        body: JSON.stringify({ match_status: "posted", match_reason: "Exact reference, amount and currency were verified against a server-verified completed PayPal capture. A human reviewer approved this row and it was posted to the PayProof AI internal demo ledger.", ledger_posted_at: now, updated_at: now })
       });
       await auditReconciliation({ statement_row_id: row.id, order_id: row.matched_order_id, action: "duplicate_post_prevented", actor, details: { transaction_id: row.transaction_id, existing_ledger_entry_id: existing[0].id } });
       return NextResponse.json({ ok: true, alreadyPosted: true, ledgerEntryId: existing[0].id, message: "An existing ledger entry was found. No duplicate was created; the reconciliation status was repaired and audited." });
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString();
     await reconciliationDb(`bank_statement_rows?id=eq.${encodeURIComponent(row.id)}&match_status=eq.approved`, {
       method: "PATCH", headers: { Prefer: "return=minimal" },
-      body: JSON.stringify({ match_status: "posted", ledger_posted_at: now, updated_at: now })
+      body: JSON.stringify({ match_status: "posted", match_reason: "Exact reference, amount and currency were verified against a server-verified completed PayPal capture. A human reviewer approved this row and it was posted to the PayProof AI internal demo ledger.", ledger_posted_at: now, updated_at: now })
     });
     await auditReconciliation({ statement_row_id: row.id, order_id: verified.id, action: "internal_ledger_posted", actor, details: { transaction_id: row.transaction_id, ledger_entry_id: inserted[0].id, amount: row.amount, currency: row.currency, destination: "PayProof AI internal ledger only" } });
     return NextResponse.json({ ok: true, ledgerEntryId: inserted[0].id, message: "Posted to PayProof AI's internal demo ledger and recorded in the audit trail. This does not post to an external accounting or banking system." });
