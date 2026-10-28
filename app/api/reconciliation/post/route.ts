@@ -16,18 +16,20 @@ export async function POST(request: NextRequest) {
     );
     const row = rows[0];
     if (!row) return NextResponse.json({ error: "Statement row was not found." }, { status: 404 });
-    if (row.match_status !== "approved" || !row.matched_order_id) return NextResponse.json({ error: "Only an explicitly approved match linked to a verified order can be posted." }, { status: 409 });
     const existing = await reconciliationDb<Array<{ id: string }>>(`ledger_entries?statement_row_id=eq.${encodeURIComponent(row.id)}&select=id`, { method: "GET" });
     if (existing.length) {
-      // Recover safely if the ledger insert succeeded but a later status/audit write failed.
-      const now = new Date().toISOString();
-      await reconciliationDb(`bank_statement_rows?id=eq.${encodeURIComponent(row.id)}&match_status=eq.approved`, {
-        method: "PATCH", headers: { Prefer: "return=minimal" },
-        body: JSON.stringify({ match_status: "posted", match_reason: "Exact reference, amount and currency were verified against a server-verified completed PayPal capture. A human reviewer approved this row and it was posted to the PayProof AI internal demo ledger.", ledger_posted_at: now, updated_at: now })
-      });
+      // Idempotently handle repeat requests and recover a partial status write without creating another ledger entry.
+      if (row.match_status !== "posted") {
+        const now = new Date().toISOString();
+        await reconciliationDb(`bank_statement_rows?id=eq.${encodeURIComponent(row.id)}`, {
+          method: "PATCH", headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ match_status: "posted", match_reason: "Exact reference, amount and currency were verified against a server-verified completed PayPal capture. A human reviewer approved this row and it was posted to the PayProof AI internal demo ledger.", ledger_posted_at: now, updated_at: now })
+        });
+      }
       await auditReconciliation({ statement_row_id: row.id, order_id: row.matched_order_id, action: "duplicate_post_prevented", actor, details: { transaction_id: row.transaction_id, existing_ledger_entry_id: existing[0].id } });
-      return NextResponse.json({ ok: true, alreadyPosted: true, ledgerEntryId: existing[0].id, message: "An existing ledger entry was found. No duplicate was created; the reconciliation status was repaired and audited." });
+      return NextResponse.json({ ok: true, alreadyPosted: true, ledgerEntryId: existing[0].id, message: "This statement row already has a ledger entry. No duplicate was created; the existing posting was confirmed and audited." });
     }
+    if (row.match_status !== "approved" || !row.matched_order_id) return NextResponse.json({ error: "Only an explicitly approved match linked to a verified order can be posted." }, { status: 409 });
     const order = await reconciliationDb<Array<{ id: string; order_number: string; payment_status: string; total_amount: string; currency: string; paypal_order_id: string | null; paypal_capture_id: string | null; verified_at: string | null }>>(
       `orders?id=eq.${encodeURIComponent(row.matched_order_id)}&select=id,order_number,payment_status,total_amount,currency,paypal_order_id,paypal_capture_id,verified_at`,
       { method: "GET" }
