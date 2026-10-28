@@ -15,8 +15,9 @@ Small merchants often have order details in conversations and payment updates in
 - **Overview workspace:** clearly labelled sample dashboard, order-intake workflow and Sandbox checkout entry point.
 - **Payment evidence:** order references, expected verification checks, amount/currency comparison and a visual checkout-to-record flow.
 - **AI payment assistant:** asks questions about synthetic evidence scenarios and uses Groq to explain what the supplied fields mean. It is advisory and cannot change payment status.
-- **Exception review:** sample scenarios for amount mismatch, missing capture evidence and records that need source confirmation, each with safe next steps.
-- **Audit trail:** an illustrative event timeline showing which identifiers and verification outcomes should be retained.
+- **Reconciliation workspace:** protected CSV bank-statement import, duplicate transaction detection, exact-reference/amount/currency matching against verified PayPal captures, exception queue, reviewer approval, internal demo-ledger posting and audit events. Matching never auto-posts. A reviewer token is required for the protected workspace API.
+- **Exception review:** sample guidance plus a live, token-protected reconciliation queue for unmatched or inconsistent statement records.
+- **Audit trail:** persistent import, matching, approval/rejection and internal ledger-posting events with actor and timestamp. The audit log is an operational prototype, not a tamper-proof or externally certified ledger.
 - **PayPal Sandbox integration:** server-priced catalogue checkout, capture verification, and Supabase order/event persistence code.
 - **Responsive design:** desktop and mobile layouts, clear statuses, loading/error messaging, and keyboard-friendly controls.
 
@@ -43,6 +44,8 @@ This is an active prototype, **not production-ready**.
 - [x] Groq-backed structured order extraction endpoint (requires `GROQ_API_KEY`)
 - [x] Groq-backed evidence explanation endpoint for synthetic scenarios (requires `GROQ_API_KEY`)
 - [x] Supabase REST persistence code for pending/verified orders and idempotent capture events
+- [x] CSV statement import, transaction deduplication, protected reconciliation endpoints, evidence matching, exception review decisions and internal demo-ledger approval/posting workflow (needs real end-to-end test)
+- [ ] Configure `RECONCILIATION_ADMIN_TOKEN` in the Vercel environment for each deployment where the protected console should be enabled
 - [ ] Complete a fresh end-to-end Sandbox checkout and confirm both expected Supabase rows exist
 - [ ] Confirm the Groq key is configured in the Vercel environments and test the AI UI there
 - [ ] Add automated tests for successful, cancelled, pending, duplicate and mismatched transactions
