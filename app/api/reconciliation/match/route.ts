@@ -4,7 +4,7 @@ import { auditReconciliation, reconciliationActor, reconciliationAuthorized, rec
 export const runtime = "nodejs";
 
 type StatementRow = { id: string; transaction_id: string; amount: string; currency: string; reference: string | null; match_status: string };
-type VerifiedOrder = { id: string; order_number: string; total_amount: string; currency: string; payment_status: string; paypal_capture_id: string | null; verified_at: string | null };
+type VerifiedOrder = { id: string; order_number: string; total_amount: string; currency: string; payment_status: string; paypal_order_id: string | null; paypal_capture_id: string | null; verified_at: string | null };
 
 export async function POST(request: NextRequest) {
   if (!reconciliationAuthorized(request)) return NextResponse.json({ error: "Authorised reconciliation access is required." }, { status: 401 });
@@ -13,8 +13,13 @@ export async function POST(request: NextRequest) {
   const actor = reconciliationActor(body.actor);
   try {
     const rows = await reconciliationDb<StatementRow[]>("bank_statement_rows?select=id,transaction_id,amount,currency,reference,match_status&match_status=in.(unmatched,exception)&order=created_at.asc&limit=500", { method: "GET" });
-    const orders = await reconciliationDb<VerifiedOrder[]>("orders?select=id,order_number,total_amount,currency,payment_status,paypal_capture_id,verified_at&payment_status=eq.paid&payment_environment=eq.sandbox&paypal_capture_id=not.is.null&verified_at=not.is.null&limit=2000", { method: "GET" });
-    const byReference = new Map(orders.map((order) => [order.order_number.toLowerCase(), order]));
+    const orders = await reconciliationDb<VerifiedOrder[]>("orders?select=id,order_number,total_amount,currency,payment_status,paypal_order_id,paypal_capture_id,verified_at&payment_status=eq.paid&payment_environment=eq.sandbox&paypal_capture_id=not.is.null&verified_at=not.is.null&limit=2000", { method: "GET" });
+    const byReference = new Map<string, VerifiedOrder>();
+    for (const order of orders) {
+      for (const referenceValue of [order.order_number, order.paypal_order_id, order.paypal_capture_id]) {
+        if (referenceValue) byReference.set(referenceValue.toLowerCase(), order);
+      }
+    }
     const totals = { exactMatch: 0, amountOrReferenceException: 0, unmatched: 0 };
     for (const row of rows) {
       const reference = (row.reference || "").trim().toLowerCase();
