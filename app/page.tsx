@@ -97,17 +97,28 @@ export default function Home() {
     }
   }
 
+  function updateDraftField(field: "item" | "quantity", value: string) {
+    setDraft((current) => current ? { ...current, [field]: value } : current);
+    setValidationResult(null);
+  }
+
   function validateDraftDetails() {
     if (!draft) return;
     const issues: string[] = [];
-    if (!draft.item.trim() || draft.item.startsWith("Unmatched")) issues.push("Confirm the product name.");
-    if (draft.quantity === "Not specified" || !Number.isInteger(Number(draft.quantity)) || Number(draft.quantity) < 1) issues.push("Enter a valid quantity of at least 1.");
+    const product = draft.item.trim();
+    const quantity = draft.quantity.trim();
+    if (product.length < 2 || /^(unmatched|unknown|not specified|unclear|n\/a|none)(\b|\s)/i.test(product)) {
+      issues.push("Enter a clear product name and confirm it matches the customer message.");
+    }
+    if (!/^[1-9]\d*$/.test(quantity) || !Number.isSafeInteger(Number(quantity)) || Number(quantity) > 100000) {
+      issues.push("Enter a whole-number quantity from 1 to 100,000.");
+    }
     if (issues.length) {
       setValidationResult({ valid: false, message: issues.join(" ") });
-      setNotice("Draft needs your attention. Resolve the highlighted details before proceeding.");
+      setNotice("Draft needs your attention. Correct the highlighted details, then validate again.");
       return;
     }
-    setValidationResult({ valid: true, message: "Product and quantity are present and pass the basic format check. This is not a saved order and does not verify payment." });
+    setValidationResult({ valid: true, message: "The product field and whole-number quantity pass basic checks. Compare them with the original customer message before proceeding. Nothing has been saved and payment is not verified." });
     setNotice("Draft details checked. Nothing has been saved and payment is not verified.");
   }
 
@@ -207,7 +218,7 @@ export default function Home() {
               <button type="button" className="secondary-button full-button" onClick={prepareDraft} disabled={draftLoading} aria-busy={draftLoading}>{draftLoading ? "Preparing draft…" : "Prepare order draft"} <span>{draftLoading ? "…" : "→"}</span></button>
               {draftError && <p className="draft-error" role="alert">{draftError}</p>}
               <p className="draft-action-hint" aria-live="polite">{draftLoading ? "Please wait while the message is analysed." : draftError ? "No order was created. You can retry after the AI service issue is resolved." : draft ? "Draft prepared. Review every field before taking any action." : "Enter a customer message above, then select Prepare order draft."}</p>
-              {draft && <div className="draft-result"><div className="draft-title">Draft for review <span>NOT SAVED</span></div><div className="draft-line"><span>Product</span><strong>{draft.item}</strong></div><div className="draft-line"><span>Quantity</span><strong>{draft.quantity}</strong></div><p>{draft.note}</p><button type="button" className="primary-button full-button" onClick={validateDraftDetails}>Validate draft details</button>{validationResult && <div className={`draft-validation ${validationResult.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{validationResult.valid ? "✓ Details checked" : "Review required"}</strong><p>{validationResult.message}</p></div>}</div>}
+              {draft && <div className="draft-result"><div className="draft-title">Draft for review <span>NOT SAVED</span></div><p className="draft-review-hint">Edit the suggested fields, then compare them with the original customer message above.</p><label className="draft-field-label" htmlFor="draft-product">PRODUCT NAME</label><input id="draft-product" className="draft-edit-input" type="text" value={draft.item} maxLength={120} autoComplete="off" onChange={(event) => updateDraftField("item", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-quantity">QUANTITY</label><input id="draft-quantity" className="draft-edit-input" type="number" min="1" max="100000" step="1" inputMode="numeric" value={draft.quantity === "Not specified" ? "" : draft.quantity} placeholder="Enter quantity" onChange={(event) => updateDraftField("quantity", event.target.value)} aria-describedby="draft-review-help" /><p id="draft-review-help" className="draft-review-hint">Validation checks formatting only; it cannot confirm product availability, price, customer intent, or payment.</p>{draft.note && <p className="draft-note">{draft.note}</p>}<button type="button" className="primary-button full-button" onClick={validateDraftDetails}>Validate draft details</button>{validationResult && <div className={`draft-validation ${validationResult.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{validationResult.valid ? "✓ Details checked" : "Review required"}</strong><p>{validationResult.message}</p></div>}</div>}
             </section>
 
             <section className="attention-card" id="activity">
