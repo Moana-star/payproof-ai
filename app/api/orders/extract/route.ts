@@ -18,7 +18,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Messages must be ${MAX_MESSAGE_LENGTH} characters or fewer.` }, { status: 413 });
   }
 
-  const apiKey = process.env.AI_GATEWAY_API_KEY || process.env.AI_API_KEY;
+  // On Vercel, prefer the deployment OIDC token so a stale/restricted static key cannot override it.
+  // Local development falls back to the configured AI Gateway API key.
+  const apiKey = process.env.VERCEL_OIDC_TOKEN || process.env.AI_GATEWAY_API_KEY || process.env.AI_API_KEY;
   // Prefer the explicit Vercel AI Gateway setting; retain AI_MODEL for compatibility.
   const model = process.env.AI_GATEWAY_MODEL || process.env.AI_MODEL;
   if (!apiKey || !model || model === "replace_me" || model === "provider/model-name" || model === "paste_the_exact_model_id_here") {
