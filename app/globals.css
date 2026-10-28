@@ -80,3 +80,8 @@ h1,h2,p{margin-top:0}h1{font:800 27px Manrope,sans-serif;letter-spacing:-1px;mar
 .workflow-step p{font-size:10px;line-height:1.65;color:#838799;margin:0}
 @media(max-width:1100px){.value-strip,.workflow-grid{grid-template-columns:1fr}.value-card p{max-width:unset}}
 @media(max-width:720px){.workflow-heading{align-items:flex-start;flex-direction:column}.workflow-heading h2{font-size:15px}.value-card{padding:16px}.workflow-step{padding:15px}}
+
+
+/* Keep AI order-intake failures visible beside the action that triggered them. */
+.draft-error{margin:12px 0 0;padding:12px 14px;border:1px solid #f0c4c4;border-radius:9px;background:#fff4f4;color:#9b2929;font-size:12px;line-height:1.6;font-weight:650}
+.draft-action-hint{line-height:1.6}
