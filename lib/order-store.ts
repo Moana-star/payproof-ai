@@ -87,11 +87,11 @@ export async function saveVerifiedOrder(order: StoredOrder, captureId: string) {
   const verifiedAt = order.verified_at || new Date().toISOString();
   // Upsert on the stable internal order reference makes repeated browser returns
   // safe; unique PayPal order/capture IDs provide a second duplicate guard.
-  await supabaseRequest<unknown[]>(
-    "orders?on_conflict=order_number",
+  const savedOrders = await supabaseRequest<Array<{ id: string }>>(
+    "orders?on_conflict=order_number&select=id",
     {
       method: "POST",
-      headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      headers: { Prefer: "resolution=merge-duplicates,return=representation" },
       body: JSON.stringify({
         ...order,
         paypal_capture_id: captureId,
@@ -103,11 +103,17 @@ export async function saveVerifiedOrder(order: StoredOrder, captureId: string) {
     }
   );
 
-  // Capture ID is unique, so repeated verification cannot create duplicate events.
+  const savedOrderId = savedOrders[0]?.id;
+  if (!savedOrderId) {
+    throw new Error("Verified order was not returned by order storage.");
+  }
+
+  // Keep a relational link to the order and make capture-event retries idempotent.
   await supabaseRequest<unknown[]>("payment_events?on_conflict=provider_event_id", {
     method: "POST",
     headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
     body: JSON.stringify({
+      order_id: savedOrderId,
       provider: "paypal",
       event_type: "sandbox.capture.completed",
       provider_event_id: captureId,
