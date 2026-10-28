@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
+import { isOrderStoreConfigured, saveVerifiedOrder } from "@/lib/order-store";
 import { getPayPalAccessToken, paypalRequest } from "@/lib/paypal";
 
 export const runtime = "nodejs";
@@ -11,6 +12,7 @@ const CATALOG = {
   "handwoven-market-tote": { name: "Handwoven market tote", unitPriceCents: 3800 }
 } as const;
 
+type ProductId = keyof typeof CATALOG;
 type PayPalCapture = {
   id?: string;
   status?: string;
@@ -32,15 +34,18 @@ function parseOrderDetails(unit: PurchaseUnit | undefined) {
   if (!unit || !unit.reference_id || !/^PP-[0-9a-f-]{36}$/i.test(unit.reference_id)) return null;
   const match = /^PAYPROOF\|([a-z-]+)\|([1-9]\d{0,2})$/.exec(unit.custom_id ?? "");
   if (!match) return null;
-  const product = CATALOG[match[1] as keyof typeof CATALOG];
+  const productId = match[1] as ProductId;
+  const product = CATALOG[productId];
   const quantity = Number(match[2]);
   if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > 100) return null;
   const totalCents = product.unitPriceCents * quantity;
   if (!Number.isSafeInteger(totalCents) || totalCents > 100000000) return null;
   return {
     referenceId: unit.reference_id,
+    productId,
     product: product.name,
     quantity,
+    unitPrice: (product.unitPriceCents / 100).toFixed(2),
     amount: (totalCents / 100).toFixed(2)
   };
 }
@@ -69,9 +74,9 @@ function checkOrder(order: PayPalOrder) {
   };
 }
 
-function resultResponse(order: PayPalOrder) {
+async function resultResponse(order: PayPalOrder) {
   const checked = checkOrder(order);
-  if (!checked.verified || !checked.details) {
+  if (!checked.verified || !checked.details || !checked.capture?.id || !order.id) {
     return NextResponse.json({
       verified: false,
       status: "REVIEW_REQUIRED",
@@ -80,21 +85,53 @@ function resultResponse(order: PayPalOrder) {
     }, { status: 409 });
   }
 
+  let persisted = false;
+  let persistenceWarning: string | undefined;
+  if (isOrderStoreConfigured()) {
+    try {
+      const result = await saveVerifiedOrder({
+        order_number: checked.details.referenceId,
+        product_id: checked.details.productId,
+        product_name: checked.details.product,
+        quantity: checked.details.quantity,
+        unit_amount: checked.details.unitPrice,
+        total_amount: checked.details.amount,
+        currency: CURRENCY,
+        payment_environment: "sandbox",
+        payment_status: "paid",
+        paypal_order_id: order.id,
+        paypal_capture_id: checked.capture.id,
+        paypal_reference_id: checked.details.referenceId,
+        verified_at: new Date().toISOString()
+      }, checked.capture.id);
+      persisted = result.persisted;
+    } catch {
+      // The payment remains verified by PayPal, but do not claim it was saved.
+      // A retry of this return route can safely retry persistence.
+      persistenceWarning = "Payment is verified by PayPal, but saving the order failed. Do not fulfil until the order is visible in the workspace.";
+    }
+  } else {
+    persistenceWarning = "Payment is verified by PayPal, but database credentials are not configured. The order has not been saved.";
+  }
+
   return NextResponse.json({
     verified: true,
     status: "COMPLETED",
-    message: "PayPal Sandbox confirms the completed capture and matches it to the server-priced catalogue order.",
+    message: persisted
+      ? "PayPal Sandbox confirms the completed capture and the order was saved."
+      : "PayPal Sandbox confirms the completed capture and matches it to the server-priced catalogue order.",
     transaction: {
       orderId: order.id,
       referenceId: checked.details.referenceId,
-      captureId: checked.capture?.id,
+      captureId: checked.capture.id,
       product: checked.details.product,
       quantity: checked.details.quantity,
-      amount: checked.capture?.amount?.value,
-      currency: checked.capture?.amount?.currency_code
+      amount: checked.capture.amount?.value,
+      currency: checked.capture.amount?.currency_code
     },
     sandbox: true,
-    persisted: false
+    persisted,
+    ...(persistenceWarning ? { persistenceWarning } : {})
   });
 }
 
