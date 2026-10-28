@@ -18,25 +18,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Messages must be ${MAX_MESSAGE_LENGTH} characters or fewer.` }, { status: 413 });
   }
 
-  // Prefer Groq's free-tier API when configured. It does not require a payment card
-  // for free-tier use; the provider may still require account/phone verification.
-  const groqKey = process.env.GROQ_API_KEY;
-  const apiKey = groqKey || process.env.VERCEL_OIDC_TOKEN || process.env.AI_GATEWAY_API_KEY || process.env.AI_API_KEY;
-  const model = groqKey
-    ? (process.env.GROQ_MODEL || "openai/gpt-oss-20b")
-    : (process.env.AI_GATEWAY_MODEL || process.env.AI_MODEL);
-  if (!apiKey || !model || model === "replace_me" || model === "provider/model-name" || model === "paste_the_exact_model_id_here") {
+  // Use Groq's no-card free tier. Do not silently fall back to Vercel AI Gateway,
+  // which is currently blocked for this project by a payment-card verification gate.
+  const apiKey = process.env.GROQ_API_KEY;
+  const model = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
+  if (!apiKey) {
     return NextResponse.json({
-      error: "AI order intake is not configured. Add a GROQ_API_KEY from GroqCloud to use the no-card free tier, then redeploy."
+      error: "AI order intake needs a Groq API key. Create a free key at console.groq.com and add it to Vercel as GROQ_API_KEY; no payment card is needed for Groq's free tier."
     }, { status: 503 });
   }
 
-  const provider = groqKey ? "Groq" : "AI Gateway";
   try {
-    const endpoint = groqKey
-      ? "https://api.groq.com/openai/v1/chat/completions"
-      : (process.env.AI_GATEWAY_URL || "https://ai-gateway.vercel.sh/v1/chat/completions");
-    const response = await fetch(endpoint, {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       cache: "no-store",
@@ -55,10 +48,10 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       // Log only the short provider error body, never customer text or credentials.
       const providerError = (await response.text()).slice(0, 500);
-      console.error(`[orders/extract] ${provider} HTTP ${response.status}: ${providerError}`);
+      console.error(`[orders/extract] Groq HTTP ${response.status}: ${providerError}`);
       const error = response.status === 429
-        ? `${provider} free-tier limit reached. No draft was created; wait and try again or review the message manually.`
-        : `${provider} returned HTTP ${response.status}. No draft was created; please review the message manually.`;
+        ? "Groq's free-tier limit was reached. No draft was created; wait and try again or review the message manually."
+        : `Groq returned HTTP ${response.status}. No draft was created; please review the message manually.`;
       return NextResponse.json({ error }, { status: 502 });
     }
     const payload = await response.json() as { choices?: Array<{ message?: { content?: unknown } }> };
@@ -74,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ draft, advisoryOnly: true, saved: false, paymentVerified: false });
   } catch (error) {
-    console.error(`[orders/extract] ${provider} request or response validation failed:`, error instanceof Error ? error.name : "UnknownError");
+    console.error("[orders/extract] Groq request or response validation failed:", error instanceof Error ? error.name : "UnknownError");
     return NextResponse.json({ error: "The AI response could not be validated. No order was created; please review the message manually." }, { status: 502 });
   }
 }
