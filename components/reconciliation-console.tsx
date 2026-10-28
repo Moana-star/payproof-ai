@@ -85,6 +85,18 @@ export function ReconciliationConsole() {
     finally { setBusy(""); }
   }
 
+  async function approveAndPost(row: Row) {
+    if (!window.confirm(`Approve this exact reference, amount and currency match, then post ${row.amount} ${row.currency} to the PayProof AI internal demo ledger? The approval will be audited before posting. No external bank/accounting system is changed.`)) return;
+    setBusy(row.id); setError("");
+    try {
+      const approval = await api("/api/reconciliation/review", { rowId: row.id, decision: "approve", actor, note: "Human reviewer approved exact evidence match before internal ledger posting." });
+      const posting = await api("/api/reconciliation/post", { rowId: row.id, actor });
+      setNotice(`${approval.message} ${posting.message}`);
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : "Approval or ledger posting failed. Refresh the queue to confirm the recorded state."); }
+    finally { setBusy(""); }
+  }
+
   async function post(row: Row) {
     if (!window.confirm(`Post ${row.amount} ${row.currency} to the PayProof AI internal demo ledger? This does not post to a bank or external accounting system.`)) return;
     setBusy(row.id); setError("");
@@ -145,7 +157,7 @@ export function ReconciliationConsole() {
         <td><span className={`recon-status ${row.match_status === "posted" ? "recon-status-good" : row.match_status === "matched_pending_review" || row.match_status === "approved" ? "recon-status-warn" : "recon-status-risk"}`}>{statusLabels[row.match_status]}</span></td>
         <td className="recon-reason-cell">{row.match_reason || "Run matching to evaluate this record."}</td>
         <td><div className="recon-row-actions">
-          {row.match_status === "matched_pending_review" && <><button onClick={() => decide(row, "approve")} disabled={!!busy} className="recon-approve-button">{busy === row.id ? "Saving…" : "Approve"}</button><button onClick={() => decide(row, "reject")} disabled={!!busy} className="recon-reject-button">Reject</button></>}
+          {row.match_status === "matched_pending_review" && <><button onClick={() => approveAndPost(row)} disabled={!!busy} className="recon-post-button">{busy === row.id ? "Working…" : "Approve & post"}</button><button onClick={() => decide(row, "approve")} disabled={!!busy} className="recon-approve-button">Approve only</button><button onClick={() => decide(row, "reject")} disabled={!!busy} className="recon-reject-button">Reject</button></>}
           {row.match_status === "approved" && <button onClick={() => post(row)} disabled={!!busy} className="recon-post-button">{busy === row.id ? "Posting…" : "Post to demo ledger"}</button>}
           {row.match_status === "exception" && <span className="recon-manual-only">Resolve at source</span>}
           {row.match_status === "posted" && <span className="recon-posted-label">✓ Audited</span>}
