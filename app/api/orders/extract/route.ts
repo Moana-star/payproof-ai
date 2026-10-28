@@ -18,24 +18,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Messages must be ${MAX_MESSAGE_LENGTH} characters or fewer.` }, { status: 413 });
   }
 
-  // On Vercel, prefer the deployment OIDC token so a stale/restricted static key cannot override it.
-  // Local development falls back to the configured AI Gateway API key.
-  const apiKey = process.env.VERCEL_OIDC_TOKEN || process.env.AI_GATEWAY_API_KEY || process.env.AI_API_KEY;
-  // Prefer the explicit Vercel AI Gateway setting; retain AI_MODEL for compatibility.
-  const model = process.env.AI_GATEWAY_MODEL || process.env.AI_MODEL;
+  // Prefer Groq's free-tier API when configured. It does not require a payment card
+  // for free-tier use; the provider may still require account/phone verification.
+  const groqKey = process.env.GROQ_API_KEY;
+  const apiKey = groqKey || process.env.VERCEL_OIDC_TOKEN || process.env.AI_GATEWAY_API_KEY || process.env.AI_API_KEY;
+  const model = groqKey
+    ? (process.env.GROQ_MODEL || "openai/gpt-oss-20b")
+    : (process.env.AI_GATEWAY_MODEL || process.env.AI_MODEL);
   if (!apiKey || !model || model === "replace_me" || model === "provider/model-name" || model === "paste_the_exact_model_id_here") {
     return NextResponse.json({
-      error: "The AI assistant is not configured yet. Add AI_GATEWAY_API_KEY and AI_GATEWAY_MODEL to the Vercel project environment, then redeploy."
+      error: "AI order intake is not configured. Add a GROQ_API_KEY from GroqCloud to use the no-card free tier, then redeploy."
     }, { status: 503 });
   }
 
+  const provider = groqKey ? "Groq" : "AI Gateway";
   try {
-    const endpoint = process.env.AI_GATEWAY_URL || "https://ai-gateway.vercel.sh/v1/chat/completions";
+    const endpoint = groqKey
+      ? "https://api.groq.com/openai/v1/chat/completions"
+      : (process.env.AI_GATEWAY_URL || "https://ai-gateway.vercel.sh/v1/chat/completions");
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       cache: "no-store",
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
       body: JSON.stringify({
         model,
         temperature: 0.1,
@@ -48,13 +53,12 @@ export async function POST(request: NextRequest) {
       })
     });
     if (!response.ok) {
-      // Capture the gateway's short error body in server logs so authentication/access
-      // failures can be distinguished from provider/model errors. Never log the prompt or credentials.
-      const gatewayError = (await response.text()).slice(0, 500);
-      console.error(`[orders/extract] AI Gateway HTTP ${response.status}: ${gatewayError}`);
-      const error = response.status === 403
-        ? "AI Gateway denied access (HTTP 403). No draft was created. This may require a key or team-access fix; please try again shortly."
-        : `The AI provider returned HTTP ${response.status}. No draft was created. Please try again.`;
+      // Log only the short provider error body, never customer text or credentials.
+      const providerError = (await response.text()).slice(0, 500);
+      console.error(`[orders/extract] ${provider} HTTP ${response.status}: ${providerError}`);
+      const error = response.status === 429
+        ? `${provider} free-tier limit reached. No draft was created; wait and try again or review the message manually.`
+        : `${provider} returned HTTP ${response.status}. No draft was created; please review the message manually.`;
       return NextResponse.json({ error }, { status: 502 });
     }
     const payload = await response.json() as { choices?: Array<{ message?: { content?: unknown } }> };
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ draft, advisoryOnly: true, saved: false, paymentVerified: false });
   } catch (error) {
-    console.error("[orders/extract] AI request or response validation failed:", error instanceof Error ? error.name : "UnknownError");
+    console.error(`[orders/extract] ${provider} request or response validation failed:`, error instanceof Error ? error.name : "UnknownError");
     return NextResponse.json({ error: "The AI response could not be validated. No order was created; please review the message manually." }, { status: 502 });
   }
 }
