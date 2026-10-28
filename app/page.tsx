@@ -14,10 +14,16 @@ type Order = {
 };
 
 const initialOrders: Order[] = [
-  { id: "PP-1048", customer: "Amina W.", item: "Handwoven market tote", amount: "$38.00", status: "Paid", time: "Verified just now · Demo data", initials: "AW" },
-  { id: "PP-1047", customer: "Daniel K.", item: "Coffee gift set", amount: "$24.50", status: "Awaiting payment", time: "Checkout not completed · Demo data", initials: "DK" },
-  { id: "PP-1046", customer: "Maya R.", item: "Ceramic mug pair", amount: "$42.00", status: "Review needed", time: "Payment evidence missing · Demo data", initials: "MR" }
+  { id: "PP-1048", customer: "Amina W.", item: "Handwoven market tote", amount: "$38.00", status: "Paid", time: "Illustrative only · Not live-verified", initials: "AW" },
+  { id: "PP-1047", customer: "Daniel K.", item: "Coffee gift set", amount: "$24.50", status: "Awaiting payment", time: "Sample record · Not saved", initials: "DK" },
+  { id: "PP-1046", customer: "Maya R.", item: "Ceramic mug pair", amount: "$42.00", status: "Review needed", time: "Sample record · Not saved", initials: "MR" }
 ];
+
+const CATALOG_PRICES: Record<string, number> = {
+  "Coffee gift set": 24.5,
+  "Ceramic mug pair": 42,
+  "Handwoven market tote": 38
+};
 
 const statusClass: Record<OrderStatus, string> = {
   Paid: "paid",
@@ -41,11 +47,16 @@ export default function Home() {
     [orders]
   );
 
-  async function startSandboxCheckout() {
+  async function startSandboxCheckout(product = "Coffee gift set", quantity = 1) {
+    if (checkoutLoading) return;
     setCheckoutLoading(true);
-    setNotice("Creating a fixed-price PayPal Sandbox checkout. No real money will be processed.");
+    setNotice("Creating a PayPal Sandbox checkout using the server-priced catalogue. No real money will be processed.");
     try {
-      const response = await fetch("/api/paypal/create-order", { method: "POST" });
+      const response = await fetch("/api/paypal/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product, quantity })
+      });
       const data = (await response.json()) as { approvalUrl?: string; error?: string };
       if (!response.ok || !data.approvalUrl) {
         throw new Error(data.error || "Could not create a PayPal Sandbox checkout.");
@@ -107,18 +118,18 @@ export default function Home() {
     const issues: string[] = [];
     const product = draft.item.trim();
     const quantity = draft.quantity.trim();
-    if (product.length < 2 || /^(unmatched|unknown|not specified|unclear|n\/a|none)(\b|\s)/i.test(product)) {
-      issues.push("Enter a clear product name and confirm it matches the customer message.");
+    if (!Object.prototype.hasOwnProperty.call(CATALOG_PRICES, product)) {
+      issues.push("Choose one supported catalogue product exactly: Coffee gift set, Ceramic mug pair, or Handwoven market tote.");
     }
-    if (!/^[1-9]\d*$/.test(quantity) || !Number.isSafeInteger(Number(quantity)) || Number(quantity) > 100000) {
-      issues.push("Enter a whole-number quantity from 1 to 100,000.");
+    if (!/^[1-9]\d*$/.test(quantity) || !Number.isSafeInteger(Number(quantity)) || Number(quantity) > 100) {
+      issues.push("Enter a whole-number quantity from 1 to 100.");
     }
     if (issues.length) {
       setValidationResult({ valid: false, message: issues.join(" ") });
       setNotice("Draft needs your attention. Correct the highlighted details, then validate again.");
       return;
     }
-    setValidationResult({ valid: true, message: "The product field and whole-number quantity pass basic checks. Compare them with the original customer message before proceeding. Nothing has been saved and payment is not verified." });
+    setValidationResult({ valid: true, message: "The product is in the supported catalogue and the quantity is valid. Confirm both against the original customer message. The server will calculate the price; this draft is not saved and payment is not verified." });
     setNotice("Draft details checked. Nothing has been saved and payment is not verified.");
   }
 
@@ -218,7 +229,7 @@ export default function Home() {
               <button type="button" className="secondary-button full-button" onClick={prepareDraft} disabled={draftLoading} aria-busy={draftLoading}>{draftLoading ? "Preparing draft…" : "Prepare order draft"} <span>{draftLoading ? "…" : "→"}</span></button>
               {draftError && <p className="draft-error" role="alert">{draftError}</p>}
               <p className="draft-action-hint" aria-live="polite">{draftLoading ? "Please wait while the message is analysed." : draftError ? "No order was created. You can retry after the AI service issue is resolved." : draft ? "Draft prepared. Review every field before taking any action." : "Enter a customer message above, then select Prepare order draft."}</p>
-              {draft && <div className="draft-result"><div className="draft-title">Draft for review <span>NOT SAVED</span></div><p className="draft-review-hint">Edit the suggested fields, then compare them with the original customer message above.</p><label className="draft-field-label" htmlFor="draft-product">PRODUCT NAME</label><input id="draft-product" className="draft-edit-input" type="text" value={draft.item} maxLength={120} autoComplete="off" onChange={(event) => updateDraftField("item", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-quantity">QUANTITY</label><input id="draft-quantity" className="draft-edit-input" type="number" min="1" max="100000" step="1" inputMode="numeric" value={draft.quantity === "Not specified" ? "" : draft.quantity} placeholder="Enter quantity" onChange={(event) => updateDraftField("quantity", event.target.value)} aria-describedby="draft-review-help" /><p id="draft-review-help" className="draft-review-hint">Validation checks formatting only; it cannot confirm product availability, price, customer intent, or payment.</p>{draft.note && <p className="draft-note">{draft.note}</p>}<button type="button" className="primary-button full-button" onClick={validateDraftDetails}>Validate draft details</button>{validationResult && <div className={`draft-validation ${validationResult.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{validationResult.valid ? "✓ Details checked" : "Review required"}</strong><p>{validationResult.message}</p></div>}</div>}
+              {draft && <div className="draft-result"><div className="draft-title">Draft for review <span>NOT SAVED</span></div><p className="draft-review-hint">Edit the suggested fields, then compare them with the original customer message above.</p><label className="draft-field-label" htmlFor="draft-product">PRODUCT NAME</label><input id="draft-product" className="draft-edit-input" type="text" value={draft.item} maxLength={120} autoComplete="off" onChange={(event) => updateDraftField("item", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-quantity">QUANTITY</label><input id="draft-quantity" className="draft-edit-input" type="number" min="1" max="100000" step="1" inputMode="numeric" value={draft.quantity === "Not specified" ? "" : draft.quantity} placeholder="Enter quantity" onChange={(event) => updateDraftField("quantity", event.target.value)} aria-describedby="draft-review-help" /><p id="draft-review-help" className="draft-review-hint">Validation checks formatting only; it cannot confirm product availability, price, customer intent, or payment.</p>{draft.note && <p className="draft-note">{draft.note}</p>}<button type="button" className="primary-button full-button" onClick={validateDraftDetails}>Validate draft details</button>{validationResult && <div className={`draft-validation ${validationResult.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{validationResult.valid ? "✓ Details checked" : "Review required"}</strong><p>{validationResult.message}</p></div>}{validationResult?.valid && <div className="draft-checkout"><div className="draft-total"><span>Estimated total · {draft.item}</span><strong>${(CATALOG_PRICES[draft.item] * Number(draft.quantity)).toFixed(2)} USD</strong></div><p>Sandbox checkout only. The server independently validates the product and calculates the final amount. This does not save an order record.</p><button type="button" className="primary-button full-button" onClick={() => startSandboxCheckout(draft.item, Number(draft.quantity))} disabled={checkoutLoading}>{checkoutLoading ? "Connecting to PayPal…" : "Continue to PayPal Sandbox"} <span>↗</span></button></div>}</div>}
             </section>
 
             <section className="attention-card" id="activity">
