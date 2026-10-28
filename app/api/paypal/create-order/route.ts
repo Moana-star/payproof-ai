@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
+import { createPendingOrder, updateOrderByNumber } from "@/lib/order-store";
 import { getPayPalAccessToken, paypalRequest } from "@/lib/paypal";
 
 export const runtime = "nodejs";
@@ -49,7 +50,23 @@ export async function POST(request: NextRequest) {
   // selected and calculated here, on the server, never trusted from the client.
   const referenceId = `PP-${randomUUID()}`;
   const amount = money(totalCents);
+  const orderRecord = {
+    order_number: referenceId,
+    product_id: product.id,
+    product_name: productName,
+    quantity,
+    unit_amount: money(product.unitPriceCents),
+    total_amount: amount,
+    currency: CURRENCY as "USD",
+    payment_environment: "sandbox" as const,
+    payment_status: "awaiting_payment" as const,
+    paypal_reference_id: referenceId
+  };
+
   try {
+    // Persist the server-priced draft before redirecting to PayPal. If storage
+    // is configured but unavailable, fail closed rather than silently losing it.
+    const pending = await createPendingOrder(orderRecord);
     const appBaseUrl = (
       process.env.APP_URL ||
       process.env.NEXT_PUBLIC_APP_URL ||
@@ -93,9 +110,11 @@ export async function POST(request: NextRequest) {
 
     const approvalUrl = order.links?.find((link) => link.rel === "approve")?.href;
     if (!order.id || !approvalUrl) {
+      await updateOrderByNumber(referenceId, { payment_status: "failed" });
       return NextResponse.json({ error: "PayPal did not return a usable approval link." }, { status: 502 });
     }
 
+    const linked = await updateOrderByNumber(referenceId, { paypal_order_id: order.id });
     return NextResponse.json({
       orderId: order.id,
       approvalUrl,
@@ -105,7 +124,7 @@ export async function POST(request: NextRequest) {
       amount,
       currency: CURRENCY,
       sandbox: true,
-      saved: false
+      saved: pending.persisted && linked.persisted
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to create a PayPal Sandbox order.";
