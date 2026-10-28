@@ -173,7 +173,7 @@ export default function Home() {
             <button className="primary-button" onClick={() => document.getElementById("intake")?.scrollIntoView({ behavior: "smooth" })}><span>＋</span> New order</button>
           </div>
 
-          {showGuide && <div className="guide-panel"><strong>How PayProof AI works</strong><p>Order messages can become reviewable drafts. PayPal server-side verification will determine payment status once the sandbox integration is configured. All records on this screen are illustrative demo data.</p></div>}
+          {showGuide && <div className="guide-panel"><strong>How PayProof AI works</strong><p>Order messages become reviewable drafts. For a new checkout, PayProof AI verifies the PayPal Sandbox response server-side and attempts to save the verified order to Supabase. The dashboard rows shown here remain illustrative demo data.</p></div>}
 
           <div className="notice" role="status"><span className="notice-icon">i</span><span>{notice}</span><button onClick={() => setNotice("Demo workspace · Sample records only")} aria-label="Reset notice">×</button></div>
 
@@ -234,7 +234,7 @@ export default function Home() {
 
             <section className="attention-card" id="activity">
               <div className="panel-heading"><div><span className="panel-icon attention-icon">!</span><div><h2>Needs your attention</h2><p>Items to review before taking action.</p></div></div><span className="attention-count">{orders.filter(o => o.status === "Review needed").length}</span></div>
-              {orders.filter(o => o.status === "Review needed" || o.status === "Awaiting payment").map((order) => <div className="attention-item" key={order.id}><div className={`attention-dot ${order.status === "Review needed" ? "dot-red" : "dot-amber"}`} /><div><strong>{order.status === "Review needed" ? "Payment needs review" : "Payment not completed"}</strong><p>{order.id} · {order.customer} · {order.amount}</p></div><button aria-label={`Review ${order.id}`} onClick={() => setNotice(`${order.id}: sample record only. A live PayPal verification flow is not configured yet.`)}>→</button></div>)}
+              {orders.filter(o => o.status === "Review needed" || o.status === "Awaiting payment").map((order) => <div className="attention-item" key={order.id}><div className={`attention-dot ${order.status === "Review needed" ? "dot-red" : "dot-amber"}`} /><div><strong>{order.status === "Review needed" ? "Payment needs review" : "Payment not completed"}</strong><p>{order.id} · {order.customer} · {order.amount}</p></div><button aria-label={`Review ${order.id}`} onClick={() => setNotice(`${order.id}: sample record only. Use Test PayPal checkout to run the configured Sandbox verification flow.`)}>→</button></div>)}
               <div className="evidence-note"><span>✓</span><p><strong>Never trust a screenshot alone.</strong><br />A paid status requires server-side PayPal verification.</p></div>
             </section>
           </div>
