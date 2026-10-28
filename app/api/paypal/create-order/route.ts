@@ -50,6 +50,13 @@ export async function POST(request: NextRequest) {
   const referenceId = `PP-${randomUUID()}`;
   const amount = money(totalCents);
   try {
+    const appBaseUrl = (
+      process.env.APP_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+      "http://localhost:3000"
+    ).replace(/\/$/, "");
     const accessToken = await getPayPalAccessToken();
     const order = await paypalRequest<CreatedOrder>("/v2/checkout/orders", accessToken, {
       method: "POST",
@@ -78,8 +85,8 @@ export async function POST(request: NextRequest) {
         application_context: {
           brand_name: "PayProof AI Sandbox",
           user_action: "PAY_NOW",
-          return_url: `${process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/checkout/return`,
-          cancel_url: `${process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/checkout/cancel`
+          return_url: `${appBaseUrl}/checkout/return`,
+          cancel_url: `${appBaseUrl}/checkout/cancel`
         }
       })
     });
