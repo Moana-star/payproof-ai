@@ -57,9 +57,10 @@ export function ReconciliationConsole() {
     try {
       const csv = await file.text();
       const result = await api("/api/reconciliation/import", { csv, filename: file.name, actor });
-      setNotice(`${result.message} Imported ${result.rowsImported} new rows; skipped ${result.duplicatesSkipped} duplicate transaction IDs.`);
+      const message = `${result.message} Imported ${result.rowsImported} new rows; skipped ${result.duplicatesSkipped} duplicate transaction IDs.`;
       setFile(null);
       await load();
+      setNotice(message);
     } catch (e) { setError(e instanceof Error ? e.message : "CSV import failed."); }
     finally { setBusy(""); }
   }
@@ -68,8 +69,9 @@ export function ReconciliationConsole() {
     setBusy("match"); setError("");
     try {
       const result = await api("/api/reconciliation/match", { actor });
-      setNotice(`Matching complete: ${result.exactMatch} exact candidate(s), ${result.amountOrReferenceException} exception(s), ${result.unmatched} unmatched. Nothing was auto-posted.`);
+      const message = `Matching complete: ${result.exactMatch} exact candidate(s), ${result.amountOrReferenceException} exception(s), ${result.unmatched} unmatched. Nothing was auto-posted.`;
       await load();
+      setNotice(message);
     } catch (e) { setError(e instanceof Error ? e.message : "Matching failed."); }
     finally { setBusy(""); }
   }
@@ -79,8 +81,8 @@ export function ReconciliationConsole() {
     try {
       const note = decision === "reject" ? window.prompt("Why are you rejecting this statement row? (Optional)") || "" : "";
       const result = await api("/api/reconciliation/review", { rowId: row.id, decision, actor, note });
-      setNotice(result.message);
       await load();
+      setNotice(result.message);
     } catch (e) { setError(e instanceof Error ? e.message : "Review decision failed."); }
     finally { setBusy(""); }
   }
@@ -91,8 +93,8 @@ export function ReconciliationConsole() {
     try {
       const approval = await api("/api/reconciliation/review", { rowId: row.id, decision: "approve", actor, note: "Human reviewer approved exact evidence match before internal ledger posting." });
       const posting = await api("/api/reconciliation/post", { rowId: row.id, actor });
-      setNotice(`${approval.message} ${posting.message}`);
       await load();
+      setNotice(`${approval.message} ${posting.message}`);
     } catch (e) { setError(e instanceof Error ? e.message : "Approval or ledger posting failed. Refresh the queue to confirm the recorded state."); }
     finally { setBusy(""); }
   }
@@ -102,8 +104,8 @@ export function ReconciliationConsole() {
     setBusy(row.id); setError("");
     try {
       const result = await api("/api/reconciliation/post", { rowId: row.id, actor });
-      setNotice(result.message);
       await load();
+      setNotice(result.message);
     } catch (e) { setError(e instanceof Error ? e.message : "Ledger posting failed."); }
     finally { setBusy(""); }
   }
