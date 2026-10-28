@@ -191,7 +191,7 @@ export default function Home() {
             <article className="value-card value-card-proof">
               <span className="value-kicker">03 · THE PROOF</span>
               <h2>Evidence over assumptions.</h2>
-              <p>Payment is only considered verified after server-side checks against PayPal—not a screenshot or AI suggestion.</p>
+              <p>A Sandbox capture is checked server-side against PayPal. Sample dashboard records are not live payment evidence.</p>
             </article>
           </section>
 
@@ -202,12 +202,12 @@ export default function Home() {
           <section className="workflow-grid" aria-label="PayProof AI workflow">
             <article className="workflow-step"><span className="workflow-number">1</span><div><h3>Capture</h3><p>Start with the customer’s original message and identify the details that matter.</p></div></article>
             <article className="workflow-step"><span className="workflow-number">2</span><div><h3>Review</h3><p>Check suggested product and quantity. Missing or ambiguous details stay flagged.</p></div></article>
-            <article className="workflow-step"><span className="workflow-number">3</span><div><h3>Verify</h3><p>Use PayPal’s server response to verify the fixed-price Sandbox payment before treating it as paid.</p></div></article>
+            <article className="workflow-step"><span className="workflow-number">3</span><div><h3>Verify</h3><p>Use PayPal’s server response to verify the catalogue item, quantity, amount and Sandbox capture.</p></div></article>
           </section>
 
           <div className="metrics-grid">
             <article className="metric-card"><div className="metric-top"><span>Total orders</span><span className="metric-icon violet">▤</span></div><div className="metric-value">{orders.length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">Sample workspace</span><span>All orders</span></div></article>
-            <article className="metric-card"><div className="metric-top"><span>Verified paid</span><span className="metric-icon green">✓</span></div><div className="metric-value">{paidTotal.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-green">Demo state only</span><span>Needs live verification</span></div></article>
+            <article className="metric-card"><div className="metric-top"><span>Sample paid</span><span className="metric-icon green">✓</span></div><div className="metric-value">{paidTotal.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-green">Illustrative only</span><span>Not a live payment count</span></div></article>
             <article className="metric-card"><div className="metric-top"><span>Awaiting payment</span><span className="metric-icon amber">◷</span></div><div className="metric-value">{orders.filter(o => o.status === "Awaiting payment").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">No action yet</span><span>Checkout pending</span></div></article>
             <article className="metric-card"><div className="metric-top"><span>Needs attention</span><span className="metric-icon red">!</span></div><div className="metric-value">{orders.filter(o => o.status === "Review needed").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-red">Review required</span><span>Before fulfilment</span></div></article>
           </div>
