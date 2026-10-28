@@ -213,3 +213,55 @@ h1,h2,p{margin-top:0}h1{font:800 27px Manrope,sans-serif;letter-spacing:-1px;mar
 @media(max-width:1150px){.recon-access{grid-template-columns:1fr 1fr}.recon-access-copy{grid-column:1/-1}.recon-access .secondary-button{width:100%}}
 @media(max-width:760px){.recon-console{padding:0 15px 17px}.recon-access{grid-template-columns:1fr;padding:13px}.recon-access-copy{grid-column:auto}.recon-live-stats{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:15px;padding:14px 0}.recon-live-stats>div{padding:0 12px;border-right:0}.recon-live-stats>div:nth-child(odd){border-right:1px solid #eeeef4}.recon-queue-head{align-items:flex-start;flex-direction:column}.recon-queue-head .primary-button{width:100%}.recon-console-bottom{grid-template-columns:1fr}.recon-safety-note{flex-direction:column;gap:5px}.recon-row-actions{min-width:110px}.reconciliation-table-heading{padding:12px 0}}
 @media(max-width:440px){.recon-import{padding:13px}.recon-import-controls{align-items:stretch;flex-direction:column}.recon-import-controls .primary-button{width:100%}.recon-live-stats strong{font-size:20px}.recon-console-bottom>section{padding:11px}.recon-access .secondary-button{width:100%}}
+
+
+/* Readability pass: increase compact dashboard labels without changing the page layout. */
+body{font-size:15px}
+.workspace-label{font-size:11px}
+.trust-card strong{font-size:13px}
+.trust-card p{font-size:12px}
+.profile-row strong{font-size:12px}
+.profile-row span{font-size:11px}
+.nav-item{font-size:13px}
+.metric-top{font-size:12px}
+.metric-foot{font-size:10px}
+.value-kicker{font-size:10px}
+.value-card h2{font-size:15px}
+.value-card p{font-size:12px;line-height:1.7}
+.workflow-step h3{font-size:13px}
+.workflow-step p{font-size:12px;line-height:1.65}
+.reconciliation-header p:not(.eyebrow){font-size:12px}
+.reconciliation-flow-step strong{font-size:11px}
+.reconciliation-flow-step small{font-size:10px}
+.reconciliation-stats span{font-size:11px}
+.reconciliation-stats small{font-size:10px}
+.reconciliation-table th{font-size:9px}
+.reconciliation-table td{font-size:11px}
+.reconciliation-table td:nth-child(2) strong{font-size:11px}
+.reconciliation-table td:nth-child(2) small{font-size:10px}
+.recon-access-copy strong{font-size:12px}
+.recon-access-copy p{font-size:11px}
+.recon-access label{font-size:10px}
+.recon-access input{font-size:12px}
+.recon-console-notice,.recon-console-error{font-size:12px}
+.recon-import h3,.recon-queue-head h3,.recon-console-bottom h3{font-size:13px}
+.recon-import p,.recon-queue-head p,.recon-console-bottom>section>p{font-size:11px}
+.recon-import-controls input{font-size:12px}
+.recon-import details{font-size:11px}
+.recon-import details code{font-size:10px}
+.recon-live-stats span{font-size:10px}
+.recon-live-stats small{font-size:10px}
+.recon-row-actions button{font-size:10px}
+.recon-reason-cell{font-size:11px!important}
+.recon-ledger-row,.recon-audit-row{font-size:11px}
+.recon-ledger-row strong{font-size:11px}
+.recon-ledger-row small,.recon-audit-row small{font-size:10px}
+.recon-audit-row span{font-size:11px}
+.reconciliation-table td>small{font-size:10px}
+@media(max-width:540px){
+  .nav-item{font-size:12px}
+  .value-card h2{font-size:15px}
+  .value-card p,.workflow-step p{font-size:12px}
+  .recon-console-notice,.recon-console-error{font-size:12px}
+  .recon-ledger-row,.recon-audit-row{font-size:11px}
+}
