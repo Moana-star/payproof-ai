@@ -45,8 +45,9 @@ async function supabaseRequest<T>(path: string, init: RequestInit = {}): Promise
     throw new Error(`Order storage request failed (HTTP ${response.status}).`);
   }
 
-  if (response.status === 204) return undefined as T;
-  return (await response.json()) as T;
+  const responseText = await response.text();
+  if (!responseText) return undefined as T;
+  return JSON.parse(responseText) as T;
 }
 
 export async function createPendingOrder(order: StoredOrder) {
