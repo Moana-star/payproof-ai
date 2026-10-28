@@ -85,3 +85,7 @@ h1,h2,p{margin-top:0}h1{font:800 27px Manrope,sans-serif;letter-spacing:-1px;mar
 /* Keep AI order-intake failures visible beside the action that triggered them. */
 .draft-error{margin:12px 0 0;padding:12px 14px;border:1px solid #f0c4c4;border-radius:9px;background:#fff4f4;color:#9b2929;font-size:12px;line-height:1.6;font-weight:650}
 .draft-action-hint{line-height:1.6}
+
+
+/* Make draft validation feedback visible immediately after the validation action. */
+.draft-validation{margin-top:12px;padding:12px;border-radius:8px;border:1px solid;font-size:11px;line-height:1.6}.draft-validation strong{display:block;font-size:11px;margin-bottom:4px}.draft-validation p{margin:0}.validation-success{background:#effaf4;border-color:#bce8cf;color:#176b49}.validation-warning{background:#fff7e8;border-color:#f1d7a4;color:#8a5a0b}
