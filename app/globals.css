@@ -294,3 +294,14 @@ body{font-size:15px}
 
 /* Clear judge-facing entry point to the Sandbox payment walkthrough */
 .demo-payment-guide-link{display:inline-flex;align-items:center;gap:5px;color:#5d4cc9;background:#f7f5ff;border:1px solid #ded8ff;border-radius:7px;padding:8px 10px;font-size:11px;font-weight:700;white-space:nowrap}.demo-payment-guide-link:hover{background:#ebe7ff}.demo-payment-guide-link:focus-visible{outline:2px solid #7b68e8;outline-offset:2px}@media(max-width:700px){.demo-payment-guide-link{font-size:0;padding:8px}.demo-payment-guide-link span{font-size:13px}.topbar-actions{gap:7px}}
+
+
+/* Judge-first overview: make the core test path visible before the longer product story. */
+.judge-quick-start{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:22px;align-items:center;padding:20px 22px;margin:0 0 24px;background:#fff;border:1px solid #e4defe;border-radius:13px;box-shadow:0 5px 18px #29254d06}
+.judge-quick-copy .eyebrow{margin-bottom:7px;color:#7664df}
+.judge-quick-copy h2{font:800 17px Manrope,sans-serif;letter-spacing:-.4px;margin:0 0 7px}
+.judge-quick-copy p:last-child{font-size:11px;line-height:1.65;color:#777b90;margin:0;max-width:45ch}
+.judge-quick-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:9px}
+.judge-quick-actions .primary-button,.judge-quick-actions .secondary-button{min-height:37px;font-size:10px;padding:0 11px;text-decoration:none;white-space:nowrap}
+@media(max-width:1050px){.judge-quick-start{grid-template-columns:1fr}.judge-quick-actions{justify-content:flex-start}}
+@media(max-width:540px){.judge-quick-start{padding:16px;gap:15px}.judge-quick-actions{display:grid;grid-template-columns:1fr 1fr}.judge-quick-actions .primary-button,.judge-quick-actions .secondary-button{white-space:normal;text-align:center;min-height:42px;padding:7px}}
