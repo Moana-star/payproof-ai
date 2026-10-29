@@ -6,6 +6,12 @@ PayProof AI is an evidence-first payment-operations prototype for small online s
 
 > **Trust rule:** AI can organise and explain information. Only server-side verification against PayPal can establish payment status. A screenshot, customer claim, or AI answer is not payment proof.
 
+## Hosted demo
+
+**Judge-ready Preview:** https://payproof-ai-git-feat-judge-ready-evidence-7cb616-naom6083-2980.vercel.app/
+
+This preview uses PayPal Sandbox only. Dashboard example rows are labelled sample data; payment evidence comes from saved server-verified Sandbox captures. Reconciliation uses simulated statement CSV data and posts only to the internal demo ledger, not a bank or external accounting platform. The hosted preview is a working build, but judges should use the documented workflow and limitations rather than interpret sample rows as live customer transactions.
+
 ## The problem
 
 Small merchants often receive order details in conversations while payment updates live in separate systems. That creates manual work and the risk of fulfilling an order before a payment is confirmed.
