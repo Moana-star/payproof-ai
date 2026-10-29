@@ -34,17 +34,6 @@ const statusClass: Record<OrderStatus, string> = {
 };
 
 export default function Home() {
-  const [greeting, setGreeting] = useState("Hello");
-  useEffect(() => {
-    const updateGreeting = () => {
-      const hour = new Date().getHours();
-      setGreeting(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
-    };
-    updateGreeting();
-    const interval = window.setInterval(updateGreeting, 60_000);
-    return () => window.clearInterval(interval);
-  }, []);
-
   const [orders, setOrders] = useState(initialOrders);
   const [ordersSource, setOrdersSource] = useState<"sample" | "saved" | "unavailable">("sample");
   const [ordersLoadNote, setOrdersLoadNote] = useState("");
@@ -230,8 +219,8 @@ export default function Home() {
             <p>AI helps explain. Verified payment data decides.</p>
           </div>
           <div className="profile-row">
-            <div className="avatar profile-avatar">M</div>
-            <div><strong>Moana&apos;s workspace</strong><span>Sandbox preview</span></div>
+            <div className="avatar profile-avatar">P</div>
+            <div><strong>Demo workspace</strong><span>Sandbox preview</span></div>
             <span className="profile-dots">···</span>
           </div>
         </div>
@@ -245,7 +234,7 @@ export default function Home() {
 
         <div className="content" id="overview">
           <div className="welcome-row">
-            <div><p className="eyebrow">YOUR PAYMENT WORKSPACE</p><h1>{greeting}, Moana <span>✳</span></h1><p className="subheading">A clearer view of orders, payments, and what needs your attention.</p></div>
+            <div><p className="eyebrow">YOUR PAYMENT WORKSPACE</p><h1>Welcome to PayProof AI <span>✳</span></h1><p className="subheading">A clearer view of orders, payments, and what needs your attention.</p></div>
             <button className="primary-button" onClick={() => document.getElementById("intake")?.scrollIntoView({ behavior: "smooth" })}><span>＋</span> New order</button>
           </div>
 
