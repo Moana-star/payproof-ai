@@ -129,3 +129,21 @@ export async function saveVerifiedOrder(order: StoredOrder, captureId: string) {
 
   return { persisted: true as const };
 }
+
+
+export type PaymentRegisterOrder = Pick<StoredOrder,
+  "order_number" | "product_name" | "quantity" | "total_amount" | "currency" |
+  "payment_environment" | "payment_status" | "paypal_order_id" |
+  "paypal_capture_id" | "paypal_reference_id" | "verified_at"
+> & { created_at?: string | null };
+
+export async function listRecentOrders(limit = 100): Promise<PaymentRegisterOrder[]> {
+  if (!isOrderStoreConfigured()) {
+    throw new Error("Payment storage is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the deployment environment.");
+  }
+  const safeLimit = Math.max(1, Math.min(Math.floor(limit), 200));
+  return supabaseRequest<PaymentRegisterOrder[]>(
+    `orders?select=order_number,product_name,quantity,total_amount,currency,payment_environment,payment_status,paypal_order_id,paypal_capture_id,paypal_reference_id,verified_at,created_at&order=created_at.desc&limit=${safeLimit}`,
+    { method: "GET" }
+  );
+}
