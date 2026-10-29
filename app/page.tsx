@@ -27,7 +27,7 @@ const CATALOG_PRICES: Record<string, number> = {
 };
 
 const statusClass: Record<OrderStatus, string> = {
-  Paid: "paid",
+  Paid: "pending",
   "Awaiting payment": "pending",
   "Review needed": "review"
 };
@@ -47,7 +47,7 @@ export default function Home() {
   const [orders, setOrders] = useState(initialOrders);
   const [message, setMessage] = useState("");
   const [draft, setDraft] = useState<{ item: string; quantity: string; note: string } | null>(null);
-  const [notice, setNotice] = useState("Demo workspace · Sample records only");
+  const [notice, setNotice] = useState("Demo workspace · Sample records only. Saved Sandbox evidence is under Payment evidence.");
   const [showGuide, setShowGuide] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
@@ -191,7 +191,7 @@ export default function Home() {
 
           {showGuide && <div className="guide-panel"><strong>How PayProof AI works</strong><p>Order messages become reviewable drafts. For a new checkout, PayProof AI verifies the PayPal Sandbox response server-side and attempts to save the verified order to Supabase. The dashboard rows shown here remain illustrative demo data.</p></div>}
 
-          <div className="notice" role="status"><span className="notice-icon">i</span><span>{notice}</span><button onClick={() => setNotice("Demo workspace · Sample records only")} aria-label="Reset notice">×</button></div>
+          <div className="notice" role="status"><span className="notice-icon">i</span><span>{notice}</span><button onClick={() => setNotice("Demo workspace · Sample records only. Saved Sandbox evidence is under Payment evidence.")} aria-label="Reset notice">×</button></div>
 
           <section className="value-strip" aria-label="PayProof AI product principles">
             <article className="value-card">
@@ -256,7 +256,7 @@ export default function Home() {
 
           <section className="orders-card">
             <div className="table-toolbar"><div className="table-title">All orders <span className="table-count">{orders.length}</span></div><div className="table-filters"><span className="filter-label">Status</span><button className="filter-button" onClick={() => setOrders(orders.slice().reverse())}>Recent activity ↕</button></div></div>
-            <div className="order-table-wrap"><table className="order-table"><thead><tr><th>ORDER</th><th>CUSTOMER / ITEM</th><th>AMOUNT</th><th>PAYMENT STATUS</th><th>LAST ACTIVITY</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><span className="order-id">{order.id}</span></td><td><div className="customer-cell"><div className="avatar">{order.initials}</div><div><strong>{order.customer}</strong><span>{order.item}</span></div></div></td><td className="amount">{order.amount}</td><td><span className={`status-badge ${statusClass[order.status]}`}><i />{order.status}</span></td><td className="activity-text">{order.time}</td></tr>)}</tbody></table></div>
+            <div className="order-table-wrap"><table className="order-table"><thead><tr><th>ORDER</th><th>CUSTOMER / ITEM</th><th>AMOUNT</th><th>PAYMENT STATUS</th><th>LAST ACTIVITY</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><span className="order-id">{order.id}</span></td><td><div className="customer-cell"><div className="avatar">{order.initials}</div><div><strong>{order.customer}</strong><span>{order.item}</span></div></div></td><td className="amount">{order.amount}</td><td><span className={`status-badge ${statusClass[order.status]}`}><i />{order.status === "Paid" ? "Sample · paid (unverified)" : order.status}</span></td><td className="activity-text">{order.time}</td></tr>)}</tbody></table></div>
             <div className="table-footer"><span>Illustrative records for interface preview</span><span>1–{orders.length} of {orders.length}</span></div>
           </section>
 
