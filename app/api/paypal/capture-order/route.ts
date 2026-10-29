@@ -85,6 +85,7 @@ async function resultResponse(order: PayPalOrder) {
     }, { status: 409 });
   }
 
+  const verifiedAt = new Date().toISOString();
   let persisted = false;
   let persistenceWarning: string | undefined;
   if (isOrderStoreConfigured()) {
@@ -102,7 +103,7 @@ async function resultResponse(order: PayPalOrder) {
         paypal_order_id: order.id,
         paypal_capture_id: checked.capture.id,
         paypal_reference_id: checked.details.referenceId,
-        verified_at: new Date().toISOString()
+        verified_at: verifiedAt
       }, checked.capture.id);
       persisted = result.persisted;
     } catch {
@@ -131,6 +132,9 @@ async function resultResponse(order: PayPalOrder) {
     },
     sandbox: true,
     persisted,
+    verifiedAt,
+    evidenceSource: "PayPal Sandbox server API",
+    expectedAmount: checked.details.amount,
     ...(persistenceWarning ? { persistenceWarning } : {})
   });
 }
