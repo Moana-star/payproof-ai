@@ -31,6 +31,22 @@ export default function DemoGuidePage() {
   return (
     <WorkspaceLayout title="Judge demo guide" eyebrow="DEMO MODE · SANDBOX ONLY" description="A short, honest route through the strongest PayProof AI workflows. Use only test data and never expose credentials or private customer details.">
       <div className="ops-info-banner"><span className="ops-info-icon">i</span><div><strong>Know what is live and what is illustrative</strong><p>This guide is a walkthrough, not proof that every integration has passed. Show a fresh Sandbox result for payment verification and label simulated reconciliation data at the point of use.</p></div></div>
+      <section className="ops-panel" style={{ padding: 24, marginBottom: 20, borderColor: "#ded8ff" }}>
+        <div className="ops-panel-top"><div><span className="ops-panel-symbol violet">↗</span><div><strong>Try demo payment</strong><p>Judge-friendly Sandbox checkout walkthrough</p></div></div><span className="ops-sample-tag">NO REAL MONEY</span></div>
+        <p style={{ lineHeight: 1.7, color: "var(--muted, #667085)", margin: "12px 0 18px" }}>Use this path to test the payment journey. The sample order helps you start quickly, but PayPal checkout still requires valid Sandbox configuration and a PayPal Sandbox test buyer. Do not use a real PayPal account or real payment details.</p>
+        <ol style={{ lineHeight: 1.9, paddingLeft: 22, marginBottom: 18 }}>
+          <li><strong>Open the workspace</strong> and choose <em>Load sample message</em> under AI order intake.</li>
+          <li>Select <em>Prepare order draft</em>, review the extracted product and quantity, then validate the details.</li>
+          <li>Select <em>Continue to PayPal Sandbox</em>. The server calculates the price from the supported catalogue.</li>
+          <li>On PayPal, sign in with a <strong>Sandbox test buyer</strong> created in the PayPal Developer Dashboard and approve the test payment.</li>
+          <li>Return to PayProof AI and open <em>Payment evidence</em>. Check whether the server-verified capture and saved order appear.</li>
+        </ol>
+        <div className="ops-info-banner"><span className="ops-info-icon">!</span><div><strong>Before the demo</strong><p>If checkout cannot start, check the Vercel Preview environment for PayPal Sandbox client credentials, the Sandbox API base URL, and Supabase storage configuration. If the AI draft fails, check the server-side Groq key. Never paste secrets into the page, source code, chat, or recording. A return redirect alone is not proof of payment.</p></div></div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
+          <Link className="ops-primary-button" href="/">Open workspace <span>↗</span></Link>
+          <Link className="ops-secondary-button" href="/payments">Check payment evidence <span>↗</span></Link>
+        </div>
+      </section>
       <section className="ops-panel" style={{ padding: 24, marginBottom: 20 }}>
         <div className="ops-panel-top"><div><span className="ops-panel-symbol mint">▶</span><div><strong>Three-minute presentation route</strong><p>Target runtime: 2 minutes 55 seconds</p></div></div><span className="ops-sample-tag">DEMO CHECKLIST</span></div>
         <div style={{ display: "grid", gap: 18, marginTop: 20 }}>
