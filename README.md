@@ -156,6 +156,7 @@ Follow [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for a short, honest walkthrough. Show th
 - [Technical specification](spec.md)
 - [Demo script](DEMO_SCRIPT.md)
 - [Hackathon submission draft](SUBMISSION_DRAFT.md)
+- [Judge readiness and acceptance tests](JUDGE_READINESS.md)
 - [Environment template](.env.example)
 - [MIT License](LICENSE)
 
