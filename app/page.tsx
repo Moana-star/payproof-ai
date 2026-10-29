@@ -107,7 +107,7 @@ export default function Home() {
       setDraft({
         item,
         quantity,
-        note: [...extracted.missingInformation, extracted.confidenceNotes].filter(Boolean).join(" ")
+        note: [extracted.missingInformation.length ? `Needs confirmation: ${extracted.missingInformation.join(" ")}` : "", extracted.confidenceNotes ? `Confidence notes: ${extracted.confidenceNotes}` : ""].filter(Boolean).join("\n")
       });
       setNotice("AI draft prepared. Review the product and quantity; nothing has been saved and payment is not verified.");
     } catch (error) {
