@@ -72,7 +72,10 @@ export async function POST(request: NextRequest) {
     // Persist the server-priced draft before redirecting to PayPal. If storage
     // is configured but unavailable, fail closed rather than silently losing it.
     const pending = await createPendingOrder(orderRecord, user.id);
-    // Keep the return on the same host where the signed-in checkout began.\n    // This preserves the browser session and returns to the correct workspace.\n    const appBaseUrl = request.nextUrl.origin.replace(/\\/$/, "");\n    const accessToken = await getPayPalAccessToken();
+    // Keep the return on the same host where the signed-in checkout began.
+    // This preserves the browser session and returns to the correct workspace.
+    const appBaseUrl = request.nextUrl.origin.replace(/\/$/, "");
+    const accessToken = await getPayPalAccessToken();
     const order = await paypalRequest<CreatedOrder>("/v2/checkout/orders", accessToken, {
       method: "POST",
       headers: { "PayPal-Request-Id": randomUUID() },
