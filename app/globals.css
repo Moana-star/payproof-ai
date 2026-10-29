@@ -332,3 +332,5 @@ body{font-size:15px}
 .profile-secondary-actions a{color:#765267;text-decoration:none;font-weight:750}
 .profile-secondary-actions button{padding:0;color:#8b4857}
 @media(max-width:540px){.auth-card{padding:25px 21px;border-radius:17px}.auth-brand{margin-bottom:26px}.profile-secondary-actions{align-items:flex-start}}
+
+.workspace-isolation-note{padding:18px 20px;border:1px solid #e9dfe5;border-radius:13px;background:#fff9fc;color:#4d3d48;font-size:12px;line-height:1.7}.workspace-isolation-note strong{display:block;font-size:13px;margin-bottom:5px;color:#68445a}.workspace-isolation-note p{margin:0;color:#786d76;max-width:75ch}
