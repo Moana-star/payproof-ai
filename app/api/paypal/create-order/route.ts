@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { createPendingOrder, updateOrderByNumber } from "@/lib/order-store";
+import { createPendingOrder, isOrderStoreConfigured, updateOrderByNumber } from "@/lib/order-store";
 import { getPayPalAccessToken, paypalRequest } from "@/lib/paypal";
 import { getAuthenticatedUser } from "@/lib/auth-server";
 
@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
   if (!Number.isInteger(body.quantity) || Number(body.quantity) < 1 || Number(body.quantity) > MAX_QUANTITY) {
     return NextResponse.json({ error: `Quantity must be a whole number from 1 to ${MAX_QUANTITY}.` }, { status: 400 });
   }
+
+  if (!isOrderStoreConfigured()) return NextResponse.json({ error: "Order storage is not configured. Checkout is disabled until Supabase storage is ready." }, { status: 503 });
 
   const productName = body.product as ProductName;
   const product = CATALOG[productName];
