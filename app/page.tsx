@@ -44,7 +44,6 @@ export default function Home() {
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      setAuthReady(true);
       setOrdersSource("sample");
       setOrdersLoadNote("Public demo mode. Sign in to save and view your own Sandbox orders.");
       return;
@@ -112,7 +111,6 @@ export default function Home() {
       if (!session) {
         setAuthUserName("");
         setAuthWorkspaceName("Demo workspace");
-        setAuthEmail("");
         await loadOrders(null);
         return;
       }
