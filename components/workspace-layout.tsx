@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 const navigation = [
   { href: "/", icon: "▦", label: "Overview" },
   { href: "/payments", icon: "▤", label: "Payment evidence" },
+  { href: "/reconciliation", icon: "⇄", label: "Reconciliation" },
   { href: "/assistant", icon: "✳", label: "AI assistant" },
   { href: "/exceptions", icon: "!", label: "Exception review" },
   { href: "/audit", icon: "↗", label: "Audit trail" }
@@ -25,7 +26,7 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
         <p className="ops-nav-label">WORKSPACE</p>
         <nav className="ops-nav" aria-label="Workspace navigation">
           {navigation.map((item) => (
-            <Link key={item.href} className={item.href === (title === "Payment evidence" ? "/payments" : title === "AI payment assistant" ? "/assistant" : title === "Exception review" ? "/exceptions" : title === "Audit trail" ? "/audit" : "/") ? "ops-nav-item is-active" : "ops-nav-item"} href={item.href}>
+            <Link key={item.href} className={item.href === (title === "Payment evidence" ? "/payments" : title === "Reconciliation" ? "/reconciliation" : title === "AI payment assistant" ? "/assistant" : title === "Exception review" ? "/exceptions" : title === "Audit trail" ? "/audit" : "/") ? "ops-nav-item is-active" : "ops-nav-item"} href={item.href}>
               <span className="ops-nav-icon" aria-hidden="true">{item.icon}</span>{item.label}
             </Link>
           ))}
