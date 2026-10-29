@@ -28,7 +28,7 @@ const CATALOG_PRICES: Record<string, number> = {
 };
 
 const statusClass: Record<OrderStatus, string> = {
-  Paid: "pending",
+  Paid: "paid",
   "Awaiting payment": "pending",
   "Review needed": "review"
 };
@@ -46,6 +46,65 @@ export default function Home() {
   }, []);
 
   const [orders, setOrders] = useState(initialOrders);
+  const [ordersSource, setOrdersSource] = useState<"sample" | "saved" | "unavailable">("sample");
+  const [ordersLoadNote, setOrdersLoadNote] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/orders", { cache: "no-store" })
+      .then(async (response) => {
+        const data = await response.json() as {
+          configured?: boolean;
+          orders?: Array<{
+            order_number: string; product_name: string; quantity: number;
+            total_amount: string; currency: string; payment_status: string;
+            verified_at?: string | null; created_at?: string | null;
+          }>;
+          error?: string;
+        };
+        if (!active) return;
+        if (!response.ok) throw new Error(data.error || "Saved orders could not be loaded.");
+        if (!data.configured) {
+          setOrdersSource("sample");
+          setOrdersLoadNote("Persistent storage is not configured. The rows below are illustrative samples.");
+          return;
+        }
+        const saved = (data.orders || []).map((order) => {
+          const status: OrderStatus = order.payment_status === "paid"
+            ? "Paid"
+            : order.payment_status === "awaiting_payment"
+              ? "Awaiting payment"
+              : "Review needed";
+          const amountValue = Number(order.total_amount);
+          const amount = Number.isFinite(amountValue)
+            ? new Intl.NumberFormat("en-US", { style: "currency", currency: order.currency || "USD" }).format(amountValue)
+            : `${order.total_amount} ${order.currency}`;
+          const timestamp = order.verified_at || order.created_at;
+          return {
+            id: order.order_number,
+            customer: "Sandbox order",
+            item: `${order.product_name} × ${order.quantity}`,
+            amount,
+            status,
+            time: status === "Paid"
+              ? (timestamp ? `Server verified · ${new Date(timestamp).toLocaleString()}` : "Server-verified Sandbox capture")
+              : status === "Awaiting payment" ? "Awaiting PayPal capture" : "Review required · Do not fulfil",
+            initials: "SB"
+          };
+        });
+        setOrders(saved);
+        setOrdersSource("saved");
+        setOrdersLoadNote(saved.length
+          ? "Showing saved Sandbox orders. Paid status comes from server-verified PayPal captures."
+          : "Persistent storage is connected, but no saved orders exist yet. Complete a Sandbox checkout to add one.");
+      })
+      .catch(() => {
+        if (!active) return;
+        setOrdersSource("unavailable");
+        setOrdersLoadNote("Saved orders could not be loaded. The visible sample rows are illustrative and are not live payment evidence.");
+      });
+    return () => { active = false; };
+  }, []);
   const [message, setMessage] = useState("");
   const [draft, setDraft] = useState<{ item: string; quantity: string; note: string } | null>(null);
   const [notice, setNotice] = useState("Demo workspace · Sample records only. Saved Sandbox evidence is under Payment evidence.");
@@ -256,9 +315,9 @@ export default function Home() {
           <div className="section-heading" id="orders"><div><h2>Recent orders</h2><p>Track each order without guessing about payment status.</p></div><button className="text-button" onClick={() => setNotice("Showing all sample orders in this prototype.")}>View all orders <span>→</span></button></div>
 
           <section className="orders-card">
-            <div className="table-toolbar"><div className="table-title">All orders <span className="table-count">{orders.length}</span></div><div className="table-filters"><span className="filter-label">Status</span><button className="filter-button" onClick={() => setOrders(orders.slice().reverse())}>Recent activity ↕</button></div></div>
+            <div className="table-toolbar"><div className="table-title">{ordersSource === "saved" ? "Saved orders" : "Sample orders"} <span className="table-count">{orders.length}</span></div><div className="table-filters"><span className="filter-label">Status</span><button className="filter-button" onClick={() => setOrders(orders.slice().reverse())}>Recent activity ↕</button></div></div>
             <div className="order-table-wrap"><table className="order-table"><thead><tr><th>ORDER</th><th>CUSTOMER / ITEM</th><th>AMOUNT</th><th>PAYMENT STATUS</th><th>LAST ACTIVITY</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><span className="order-id">{order.id}</span></td><td><div className="customer-cell"><div className="avatar">{order.initials}</div><div><strong>{order.customer}</strong><span>{order.item}</span></div></div></td><td className="amount">{order.amount}</td><td><span className={`status-badge ${statusClass[order.status]}`}><i />{order.status === "Paid" ? "Sample · paid (unverified)" : order.status}</span></td><td className="activity-text">{order.time}</td></tr>)}</tbody></table></div>
-            <div className="table-footer"><span>Illustrative records for interface preview</span><span>1–{orders.length} of {orders.length}</span></div>
+            <div className="table-footer"><span>{ordersLoadNote || (ordersSource === "saved" ? "Persistent Sandbox order records" : "Illustrative records · Not live payment evidence")}</span><span>{orders.length ? `1–${orders.length} of ${orders.length}` : "0 orders"}</span></div>
           </section>
 
           <div className="lower-grid">
