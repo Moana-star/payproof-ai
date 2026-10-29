@@ -37,8 +37,6 @@ const statusClass: Record<OrderStatus, string> = {
 export default function Home() {
   const [authUserName, setAuthUserName] = useState("");
   const [authWorkspaceName, setAuthWorkspaceName] = useState("Demo workspace");
-  const [authEmail, setAuthEmail] = useState("");
-  const [authReady, setAuthReady] = useState(false);
   const [orders, setOrders] = useState(initialOrders);
   const [ordersSource, setOrdersSource] = useState<"sample" | "saved" | "unavailable">("sample");
   const [ordersLoadNote, setOrdersLoadNote] = useState("");
@@ -115,15 +113,12 @@ export default function Home() {
         setAuthUserName("");
         setAuthWorkspaceName("Demo workspace");
         setAuthEmail("");
-        setAuthReady(true);
         await loadOrders(null);
         return;
       }
       const metadata = session.user.user_metadata || {};
       setAuthUserName(typeof metadata.display_name === "string" && metadata.display_name.trim() ? metadata.display_name.trim() : (session.user.email?.split("@")[0] || "Account"));
       setAuthWorkspaceName(typeof metadata.workspace_name === "string" && metadata.workspace_name.trim() ? metadata.workspace_name.trim() : "My workspace");
-      setAuthEmail(session.user.email || "");
-      setAuthReady(true);
       await loadOrders(session.access_token);
     };
     supabase.auth.getSession().then(({ data }) => applySession(data.session ? {
@@ -153,9 +148,16 @@ export default function Home() {
     setCheckoutLoading(true);
     setNotice("Creating a PayPal Sandbox checkout using the server-priced catalogue. No real money will be processed.");
     try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!session) {
+        setNotice("Sign in or create an account before starting a checkout so the order is saved to your own workspace.");
+        window.location.assign("/auth");
+        return;
+      }
       const response = await fetch("/api/paypal/create-order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ product, quantity })
       });
       const data = (await response.json()) as { approvalUrl?: string; error?: string };
