@@ -68,7 +68,7 @@ export default function ProfilePage() {
       <Link className="brand auth-brand" href="/"><span className="brand-mark">P<span>✓</span></span><span className="brand-name">payproof<span>ai</span></span></Link>
       <p className="eyebrow">ACCOUNT SETTINGS</p>
       <h1>Your profile</h1>
-      <p className="auth-intro">Update how your name and workspace appear in PayProof AI. Your account's orders stay separate from other users.</p>
+      <p className="auth-intro">Update how your name and workspace appear in PayProof AI. Your account&apos;s orders stay separate from other users.</p>
       {loading ? <p>Loading your profile…</p> : <form className="auth-form" onSubmit={saveProfile}>
         <label htmlFor="profile-email">Account email</label>
         <input id="profile-email" type="email" value={email} disabled />
