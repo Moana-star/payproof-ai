@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type CaptureResult = {
   verified?: boolean;
@@ -31,11 +32,23 @@ function ReturnContent() {
     }
 
     let active = true;
-    fetch("/api/paypal/capture-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId })
-    })
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setResult({ verified: false, status: "REVIEW_REQUIRED", error: "Sign-in configuration is missing. The payment was not confirmed in this workspace." });
+      setLoading(false);
+      return () => { active = false; };
+    }
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        if (active) setResult({ verified: false, status: "REVIEW_REQUIRED", error: "Your session expired. Sign in to verify this order belongs to your workspace." });
+        if (active) setLoading(false);
+        return;
+      }
+      fetch("/api/paypal/capture-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + data.session.access_token },
+        body: JSON.stringify({ orderId })
+      })
       .then(async (response) => {
         const data = (await response.json()) as CaptureResult;
         if (active) setResult(data);
@@ -44,6 +57,7 @@ function ReturnContent() {
         if (active) setResult({ verified: false, status: "REVIEW_REQUIRED", error: "We could not verify the result. Check the dashboard and retry safely." });
       })
       .finally(() => { if (active) setLoading(false); });
+    });
 
     return () => { active = false; };
   }, [searchParams]);
