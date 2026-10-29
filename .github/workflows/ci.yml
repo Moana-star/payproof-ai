@@ -6,14 +6,15 @@ on:
     branches:
       - main
       - feat/persistent-order-storage
+      - feat/judge-ready-evidence-workflow
 
 permissions:
   contents: read
 
 jobs:
-  lint-and-build:
+  lint-build-and-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -27,3 +28,19 @@ jobs:
         run: npm run lint
       - name: Build Next.js application
         run: npm run build
+      - name: Start production server
+        run: |
+          npm run start > /tmp/payproof-next.log 2>&1 &
+          echo $! > /tmp/payproof-next.pid
+      - name: Wait for server
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/payproof-next.log
+          exit 1
+      - name: Test public routes and security boundaries
+        run: npm run test:smoke -- http://127.0.0.1:3000

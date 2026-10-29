@@ -3,6 +3,7 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export type StoredOrder = {
   order_number: string;
+  owner_id?: string | null;
   customer_name?: string | null;
   customer_email?: string | null;
   product_id: string;
@@ -50,7 +51,7 @@ async function supabaseRequest<T>(path: string, init: RequestInit = {}): Promise
   return JSON.parse(responseText) as T;
 }
 
-export async function createPendingOrder(order: StoredOrder) {
+export async function createPendingOrder(order: StoredOrder, ownerId: string) {
   if (!isOrderStoreConfigured()) return { persisted: false as const };
 
   await supabaseRequest<unknown[]>("orders", {
@@ -58,6 +59,7 @@ export async function createPendingOrder(order: StoredOrder) {
     headers: { Prefer: "return=minimal" },
     body: JSON.stringify({
       ...order,
+      owner_id: ownerId,
       payment_status: "awaiting_payment",
       payment_environment: "sandbox"
     })
@@ -66,11 +68,11 @@ export async function createPendingOrder(order: StoredOrder) {
   return { persisted: true as const };
 }
 
-export async function updateOrderByNumber(orderNumber: string, patch: Partial<StoredOrder>) {
+export async function updateOrderByNumber(orderNumber: string, patch: Partial<StoredOrder>, ownerId: string) {
   if (!isOrderStoreConfigured()) return { persisted: false as const };
 
   await supabaseRequest<unknown[]>(
-    `orders?order_number=eq.${encodeURIComponent(orderNumber)}`,
+    `orders?order_number=eq.${encodeURIComponent(orderNumber)}&owner_id=eq.${encodeURIComponent(ownerId)}`,
     {
       method: "PATCH",
       headers: { Prefer: "return=minimal" },
@@ -81,7 +83,7 @@ export async function updateOrderByNumber(orderNumber: string, patch: Partial<St
   return { persisted: true as const };
 }
 
-export async function saveVerifiedOrder(order: StoredOrder, captureId: string) {
+export async function saveVerifiedOrder(order: StoredOrder, captureId: string, ownerId: string) {
   if (!isOrderStoreConfigured()) return { persisted: false as const };
 
   const verifiedAt = order.verified_at || new Date().toISOString();
@@ -94,6 +96,7 @@ export async function saveVerifiedOrder(order: StoredOrder, captureId: string) {
       headers: { Prefer: "resolution=merge-duplicates,return=representation" },
       body: JSON.stringify({
         ...order,
+        owner_id: ownerId,
         paypal_capture_id: captureId,
         payment_status: "paid",
         payment_environment: "sandbox",
@@ -128,4 +131,33 @@ export async function saveVerifiedOrder(order: StoredOrder, captureId: string) {
   });
 
   return { persisted: true as const };
+}
+
+
+export type PaymentRegisterOrder = Pick<StoredOrder,
+  "order_number" | "product_name" | "quantity" | "total_amount" | "currency" |
+  "payment_environment" | "payment_status" | "paypal_order_id" |
+  "paypal_capture_id" | "paypal_reference_id" | "verified_at"
+> & { created_at?: string | null };
+
+export async function listRecentOrders(limit = 100, ownerId?: string): Promise<PaymentRegisterOrder[]> {
+  // Server-rendered pages without a verified session must never receive shared account records.
+  if (!ownerId) return [];
+  if (!isOrderStoreConfigured()) {
+    throw new Error("Payment storage is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the deployment environment.");
+  }
+  const safeLimit = Math.max(1, Math.min(Math.floor(limit), 200));
+  return supabaseRequest<PaymentRegisterOrder[]>(
+    `orders?select=order_number,product_name,quantity,total_amount,currency,payment_environment,payment_status,paypal_order_id,paypal_capture_id,paypal_reference_id,verified_at,created_at&owner_id=eq.${encodeURIComponent(ownerId)}&order=created_at.desc&limit=${safeLimit}`,
+    { method: "GET" }
+  );
+}
+
+export async function getOwnedOrderByPayPalId(paypalOrderId: string, ownerId: string): Promise<{ order_number: string; owner_id: string } | null> {
+  if (!isOrderStoreConfigured()) return null;
+  const rows = await supabaseRequest<Array<{ order_number: string; owner_id: string }>>(
+    `orders?select=order_number,owner_id&paypal_order_id=eq.${encodeURIComponent(paypalOrderId)}&owner_id=eq.${encodeURIComponent(ownerId)}&limit=1`,
+    { method: "GET" }
+  );
+  return rows[0] || null;
 }

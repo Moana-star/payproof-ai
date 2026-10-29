@@ -1,0 +1,4 @@
+transaction_id,amount,currency,reference,description,posted_at
+DEMO-STMT-001,24.50,USD,DEMO-REFERENCE-NOT-LIVE,Coffee gift set — illustrative row,2026-10-29T10:00:00Z
+DEMO-STMT-002,40.00,USD,DEMO-REFERENCE-MISMATCH,Ceramic mug pair — illustrative amount mismatch,2026-10-29T10:05:00Z
+DEMO-STMT-003,16.00,USD,UNKNOWN-DEMO-REFERENCE,Unidentified incoming payment — illustrative unmatched row,2026-10-29T10:10:00Z

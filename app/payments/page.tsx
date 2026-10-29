@@ -1,42 +1,101 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { WorkspaceLayout } from "@/components/workspace-layout";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
-const samplePayments = [
-  { id: "PP-DEMO-1048", product: "Handwoven market tote", expected: "$38.00 USD", captured: "$38.00 USD · example only", status: "Example match", tone: "good", capture: "CAP-DEMO-48", time: "No verified timestamp", source: "Synthetic example", discrepancy: "None in this illustrative scenario", next: "Run a real Sandbox checkout to verify" },
-  { id: "PP-DEMO-1047", product: "Coffee gift set × 2", expected: "$49.00 USD", captured: "Unavailable", status: "Awaiting payment", tone: "pending", capture: "No capture reference", time: "No verification timestamp", source: "Sample record · not saved", discrepancy: "No completed capture evidence", next: "Wait; verify payment server-side" },
-  { id: "PP-DEMO-1046", product: "Ceramic mug pair", expected: "$42.00 USD", captured: "$40.00 USD · synthetic example", status: "Review required", tone: "review", capture: "Synthetic reference only", time: "No verified timestamp", source: "Synthetic mismatch scenario", discrepancy: "$2.00 USD amount difference", next: "Pause fulfilment and investigate" }
-];
+type RegisterOrder = {
+  order_number: string; product_name: string; quantity: number; total_amount: string; currency: string;
+  payment_environment: string; payment_status: string; paypal_order_id?: string | null;
+  paypal_capture_id?: string | null; paypal_reference_id?: string | null; verified_at?: string | null;
+  created_at?: string | null;
+};
+
+function money(amount: string, currency: string) {
+  const value = Number(amount);
+  return Number.isFinite(value) ? new Intl.NumberFormat("en-US", { style: "currency", currency }).format(value) : `${amount} ${currency}`;
+}
+function statusPresentation(status: string) {
+  switch (status) {
+    case "paid": return { label: "Verified paid", tone: "good", next: "Server-verified payment. Check fulfilment policy before dispatch." };
+    case "awaiting_payment": return { label: "Awaiting payment", tone: "pending", next: "Wait for server-side PayPal capture verification." };
+    case "payment_review": return { label: "Review required", tone: "review", next: "Hold fulfilment until a reviewer resolves the exception." };
+    case "failed": return { label: "Payment failed", tone: "review", next: "Do not fulfil. Review the failed payment outcome." };
+    case "cancelled": return { label: "Cancelled", tone: "pending", next: "No fulfilment; order is cancelled." };
+    default: return { label: "Unknown status", tone: "review", next: "Review the saved order status before taking action." };
+  }
+}
+function verifiedTime(value?: string | null) {
+  if (!value) return "Not verified";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Invalid timestamp" : date.toLocaleString("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Nairobi" }) + " EAT";
+}
 
 export default function PaymentsPage() {
-  return (
-    <WorkspaceLayout title="Payment evidence" eyebrow="PAYMENT OPERATIONS" description="Compare expected amounts with capture evidence, references, timestamps, discrepancies, and the next safe action. The rows below are illustrative scenarios—not live order records.">
-      <div className="ops-info-banner"><span className="ops-info-icon">i</span><div><strong>What counts as proof?</strong><p>A server-side PayPal response with a completed capture, matching amount, currency and order reference. A screenshot or AI answer is not payment proof.</p></div></div>
-      <section className="ops-metric-grid">
-        <article className="ops-metric"><span>Sample payment records</span><strong>03</strong><small>Illustrative only</small><span className="ops-metric-icon purple">▤</span></article>
-        <article className="ops-metric"><span>Verified in this sample</span><strong>01</strong><small>Not a live payment count</small><span className="ops-metric-icon green">✓</span></article>
-        <article className="ops-metric"><span>Awaiting confirmation</span><strong>01</strong><small>Do not fulfil yet</small><span className="ops-metric-icon amber">◷</span></article>
-        <article className="ops-metric"><span>Needs review</span><strong>01</strong><small>Check the evidence</small><span className="ops-metric-icon red">!</span></article>
+  const [orders, setOrders] = useState<RegisterOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [signedIn, setSignedIn] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) { setError("Sign-in is not configured. Add the public Supabase environment variables in Vercel."); setLoading(false); return; }
+    let active = true;
+    supabase.auth.getSession().then(async ({ data, error: sessionError }) => {
+      if (!active) return;
+      if (sessionError || !data.session) { setSignedIn(false); setLoading(false); return; }
+      setSignedIn(true);
+      try {
+        const response = await fetch("/api/orders", { cache: "no-store", headers: { Authorization: "Bearer " + data.session.access_token } });
+        const payload = await response.json() as { orders?: RegisterOrder[]; error?: string };
+        if (!response.ok) throw new Error(payload.error || "Your payment register could not be loaded.");
+        if (active) setOrders(payload.orders || []);
+      } catch (e) {
+        if (active) setError(e instanceof Error ? e.message : "Your payment register could not be loaded.");
+      } finally { if (active) setLoading(false); }
+    });
+    return () => { active = false; };
+  }, []);
+  const paid = orders.filter(order => order.payment_status === "paid").length;
+  const waiting = orders.filter(order => order.payment_status === "awaiting_payment").length;
+  const review = orders.filter(order => order.payment_status === "payment_review" || order.payment_status === "failed").length;
+
+  return <WorkspaceLayout title="Payment evidence" eyebrow="PAYMENT OPERATIONS" description="Your private payment register. A payment is only marked paid after server-side PayPal verification.">
+    <div className="ops-info-banner"><span className="ops-info-icon">i</span><div><strong>What counts as proof?</strong><p>A server-side PayPal response with a completed capture, matching amount, currency and order reference. A screenshot or AI answer is not payment proof.</p></div></div>
+    {!signedIn && !loading && <div className="ops-info-banner"><span className="ops-info-icon">!</span><div><strong>Sign in to view your private register</strong><p>Payment evidence is tied to an account and is not shared with other users.</p><p><Link href="/auth">Sign in or create an account ↗</Link></p></div></div>}
+    {error && <div className="ops-info-banner"><span className="ops-info-icon">!</span><div><strong>Could not load payment records</strong><p>{error}</p></div></div>}
+    <section className="ops-metric-grid">
+      <article className="ops-metric"><span>Orders loaded</span><strong>{orders.length.toString().padStart(2, "0")}</strong><small>Your saved records</small><span className="ops-metric-icon purple">▤</span></article>
+      <article className="ops-metric"><span>Verified paid</span><strong>{paid.toString().padStart(2, "0")}</strong><small>Server-verified records</small><span className="ops-metric-icon green">✓</span></article>
+      <article className="ops-metric"><span>Awaiting payment</span><strong>{waiting.toString().padStart(2, "0")}</strong><small>Do not fulfil yet</small><span className="ops-metric-icon amber">◷</span></article>
+      <article className="ops-metric"><span>Needs review</span><strong>{review.toString().padStart(2, "0")}</strong><small>Failed or flagged</small><span className="ops-metric-icon red">!</span></article>
+    </section>
+    <div className="ops-section-title"><div><h2>Payment register</h2><p>Latest saved orders from your account. Refresh this page to reload current records.</p></div><div style={{display:"flex",gap:10,flexWrap:"wrap"}}><Link className="ops-secondary-button" href="/demo-guide">Walkthrough guide ↗</Link><Link className="ops-secondary-button" href="/">Workspace ↗</Link></div></div>
+    <section className="ops-panel ops-table-panel">
+      <div className="ops-panel-top"><div><span className="ops-panel-symbol">▤</span><div><strong>Recent payment outcomes</strong><p>Order · expected amount · capture evidence</p></div></div><span className="ops-live-badge">{signedIn ? "PRIVATE REGISTER" : "SIGN IN REQUIRED"}</span></div>
+      <div className="ops-table-wrap"><table className="ops-table"><thead><tr><th>ORDER / EVIDENCE</th><th>PRODUCT</th><th>EXPECTED</th><th>CAPTURE DETAILS</th><th>STATUS / NEXT ACTION</th></tr></thead><tbody>
+        {orders.map(order => { const status = statusPresentation(order.payment_status); return <tr key={order.order_number}>
+          <td><strong className="ops-id">{order.order_number}</strong><small>Environment: {order.payment_environment}</small><small>Verified: {verifiedTime(order.verified_at)}</small></td>
+          <td>{order.product_name} × {order.quantity}</td><td className="ops-amount">{money(order.total_amount, order.currency)}</td>
+          <td><strong>{order.paypal_capture_id ? "Capture recorded" : "No capture evidence"}</strong><small>PayPal order: <code>{order.paypal_order_id || "Not available"}</code></small><small>Capture: <code>{order.paypal_capture_id || "Not available"}</code></small><small>Reference: <code>{order.paypal_reference_id || order.order_number}</code></small></td>
+          <td><span className={`ops-status ${status.tone}`}><i />{status.label}</span><small>{status.next}</small></td>
+        </tr>; })}
+        {orders.length === 0 && <tr><td colSpan={5}>{loading ? "Loading your private payment records…" : signedIn ? "No saved orders yet. Create an order and complete a Sandbox checkout to populate this register." : "Sign in to view payment records belonging to your workspace."}</td></tr>}
+      </tbody></table></div>
+    </section>
+    <div className="ops-two-column">
+      <section className="ops-panel ops-evidence-panel"><div className="ops-panel-top"><div><span className="ops-panel-symbol mint">✓</span><div><strong>Payment Evidence Rules</strong><p>Required checks before fulfilment</p></div></div><span className="ops-live-badge">SERVER CHECKS</span></div>
+        <div className="ops-evidence-check"><span>01</span><div><strong>Capture status is completed</strong><p>Read from PayPal&apos;s server response, not the browser.</p></div><b>Required</b></div>
+        <div className="ops-evidence-check"><span>02</span><div><strong>Amount and currency match</strong><p>Compare the captured value with the server-priced order.</p></div><b>Required</b></div>
+        <div className="ops-evidence-check"><span>03</span><div><strong>Order reference matches</strong><p>Link the capture to the order that initiated checkout.</p></div><b>Required</b></div>
+        <div className="ops-evidence-check"><span>04</span><div><strong>Evidence is saved</strong><p>Confirm the order and capture event exist in persistent storage.</p></div><b>Required</b></div>
+        <div className="ops-evidence-check"><span>05</span><div><strong>Take a safe next action</strong><p>Wait when evidence is missing; review discrepancies. Never fulfil based on AI output alone.</p></div><b>Human review</b></div>
       </section>
-      <div className="ops-section-title"><div><h2>Payment register</h2><p>Sample records show the structure; they are not connected to real customer orders.</p></div><Link className="ops-secondary-button" href="/">Run Sandbox checkout ↗</Link></div>
-      <section className="ops-panel ops-table-panel">
-        <div className="ops-panel-top"><div><span className="ops-panel-symbol">▤</span><div><strong>Recent payment outcomes</strong><p>Amount · status · capture evidence</p></div></div><span className="ops-sample-tag">SAMPLE DATA</span></div>
-        <div className="ops-table-wrap"><table className="ops-table"><thead><tr><th>ORDER / SOURCE</th><th>PRODUCT</th><th>EXPECTED</th><th>CAPTURED EVIDENCE</th><th>STATUS / NEXT ACTION</th></tr></thead><tbody>{samplePayments.map((payment) => <tr key={payment.id}><td><strong className="ops-id">{payment.id}</strong><small>{payment.source}</small><small>{payment.time}</small></td><td>{payment.product}</td><td className="ops-amount">{payment.expected}</td><td><strong>{payment.captured}</strong><small>Reference: <code>{payment.capture}</code></small><small>Difference: {payment.discrepancy}</small></td><td><span className={`ops-status ${payment.tone}`}><i />{payment.status}</span><small>{payment.next}</small></td></tr>)}</tbody></table></div>
+      <section className="ops-panel ops-visual-panel"><div className="ops-panel-top"><div><span className="ops-panel-symbol violet">↗</span><div><strong>Operational flow</strong><p>Checkout through evidence storage</p></div></div></div>
+        <div className="ops-flow-visual"><div className="ops-flow-node"><span>01</span><strong>Order</strong><small>Server-priced</small></div><i /><div className="ops-flow-node"><span>02</span><strong>PayPal</strong><small>Capture verified</small></div><i /><div className="ops-flow-node"><span>03</span><strong>Database</strong><small>Evidence saved</small></div></div>
+        <div className="ops-flow-caption"><span className="ops-flow-dot" /> No AI-generated payment decisions <span className="ops-caption-divider">·</span> Sandbox payments only</div>
       </section>
-      <div className="ops-two-column">
-        <section className="ops-panel ops-evidence-panel">
-          <div className="ops-panel-top"><div><span className="ops-panel-symbol mint">✓</span><div><strong>Payment Evidence Brief</strong><p>Compare evidence facts before deciding what happens next</p></div></div><span className="ops-live-badge">RULES</span></div>
-          <div className="ops-evidence-check"><span>01</span><div><strong>Capture status is completed</strong><p>Read from the PayPal server response, not the browser.</p></div><b>Required</b></div>
-          <div className="ops-evidence-check"><span>02</span><div><strong>Amount and currency match</strong><p>Compare the captured value with the server-priced order.</p></div><b>Required</b></div>
-          <div className="ops-evidence-check"><span>03</span><div><strong>Order reference matches</strong><p>Link the capture to the order that initiated checkout.</p></div><b>Required</b></div>
-          <div className="ops-evidence-check"><span>04</span><div><strong>Verification timestamp and source</strong><p>Display the server verification time and evidence source from the saved record. Sample rows here have no verified timestamp.</p></div><b>Show source</b></div><div className="ops-evidence-check"><span>05</span><div><strong>Choose a safe next action</strong><p>Proceed only after verified matching evidence; wait when capture evidence is missing; review any discrepancy.</p></div><b>Human review</b></div>
-        </section>
-        <section className="ops-panel ops-visual-panel">
-          <div className="ops-panel-top"><div><span className="ops-panel-symbol violet">↗</span><div><strong>Verification flow</strong><p>One clear path from checkout to evidence</p></div></div></div>
-          <div className="ops-flow-visual"><div className="ops-flow-node"><span>01</span><strong>Order</strong><small>Server-priced</small></div><i /><div className="ops-flow-node"><span>02</span><strong>PayPal</strong><small>Capture check</small></div><i /><div className="ops-flow-node"><span>03</span><strong>Record</strong><small>Save outcome</small></div></div>
-          <div className="ops-flow-caption"><span className="ops-flow-dot" /> No AI-generated payment decisions <span className="ops-caption-divider">·</span> No real-money processing</div>
-        </section>
-      </div>
-      <div className="ops-bottom-cta"><div><span className="ops-cta-icon">↗</span><div><strong>Want to see the verification flow live?</strong><p>Run a PayPal Sandbox checkout with a test buyer. No real money is processed.</p></div></div><Link className="ops-primary-button" href="/">Test PayPal checkout <span>↗</span></Link></div>
-    </WorkspaceLayout>
-  );
+    </div>
+    <div className="ops-bottom-cta"><div><span className="ops-cta-icon">↗</span><div><strong>Test the real payment flow</strong><p>Use a PayPal Sandbox test buyer. The register updates from your account&apos;s saved order records, not shared or illustrative data.</p></div></div><Link className="ops-primary-button" href="/">Create an order <span>↗</span></Link></div>
+  </WorkspaceLayout>;
 }

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { createPendingOrder, updateOrderByNumber } from "@/lib/order-store";
+import { createPendingOrder, isOrderStoreConfigured, updateOrderByNumber } from "@/lib/order-store";
 import { getPayPalAccessToken, paypalRequest } from "@/lib/paypal";
+import { getAuthenticatedUser } from "@/lib/auth-server";
 
 export const runtime = "nodejs";
 
@@ -22,6 +23,8 @@ function money(cents: number) {
 }
 
 export async function POST(request: NextRequest) {
+  const user = await getAuthenticatedUser(request);
+  if (!user) return NextResponse.json({ error: "Sign in to create and save orders in your own workspace." }, { status: 401 });
   let body: { product?: unknown; quantity?: unknown };
   try {
     body = await request.json();
@@ -37,6 +40,8 @@ export async function POST(request: NextRequest) {
   if (!Number.isInteger(body.quantity) || Number(body.quantity) < 1 || Number(body.quantity) > MAX_QUANTITY) {
     return NextResponse.json({ error: `Quantity must be a whole number from 1 to ${MAX_QUANTITY}.` }, { status: 400 });
   }
+
+  if (!isOrderStoreConfigured()) return NextResponse.json({ error: "Order storage is not configured. Checkout is disabled until Supabase storage is ready." }, { status: 503 });
 
   const productName = body.product as ProductName;
   const product = CATALOG[productName];
@@ -66,7 +71,7 @@ export async function POST(request: NextRequest) {
   try {
     // Persist the server-priced draft before redirecting to PayPal. If storage
     // is configured but unavailable, fail closed rather than silently losing it.
-    const pending = await createPendingOrder(orderRecord);
+    const pending = await createPendingOrder(orderRecord, user.id);
     const appBaseUrl = (
       process.env.APP_URL ||
       process.env.NEXT_PUBLIC_APP_URL ||
@@ -110,11 +115,11 @@ export async function POST(request: NextRequest) {
 
     const approvalUrl = order.links?.find((link) => link.rel === "approve")?.href;
     if (!order.id || !approvalUrl) {
-      await updateOrderByNumber(referenceId, { payment_status: "failed" });
+      await updateOrderByNumber(referenceId, { payment_status: "failed" }, user.id);
       return NextResponse.json({ error: "PayPal did not return a usable approval link." }, { status: 502 });
     }
 
-    const linked = await updateOrderByNumber(referenceId, { paypal_order_id: order.id });
+    const linked = await updateOrderByNumber(referenceId, { paypal_order_id: order.id }, user.id);
     return NextResponse.json({
       orderId: order.id,
       approvalUrl,

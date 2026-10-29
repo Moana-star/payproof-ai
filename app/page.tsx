@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { ReconciliationConsole } from "@/components/reconciliation-console";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type OrderStatus = "Paid" | "Awaiting payment" | "Review needed";
 type Order = {
@@ -33,21 +35,110 @@ const statusClass: Record<OrderStatus, string> = {
 };
 
 export default function Home() {
-  const [greeting, setGreeting] = useState("Hello");
-  useEffect(() => {
-    const updateGreeting = () => {
-      const hour = new Date().getHours();
-      setGreeting(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
-    };
-    updateGreeting();
-    const interval = window.setInterval(updateGreeting, 60_000);
-    return () => window.clearInterval(interval);
-  }, []);
-
+  const [authUserName, setAuthUserName] = useState("");
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [authWorkspaceName, setAuthWorkspaceName] = useState("Demo workspace");
   const [orders, setOrders] = useState(initialOrders);
+  const [ordersSource, setOrdersSource] = useState<"sample" | "saved" | "unavailable">("sample");
+  const [ordersLoadNote, setOrdersLoadNote] = useState("");
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setAuthChecked(true);
+      setIsSignedIn(false);
+      setOrdersSource("sample");
+      setOrdersLoadNote("Public demo mode. Sign in to save and view your own Sandbox orders.");
+      return;
+    }
+    let active = true;
+    const loadOrders = async (token: string | null) => {
+      if (!token) {
+        setOrders(initialOrders);
+        setOrdersSource("sample");
+        setOrdersLoadNote("Public demo mode. Sample rows are illustrative; sign in to see your own saved orders.");
+        return;
+      }
+      try {
+        const response = await fetch("/api/orders", {
+          cache: "no-store",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await response.json() as {
+          configured?: boolean;
+          orders?: Array<{
+            order_number: string; product_name: string; quantity: number;
+            total_amount: string; currency: string; payment_status: string;
+            verified_at?: string | null; created_at?: string | null;
+          }>;
+          error?: string;
+        };
+        if (!active) return;
+        if (!response.ok) throw new Error(data.error || "Saved orders could not be loaded.");
+        if (!data.configured) {
+          setOrders([]);
+          setOrdersSource("unavailable");
+          setOrdersLoadNote("Order storage is not configured yet. Your account is signed in, but saved orders cannot be loaded.");
+          return;
+        }
+        const saved = (data.orders || []).map((order) => {
+          const status: OrderStatus = order.payment_status === "paid" ? "Paid" : order.payment_status === "awaiting_payment" ? "Awaiting payment" : "Review needed";
+          const amountValue = Number(order.total_amount);
+          const amount = Number.isFinite(amountValue)
+            ? new Intl.NumberFormat("en-US", { style: "currency", currency: order.currency || "USD" }).format(amountValue)
+            : `${order.total_amount} ${order.currency}`;
+          const timestamp = order.verified_at || order.created_at;
+          return {
+            id: order.order_number,
+            customer: "Your Sandbox order",
+            item: `${order.product_name} × ${order.quantity}`,
+            amount,
+            status,
+            time: status === "Paid" ? (timestamp ? `Server verified · ${new Date(timestamp).toLocaleString()}` : "Server-verified Sandbox capture") : status === "Awaiting payment" ? "Awaiting PayPal capture" : "Review required · Do not fulfil",
+            initials: "ME"
+          };
+        });
+        setOrders(saved);
+        setOrdersSource("saved");
+        setOrdersLoadNote(saved.length
+          ? "Showing only orders saved to your account. Paid status comes from server-verified PayPal captures."
+          : "Your workspace is ready. No saved orders yet; complete a Sandbox checkout to add one.");
+      } catch {
+        if (!active) return;
+        setOrdersSource("unavailable");
+        setOrdersLoadNote("Your saved orders could not be loaded. Please refresh or check the Supabase configuration.");
+      }
+    };
+    const applySession = async (session: { access_token: string; user: { email?: string; user_metadata?: Record<string, unknown> } } | null) => {
+      if (!active) return;
+      if (!session) {
+        setAuthChecked(true);
+        setIsSignedIn(false);
+        setAuthUserName("");
+        setAuthWorkspaceName("Demo workspace");
+        await loadOrders(null);
+        return;
+      }
+      setAuthChecked(true);
+      setIsSignedIn(true);
+      const metadata = session.user.user_metadata || {};
+      setAuthUserName(typeof metadata.display_name === "string" && metadata.display_name.trim() ? metadata.display_name.trim() : (session.user.email?.split("@")[0] || "Account"));
+      setAuthWorkspaceName(typeof metadata.workspace_name === "string" && metadata.workspace_name.trim() ? metadata.workspace_name.trim() : "My workspace");
+      await loadOrders(session.access_token);
+    };
+    supabase.auth.getSession().then(({ data }) => applySession(data.session ? {
+      access_token: data.session.access_token,
+      user: { email: data.session.user.email, user_metadata: data.session.user.user_metadata }
+    } : null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      void applySession(session ? { access_token: session.access_token, user: { email: session.user.email, user_metadata: session.user.user_metadata } } : null);
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
   const [message, setMessage] = useState("");
   const [draft, setDraft] = useState<{ item: string; quantity: string; note: string } | null>(null);
-  const [notice, setNotice] = useState("Demo workspace · Sample records only");
+  const [notice, setNotice] = useState("Demo workspace · Sample records only. Saved Sandbox evidence is under Payment evidence.");
   const [showGuide, setShowGuide] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
@@ -63,9 +154,16 @@ export default function Home() {
     setCheckoutLoading(true);
     setNotice("Creating a PayPal Sandbox checkout using the server-priced catalogue. No real money will be processed.");
     try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!session) {
+        setNotice("Sign in or create an account before starting a checkout so the order is saved to your own workspace.");
+        window.location.assign("/auth");
+        return;
+      }
       const response = await fetch("/api/paypal/create-order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ product, quantity })
       });
       const data = (await response.json()) as { approvalUrl?: string; error?: string };
@@ -160,8 +258,7 @@ export default function Home() {
           <a className="nav-item" href="#reconciliation"><span className="nav-icon">⇄</span> Reconciliation</a>
           <a className="nav-item" href="/payments"><span className="nav-icon">✓</span> Payment evidence</a>
           <a className="nav-item" href="/assistant"><span className="nav-icon">✳</span> AI assistant</a>
-          <a className="nav-item" href="/exceptions"><span className="nav-icon">!</span> Exception review</a>
-          <a className="nav-item" href="/audit"><span className="nav-icon">⌁</span> Audit trail</a>
+          {!isSignedIn && <><a className="nav-item" href="/exceptions"><span className="nav-icon">!</span> Exception review</a><a className="nav-item" href="/audit"><span className="nav-icon">⌁</span> Audit trail</a></>}
         </nav>
         <div className="sidebar-bottom">
           <div className="trust-card">
@@ -170,8 +267,8 @@ export default function Home() {
             <p>AI helps explain. Verified payment data decides.</p>
           </div>
           <div className="profile-row">
-            <div className="avatar profile-avatar">M</div>
-            <div><strong>Moana&apos;s workspace</strong><span>Sandbox preview</span></div>
+            <div className="avatar profile-avatar">{authUserName ? authUserName.slice(0, 1).toUpperCase() : "P"}</div>
+            <div><strong>{authUserName ? authWorkspaceName : "Demo workspace"}</strong><span>{authUserName || "Public Sandbox preview"}</span></div>
             <span className="profile-dots">···</span>
           </div>
         </div>
@@ -180,50 +277,32 @@ export default function Home() {
       <section className="main-area">
         <header className="topbar">
           <div className="breadcrumb">Workspace <span>/</span> Overview</div>
-          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><button className="sandbox-checkout-button" onClick={() => startSandboxCheckout()} disabled={checkoutLoading}>{checkoutLoading ? "Connecting…" : "Test PayPal checkout"} <span>↗</span></button><button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
+          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link>{authUserName ? <><Link className="demo-payment-guide-link" href="/profile">My profile ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
 
         <div className="content" id="overview">
           <div className="welcome-row">
-            <div><p className="eyebrow">YOUR PAYMENT WORKSPACE</p><h1>{greeting}, Moana <span>✳</span></h1><p className="subheading">A clearer view of orders, payments, and what needs your attention.</p></div>
+            <div><p className="eyebrow">YOUR PAYMENT WORKSPACE</p><h1>{authUserName ? `Welcome, ${authUserName}` : "Welcome to PayProof AI"} <span>✳</span></h1><p className="subheading">{authUserName ? `Your ${authWorkspaceName} workspace — orders, payment evidence, and what needs your attention.` : "Explore the public demo, or sign in to create your own private workspace."}</p></div>
             <button className="primary-button" onClick={() => document.getElementById("intake")?.scrollIntoView({ behavior: "smooth" })}><span>＋</span> New order</button>
           </div>
 
           {showGuide && <div className="guide-panel"><strong>How PayProof AI works</strong><p>Order messages become reviewable drafts. For a new checkout, PayProof AI verifies the PayPal Sandbox response server-side and attempts to save the verified order to Supabase. The dashboard rows shown here remain illustrative demo data.</p></div>}
 
-          <div className="notice" role="status"><span className="notice-icon">i</span><span>{notice}</span><button onClick={() => setNotice("Demo workspace · Sample records only")} aria-label="Reset notice">×</button></div>
+          <div className="notice" role="status"><span className="notice-icon">i</span><span>{notice}</span><button onClick={() => setNotice("Demo workspace · Sample records only. Saved Sandbox evidence is under Payment evidence.")} aria-label="Reset notice">×</button></div>
 
-          <section className="value-strip" aria-label="PayProof AI product principles">
-            <article className="value-card">
-              <span className="value-kicker">01 · THE PROBLEM</span>
-              <h2>Orders arrive in conversations.</h2>
-              <p>Customer messages, checkout links, and payment updates can become scattered across tools.</p>
-            </article>
-            <article className="value-card">
-              <span className="value-kicker">02 · THE PROMISE</span>
-              <h2>One clearer review workflow.</h2>
-              <p>Organise order details, surface missing information, and keep exceptions visible before fulfilment.</p>
-            </article>
-            <article className="value-card value-card-proof">
-              <span className="value-kicker">03 · THE PROOF</span>
-              <h2>Evidence over assumptions.</h2>
-              <p>A Sandbox capture is checked server-side against PayPal. Sample dashboard records are not live payment evidence.</p>
-            </article>
-          </section>
-
-          <div className="workflow-heading">
-            <div><p className="eyebrow">BUILT AROUND TRUST</p><h2>From customer message to payment evidence</h2></div>
-            <span className="workflow-label"><i /> Sandbox prototype</span>
-          </div>
-          <section className="workflow-grid" aria-label="PayProof AI workflow">
-            <article className="workflow-step"><span className="workflow-number">1</span><div><h3>Capture</h3><p>Start with the customer’s original message and identify the details that matter.</p></div></article>
-            <article className="workflow-step"><span className="workflow-number">2</span><div><h3>Review</h3><p>Check suggested product and quantity. Missing or ambiguous details stay flagged.</p></div></article>
-            <article className="workflow-step"><span className="workflow-number">3</span><div><h3>Verify</h3><p>Use PayPal’s server response to verify the catalogue item, quantity, amount and Sandbox capture.</p></div></article>
+          <section className="judge-quick-start" aria-label="Judge quick start">
+            <div className="judge-quick-copy"><p className="eyebrow">JUDGE QUICK START</p><h2>Test the core workflow</h2><p>Prepare an order, verify a Sandbox capture, review saved evidence, then inspect reconciliation exceptions.</p></div>
+            <div className="judge-quick-actions">
+              <button type="button" className="primary-button" onClick={() => document.getElementById("intake")?.scrollIntoView({ behavior: "smooth" })}>1. Prepare an order</button>
+              <button type="button" className="secondary-button" onClick={() => startSandboxCheckout()}>2. Test PayPal Sandbox ↗</button>
+              <Link className="secondary-button" href="/payments">3. Review evidence ↗</Link>
+              <button type="button" className="secondary-button" onClick={() => document.getElementById("reconciliation")?.scrollIntoView({ behavior: "smooth" })}>4. Reconciliation ↓</button>
+            </div>
           </section>
 
           <div className="metrics-grid">
-            <article className="metric-card"><div className="metric-top"><span>Total orders</span><span className="metric-icon violet">▤</span></div><div className="metric-value">{orders.length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">Sample workspace</span><span>All orders</span></div></article>
-            <article className="metric-card"><div className="metric-top"><span>Sample paid</span><span className="metric-icon green">✓</span></div><div className="metric-value">{paidTotal.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-green">Illustrative only</span><span>Not a live payment count</span></div></article>
+            <article className="metric-card"><div className="metric-top"><span>Total orders</span><span className="metric-icon violet">▤</span></div><div className="metric-value">{orders.length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">{ordersSource === "saved" ? "Connected records" : "Sample workspace"}</span><span>All orders</span></div></article>
+            <article className="metric-card"><div className="metric-top"><span>{ordersSource === "saved" ? "Verified paid" : "Sample paid"}</span><span className="metric-icon green">✓</span></div><div className="metric-value">{paidTotal.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-green">{ordersSource === "saved" ? "Server verified" : "Illustrative only"}</span><span>{ordersSource === "saved" ? "Saved Sandbox records" : "Not a live payment count"}</span></div></article>
             <article className="metric-card"><div className="metric-top"><span>Awaiting payment</span><span className="metric-icon amber">◷</span></div><div className="metric-value">{orders.filter(o => o.status === "Awaiting payment").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">No action yet</span><span>Checkout pending</span></div></article>
             <article className="metric-card"><div className="metric-top"><span>Needs attention</span><span className="metric-icon red">!</span></div><div className="metric-value">{orders.filter(o => o.status === "Review needed").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-red">Review required</span><span>Before fulfilment</span></div></article>
           </div>
@@ -249,23 +328,26 @@ export default function Home() {
               <div className="reconciliation-flow-line" />
               <div className="reconciliation-flow-step"><span>4</span><div><strong>Post &amp; audit</strong><small>Internal demo ledger</small></div></div>
             </div>
-            <ReconciliationConsole />
+            {!authChecked ? <p className="workspace-isolation-note">Checking workspace access…</p> : isSignedIn ? <div className="workspace-isolation-note"><strong>Private workspace boundary</strong><p>Your orders and payment evidence are scoped to your account. The current reconciliation statement, exception and audit demo remains a shared judge preview, so it is hidden here rather than mixing it with your private records.</p></div> : <ReconciliationConsole />}
           </section>
 
-          <div className="section-heading" id="orders"><div><h2>Recent orders</h2><p>Track each order without guessing about payment status.</p></div><button className="text-button" onClick={() => setNotice("Showing all sample orders in this prototype.")}>View all orders <span>→</span></button></div>
+          <div className="section-heading" id="orders"><div><h2>Recent orders</h2><p>Track each order without guessing about payment status.</p></div><button className="text-button" onClick={() => setNotice(ordersSource === "saved" ? "Showing saved Sandbox orders. For capture details and verification timestamps, open Payment evidence." : "Showing illustrative sample orders. These are not saved payment records.")}>View all orders <span>→</span></button></div>
 
           <section className="orders-card">
-            <div className="table-toolbar"><div className="table-title">All orders <span className="table-count">{orders.length}</span></div><div className="table-filters"><span className="filter-label">Status</span><button className="filter-button" onClick={() => setOrders(orders.slice().reverse())}>Recent activity ↕</button></div></div>
-            <div className="order-table-wrap"><table className="order-table"><thead><tr><th>ORDER</th><th>CUSTOMER / ITEM</th><th>AMOUNT</th><th>PAYMENT STATUS</th><th>LAST ACTIVITY</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><span className="order-id">{order.id}</span></td><td><div className="customer-cell"><div className="avatar">{order.initials}</div><div><strong>{order.customer}</strong><span>{order.item}</span></div></div></td><td className="amount">{order.amount}</td><td><span className={`status-badge ${statusClass[order.status]}`}><i />{order.status}</span></td><td className="activity-text">{order.time}</td></tr>)}</tbody></table></div>
-            <div className="table-footer"><span>Illustrative records for interface preview</span><span>1–{orders.length} of {orders.length}</span></div>
+            <div className="table-toolbar"><div className="table-title">{ordersSource === "saved" ? "Saved orders" : "Sample orders"} <span className="table-count">{orders.length}</span></div><div className="table-filters"><span className="filter-label">Status</span><button className="filter-button" onClick={() => setOrders(orders.slice().reverse())}>Recent activity ↕</button></div></div>
+            <div className="order-table-wrap"><table className="order-table"><thead><tr><th>ORDER</th><th>CUSTOMER / ITEM</th><th>AMOUNT</th><th>PAYMENT STATUS</th><th>LAST ACTIVITY</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><span className="order-id">{order.id}</span></td><td><div className="customer-cell"><div className="avatar">{order.initials}</div><div><strong>{order.customer}</strong><span>{order.item}</span></div></div></td><td className="amount">{order.amount}</td><td><span className={`status-badge ${statusClass[order.status]}`}><i />{order.status === "Paid" ? (ordersSource === "saved" ? "Verified paid" : "Sample · unverified") : order.status}</span></td><td className="activity-text">{order.time}</td></tr>)}{orders.length === 0 && <tr><td colSpan={5}>{ordersSource === "saved" ? "No saved orders yet. Complete a Sandbox checkout to populate this table." : "No sample rows are available. Check the payment evidence page for saved records."}</td></tr>}</tbody></table></div>
+            <div className="table-footer"><span>{ordersLoadNote || (ordersSource === "saved" ? "Persistent Sandbox order records" : "Illustrative records · Not live payment evidence")}</span><span>{orders.length ? `1–${orders.length} of ${orders.length}` : "0 orders"}</span></div>
           </section>
 
           <div className="lower-grid">
             <section className="intake-card" id="intake">
               <div className="panel-heading"><div><span className="panel-icon">✳</span><div><h2>AI order intake</h2><p>Extract order details for human review.</p></div></div><span className="beta-badge">AI-ASSISTED · REVIEW REQUIRED</span></div>
-              <label className="field-label" htmlFor="customer-message">CUSTOMER MESSAGE</label>
-              <textarea id="customer-message" value={message} onChange={(event) => { setMessage(event.target.value); if (draftError) setDraftError(null); }} placeholder={'Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
-              <div className="field-hint">AI suggestions are advisory only. Confirm every field; nothing is saved automatically and payment status is never inferred.</div>
+              <div className="intake-sample-row">
+                <label className="field-label" htmlFor="customer-message">CUSTOMER MESSAGE</label>
+                <button type="button" className="sample-message-button" onClick={() => { setMessage("Hi, I'd like 2 Coffee gift sets, please. Can you prepare the order for me?"); setDraft(null); setDraftError(null); setValidationResult(null); setNotice("Sample customer message loaded. Select Prepare order draft to test AI extraction."); }}>Load sample message</button>
+              </div>
+              <textarea id="customer-message" value={message} onChange={(event) => { setMessage(event.target.value); if (draftError) setDraftError(null); }} placeholder={'Try the sample message, or paste a customer message here. Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
+              <div className="field-hint">Try the sample message above, then choose Prepare order draft. AI suggestions are advisory only. Confirm every field; nothing is saved automatically and payment status is never inferred.</div>
               <button type="button" className="secondary-button full-button" onClick={prepareDraft} disabled={draftLoading} aria-busy={draftLoading}>{draftLoading ? "Preparing draft…" : "Prepare order draft"} <span>{draftLoading ? "…" : "→"}</span></button>
               {draftError && <p className="draft-error" role="alert">{draftError}</p>}
               <p className="draft-action-hint" aria-live="polite">{draftLoading ? "Please wait while the message is analysed." : draftError ? "No order was created. You can retry after the AI service issue is resolved." : draft ? "Draft prepared. Review every field before taking any action." : "Enter a customer message above, then select Prepare order draft."}</p>
@@ -274,7 +356,7 @@ export default function Home() {
 
             <section className="attention-card" id="activity">
               <div className="panel-heading"><div><span className="panel-icon attention-icon">!</span><div><h2>Needs your attention</h2><p>Items to review before taking action.</p></div></div><span className="attention-count">{orders.filter(o => o.status === "Review needed").length}</span></div>
-              {orders.filter(o => o.status === "Review needed" || o.status === "Awaiting payment").map((order) => <div className="attention-item" key={order.id}><div className={`attention-dot ${order.status === "Review needed" ? "dot-red" : "dot-amber"}`} /><div><strong>{order.status === "Review needed" ? "Payment needs review" : "Payment not completed"}</strong><p>{order.id} · {order.customer} · {order.amount}</p></div><button aria-label={`Review ${order.id}`} onClick={() => setNotice(`${order.id}: sample record only. Use Test PayPal checkout to run the configured Sandbox verification flow.`)}>→</button></div>)}
+              {orders.filter(o => o.status === "Review needed" || o.status === "Awaiting payment").map((order) => <div className="attention-item" key={order.id}><div className={`attention-dot ${order.status === "Review needed" ? "dot-red" : "dot-amber"}`} /><div><strong>{order.status === "Review needed" ? "Payment needs review" : "Payment not completed"}</strong><p>{order.id} · {order.customer} · {order.amount}</p></div><button aria-label={`Review ${order.id}`} onClick={() => setNotice(ordersSource === "saved" ? `${order.id}: check Payment evidence for saved PayPal capture details. Do not fulfil while payment is awaiting or under review.` : `${order.id}: illustrative sample only. Use Test PayPal checkout to run the configured Sandbox verification flow.`)}>→</button></div>)}
               <div className="evidence-note"><span>✓</span><p><strong>Never trust a screenshot alone.</strong><br />A paid status requires server-side PayPal verification.</p></div>
             </section>
           </div>
