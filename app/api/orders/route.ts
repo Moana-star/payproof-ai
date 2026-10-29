@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const orders = await listRecentOrders(user.id, 100);
+    const orders = await listRecentOrders(100, user.id);
     return NextResponse.json(
       { configured: true, orders },
       { headers: { "Cache-Control": "no-store" } }
