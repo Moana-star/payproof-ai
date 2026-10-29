@@ -36,6 +36,8 @@ const statusClass: Record<OrderStatus, string> = {
 
 export default function Home() {
   const [authUserName, setAuthUserName] = useState("");
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
   const [authWorkspaceName, setAuthWorkspaceName] = useState("Demo workspace");
   const [orders, setOrders] = useState(initialOrders);
   const [ordersSource, setOrdersSource] = useState<"sample" | "saved" | "unavailable">("sample");
@@ -44,6 +46,8 @@ export default function Home() {
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
+      setAuthChecked(true);
+      setIsSignedIn(false);
       setOrdersSource("sample");
       setOrdersLoadNote("Public demo mode. Sign in to save and view your own Sandbox orders.");
       return;
@@ -109,11 +113,15 @@ export default function Home() {
     const applySession = async (session: { access_token: string; user: { email?: string; user_metadata?: Record<string, unknown> } } | null) => {
       if (!active) return;
       if (!session) {
+        setAuthChecked(true);
+        setIsSignedIn(false);
         setAuthUserName("");
         setAuthWorkspaceName("Demo workspace");
         await loadOrders(null);
         return;
       }
+      setAuthChecked(true);
+      setIsSignedIn(true);
       const metadata = session.user.user_metadata || {};
       setAuthUserName(typeof metadata.display_name === "string" && metadata.display_name.trim() ? metadata.display_name.trim() : (session.user.email?.split("@")[0] || "Account"));
       setAuthWorkspaceName(typeof metadata.workspace_name === "string" && metadata.workspace_name.trim() ? metadata.workspace_name.trim() : "My workspace");
@@ -250,8 +258,7 @@ export default function Home() {
           <a className="nav-item" href="#reconciliation"><span className="nav-icon">⇄</span> Reconciliation</a>
           <a className="nav-item" href="/payments"><span className="nav-icon">✓</span> Payment evidence</a>
           <a className="nav-item" href="/assistant"><span className="nav-icon">✳</span> AI assistant</a>
-          <a className="nav-item" href="/exceptions"><span className="nav-icon">!</span> Exception review</a>
-          <a className="nav-item" href="/audit"><span className="nav-icon">⌁</span> Audit trail</a>
+          {!isSignedIn && <><a className="nav-item" href="/exceptions"><span className="nav-icon">!</span> Exception review</a><a className="nav-item" href="/audit"><span className="nav-icon">⌁</span> Audit trail</a></>}
         </nav>
         <div className="sidebar-bottom">
           <div className="trust-card">
@@ -321,7 +328,7 @@ export default function Home() {
               <div className="reconciliation-flow-line" />
               <div className="reconciliation-flow-step"><span>4</span><div><strong>Post &amp; audit</strong><small>Internal demo ledger</small></div></div>
             </div>
-            <ReconciliationConsole />
+            {!authChecked ? <p className="workspace-isolation-note">Checking workspace access…</p> : isSignedIn ? <div className="workspace-isolation-note"><strong>Private workspace boundary</strong><p>Your orders and payment evidence are scoped to your account. The current reconciliation statement, exception and audit demo remains a shared judge preview, so it is hidden here rather than mixing it with your private records.</p></div> : <ReconciliationConsole />}
           </section>
 
           <div className="section-heading" id="orders"><div><h2>Recent orders</h2><p>Track each order without guessing about payment status.</p></div><button className="text-button" onClick={() => setNotice(ordersSource === "saved" ? "Showing saved Sandbox orders. For capture details and verification timestamps, open Payment evidence." : "Showing illustrative sample orders. These are not saved payment records.")}>View all orders <span>→</span></button></div>
