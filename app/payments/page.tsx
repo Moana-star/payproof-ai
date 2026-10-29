@@ -81,7 +81,7 @@ export default async function PaymentsPage() {
       <div className="ops-two-column">
         <section className="ops-panel ops-evidence-panel">
           <div className="ops-panel-top"><div><span className="ops-panel-symbol mint">✓</span><div><strong>Payment Evidence Rules</strong><p>Required checks before fulfilment</p></div></div><span className="ops-live-badge">SERVER CHECKS</span></div>
-          <div className="ops-evidence-check"><span>01</span><div><strong>Capture status is completed</strong><p>Read from PayPal's server response, not the browser.</p></div><b>Required</b></div>
+          <div className="ops-evidence-check"><span>01</span><div><strong>Capture status is completed</strong><p>Read from PayPal&apos;s server response, not the browser.</p></div><b>Required</b></div>
           <div className="ops-evidence-check"><span>02</span><div><strong>Amount and currency match</strong><p>Compare the captured value with the server-priced order.</p></div><b>Required</b></div>
           <div className="ops-evidence-check"><span>03</span><div><strong>Order reference matches</strong><p>Link the capture to the order that initiated checkout.</p></div><b>Required</b></div>
           <div className="ops-evidence-check"><span>04</span><div><strong>Evidence is saved</strong><p>Confirm the order and capture event exist in persistent storage.</p></div><b>Required</b></div>
