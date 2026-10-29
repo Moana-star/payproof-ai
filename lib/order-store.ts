@@ -140,7 +140,7 @@ export type PaymentRegisterOrder = Pick<StoredOrder,
   "paypal_capture_id" | "paypal_reference_id" | "verified_at"
 > & { created_at?: string | null };
 
-export async function listRecentOrders(limit = 100, ownerId: string): Promise<PaymentRegisterOrder[]> {
+export async function listRecentOrders(ownerId: string, limit = 100): Promise<PaymentRegisterOrder[]> {
   if (!isOrderStoreConfigured()) {
     throw new Error("Payment storage is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the deployment environment.");
   }
