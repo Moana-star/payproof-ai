@@ -48,7 +48,8 @@ This is a hackathon prototype, **not production-ready**.
 - [x] MIT license and environment-variable template
 - [x] A successful Sandbox capture and saved paid order have been observed
 - [x] Reconciliation flow tested using clearly labelled simulated statement data
-- [ ] Confirm `GROQ_API_KEY` is present in the active Vercel Preview environment and test both AI screens there
+- [x] Confirm `GROQ_API_KEY` is configured for Vercel Preview
+- [ ] Test AI order intake and the AI assistant on the active deployed Preview
 - [ ] Perform a fresh end-to-end Sandbox checkout and independently confirm the matching Supabase order and payment-event records
 - [ ] Run automated lint/build checks on the exact final commit and verify the resulting deployment
 - [ ] Exercise safe failure paths: incomplete order, cancelled/uncompleted payment, amount/currency/reference mismatch, provider outage, and duplicate request
@@ -154,6 +155,7 @@ Follow [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for a short, honest walkthrough. Show th
 - [Product requirements](prd.md)
 - [Technical specification](spec.md)
 - [Demo script](DEMO_SCRIPT.md)
+- [Hackathon submission draft](SUBMISSION_DRAFT.md)
 - [Environment template](.env.example)
 - [MIT License](LICENSE)
 
