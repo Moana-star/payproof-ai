@@ -85,7 +85,7 @@ export default function PaymentsPage() {
     </section>
     <div className="ops-two-column">
       <section className="ops-panel ops-evidence-panel"><div className="ops-panel-top"><div><span className="ops-panel-symbol mint">✓</span><div><strong>Payment Evidence Rules</strong><p>Required checks before fulfilment</p></div></div><span className="ops-live-badge">SERVER CHECKS</span></div>
-        <div className="ops-evidence-check"><span>01</span><div><strong>Capture status is completed</strong><p>Read from PayPal's server response, not the browser.</p></div><b>Required</b></div>
+        <div className="ops-evidence-check"><span>01</span><div><strong>Capture status is completed</strong><p>Read from PayPal&apos;s server response, not the browser.</p></div><b>Required</b></div>
         <div className="ops-evidence-check"><span>02</span><div><strong>Amount and currency match</strong><p>Compare the captured value with the server-priced order.</p></div><b>Required</b></div>
         <div className="ops-evidence-check"><span>03</span><div><strong>Order reference matches</strong><p>Link the capture to the order that initiated checkout.</p></div><b>Required</b></div>
         <div className="ops-evidence-check"><span>04</span><div><strong>Evidence is saved</strong><p>Confirm the order and capture event exist in persistent storage.</p></div><b>Required</b></div>
@@ -96,6 +96,6 @@ export default function PaymentsPage() {
         <div className="ops-flow-caption"><span className="ops-flow-dot" /> No AI-generated payment decisions <span className="ops-caption-divider">·</span> Sandbox payments only</div>
       </section>
     </div>
-    <div className="ops-bottom-cta"><div><span className="ops-cta-icon">↗</span><div><strong>Test the real payment flow</strong><p>Use a PayPal Sandbox test buyer. The register updates from your account's saved order records, not shared or illustrative data.</p></div></div><Link className="ops-primary-button" href="/">Create an order <span>↗</span></Link></div>
+    <div className="ops-bottom-cta"><div><span className="ops-cta-icon">↗</span><div><strong>Test the real payment flow</strong><p>Use a PayPal Sandbox test buyer. The register updates from your account&apos;s saved order records, not shared or illustrative data.</p></div></div><Link className="ops-primary-button" href="/">Create an order <span>↗</span></Link></div>
   </WorkspaceLayout>;
 }
