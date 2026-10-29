@@ -26,7 +26,7 @@ grant select, insert, update on public.profiles to authenticated;
 grant select, insert, update on public.orders to authenticated;
 
 create or replace function public.handle_new_user_profile()
-returns trigger language plpgsql security invoker set search_path = ''
+returns trigger language plpgsql security definer set search_path = ''
 as $$
 begin
   insert into public.profiles (id, display_name, workspace_name)
@@ -42,3 +42,5 @@ $$;
 drop trigger if exists on_auth_user_created_profile on auth.users;
 create trigger on_auth_user_created_profile after insert on auth.users
 for each row execute procedure public.handle_new_user_profile();
+
+revoke all on function public.handle_new_user_profile() from public, anon, authenticated;
