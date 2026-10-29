@@ -83,9 +83,15 @@ function ReturnContent() {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         outcome = await sendVerification();
       }
+      // If PayPal confirms capture but the database write was temporarily unavailable,
+      // retry the same idempotent verification endpoint once to persist the evidence.
+      if (outcome.body.verified && !outcome.body.persisted) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        outcome = await sendVerification();
+      }
 
       setResult(outcome.body);
-      if (outcome.body.verified) finished.current = true;
+      if (outcome.body.verified && outcome.body.persisted) finished.current = true;
     } catch {
       setResult({ verified: false, status: "REVIEW_REQUIRED", error: "Automatic verification could not finish. Use Retry verification below; do not refresh or pay again." });
     } finally {
