@@ -50,6 +50,7 @@ export default function Home() {
       setIsSignedIn(false);
       setOrdersSource("sample");
       setOrdersLoadNote("Public demo mode. Sign in to save and view your own Sandbox orders.");
+      setNotice("Public demo · Sample rows are illustrative only. Sign in to view your private saved Sandbox orders.");
       return;
     }
     let active = true;
@@ -58,6 +59,7 @@ export default function Home() {
         setOrders(initialOrders);
         setOrdersSource("sample");
         setOrdersLoadNote("Public demo mode. Sample rows are illustrative; sign in to see your own saved orders.");
+        setNotice("Public demo · Sample rows are illustrative only. Sign in to view your private saved Sandbox orders.");
         return;
       }
       try {
@@ -80,6 +82,7 @@ export default function Home() {
           setOrders([]);
           setOrdersSource("unavailable");
           setOrdersLoadNote("Order storage is not configured yet. Your account is signed in, but saved orders cannot be loaded.");
+          setNotice("Account signed in, but order storage is not configured. Do not treat sample rows as account records.");
           return;
         }
         const saved = (data.orders || []).map((order) => {
@@ -104,10 +107,14 @@ export default function Home() {
         setOrdersLoadNote(saved.length
           ? "Showing only orders saved to your account. Paid status comes from server-verified PayPal captures."
           : "Your workspace is ready. No saved orders yet; complete a Sandbox checkout to add one.");
+        setNotice(saved.length
+          ? "Private workspace · Showing only orders saved to your account. Payment evidence is available under Payment evidence."
+          : "Private workspace ready · No saved orders yet. Create a Sandbox order to begin.");
       } catch {
         if (!active) return;
         setOrdersSource("unavailable");
         setOrdersLoadNote("Your saved orders could not be loaded. Please refresh or check the Supabase configuration.");
+        setNotice("Your account is signed in, but saved orders could not be loaded. Refresh before relying on the dashboard.");
       }
     };
     const applySession = async (session: { access_token: string; user: { email?: string; user_metadata?: Record<string, unknown> } } | null) => {
@@ -138,7 +145,7 @@ export default function Home() {
   }, []);
   const [message, setMessage] = useState("");
   const [draft, setDraft] = useState<{ item: string; quantity: string; note: string } | null>(null);
-  const [notice, setNotice] = useState("Demo workspace · Sample records only. Saved Sandbox evidence is under Payment evidence.");
+  const [notice, setNotice] = useState("Checking workspace status…");
   const [showGuide, setShowGuide] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
@@ -286,9 +293,9 @@ export default function Home() {
             <button className="primary-button" onClick={() => document.getElementById("intake")?.scrollIntoView({ behavior: "smooth" })}><span>＋</span> New order</button>
           </div>
 
-          {showGuide && <div className="guide-panel"><strong>How PayProof AI works</strong><p>Order messages become reviewable drafts. For a new checkout, PayProof AI verifies the PayPal Sandbox response server-side and attempts to save the verified order to Supabase. The dashboard rows shown here remain illustrative demo data.</p></div>}
+          {showGuide && <div className="guide-panel"><strong>How PayProof AI works</strong><p>Order messages become reviewable drafts. For a new checkout, PayProof AI verifies the PayPal Sandbox response server-side and attempts to save the verified order to Supabase. {isSignedIn ? "Your signed-in dashboard shows orders saved to your account." : "The public dashboard rows are illustrative demo data."}</p></div>}
 
-          <div className="notice" role="status"><span className="notice-icon">i</span><span>{notice}</span><button onClick={() => setNotice("Demo workspace · Sample records only. Saved Sandbox evidence is under Payment evidence.")} aria-label="Reset notice">×</button></div>
+          <div className="notice" role="status"><span className="notice-icon">i</span><span>{notice}</span><button onClick={() => setNotice(isSignedIn ? "Private workspace · Your saved Sandbox evidence is under Payment evidence." : "Public demo · Sample rows are illustrative only. Sign in to view your private saved Sandbox orders.")} aria-label="Reset notice">×</button></div>
 
           <section className="judge-quick-start" aria-label="Judge quick start">
             <div className="judge-quick-copy"><p className="eyebrow">JUDGE QUICK START</p><h2>Test the core workflow</h2><p>Prepare an order, verify a Sandbox capture, review saved evidence, then inspect reconciliation exceptions.</p></div>
