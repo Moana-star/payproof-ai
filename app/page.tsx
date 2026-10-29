@@ -253,6 +253,16 @@ export default function Home() {
 
           <div className="notice" role="status"><span className="notice-icon">i</span><span>{notice}</span><button onClick={() => setNotice("Demo workspace · Sample records only. Saved Sandbox evidence is under Payment evidence.")} aria-label="Reset notice">×</button></div>
 
+          <section className="judge-quick-start" aria-label="Judge quick start">
+            <div className="judge-quick-copy"><p className="eyebrow">JUDGE QUICK START</p><h2>Test the core workflow</h2><p>Prepare an order, verify a Sandbox capture, review saved evidence, then inspect reconciliation exceptions.</p></div>
+            <div className="judge-quick-actions">
+              <button type="button" className="primary-button" onClick={() => document.getElementById("intake")?.scrollIntoView({ behavior: "smooth" })}>1. Prepare an order</button>
+              <button type="button" className="secondary-button" onClick={() => startSandboxCheckout()}>2. Test PayPal Sandbox ↗</button>
+              <Link className="secondary-button" href="/payments">3. Review evidence ↗</Link>
+              <button type="button" className="secondary-button" onClick={() => document.getElementById("reconciliation")?.scrollIntoView({ behavior: "smooth" })}>4. Reconciliation ↓</button>
+            </div>
+          </section>
+
           <section className="value-strip" aria-label="PayProof AI product principles">
             <article className="value-card">
               <span className="value-kicker">01 · THE PROBLEM</span>
