@@ -42,6 +42,7 @@ export default function DemoGuidePage() {
           <li>Return to PayProof AI and open <em>Payment evidence</em>. Check whether the server-verified capture and saved order appear.</li>
         </ol>
         <div className="ops-info-banner"><span className="ops-info-icon">!</span><div><strong>Before the demo</strong><p>If checkout cannot start, check the Vercel Preview environment for PayPal Sandbox client credentials, the Sandbox API base URL, and Supabase storage configuration. If the AI draft fails, check the server-side Groq key. Never paste secrets into the page, source code, chat, or recording. A return redirect alone is not proof of payment.</p></div></div>
+        <div className="ops-info-banner"><span className="ops-info-icon">✓</span><div><strong>Judge access: start without a token</strong><p>Choose “Try sample review” in the dashboard to load synthetic, read-only reconciliation rows. No reviewer token is needed for this public walkthrough. Importing statements, making review decisions, and posting to the internal demo ledger require separately authorised private reviewer access.</p></div></div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
           <Link className="ops-primary-button" href="/#reconciliation">Open sample reconciliation <span>↗</span></Link><Link className="ops-secondary-button" href="/">Open workspace <span>↗</span></Link>
           <Link className="ops-secondary-button" href="/payments">Check payment evidence <span>↗</span></Link>
