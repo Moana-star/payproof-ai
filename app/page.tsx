@@ -263,9 +263,12 @@ export default function Home() {
           <div className="lower-grid">
             <section className="intake-card" id="intake">
               <div className="panel-heading"><div><span className="panel-icon">✳</span><div><h2>AI order intake</h2><p>Extract order details for human review.</p></div></div><span className="beta-badge">AI-ASSISTED · REVIEW REQUIRED</span></div>
-              <label className="field-label" htmlFor="customer-message">CUSTOMER MESSAGE</label>
-              <textarea id="customer-message" value={message} onChange={(event) => { setMessage(event.target.value); if (draftError) setDraftError(null); }} placeholder={'Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
-              <div className="field-hint">AI suggestions are advisory only. Confirm every field; nothing is saved automatically and payment status is never inferred.</div>
+              <div className="intake-sample-row">
+                <label className="field-label" htmlFor="customer-message">CUSTOMER MESSAGE</label>
+                <button type="button" className="sample-message-button" onClick={() => { setMessage("Hi, I'd like 2 Coffee gift sets, please. Can you prepare the order for me?"); setDraft(null); setDraftError(null); setValidationResult(null); setNotice("Sample customer message loaded. Select Prepare order draft to test AI extraction."); }}>Load sample message</button>
+              </div>
+              <textarea id="customer-message" value={message} onChange={(event) => { setMessage(event.target.value); if (draftError) setDraftError(null); }} placeholder={'Try the sample message, or paste a customer message here. Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
+              <div className="field-hint">Try the sample message above, then choose Prepare order draft. AI suggestions are advisory only. Confirm every field; nothing is saved automatically and payment status is never inferred.</div>
               <button type="button" className="secondary-button full-button" onClick={prepareDraft} disabled={draftLoading} aria-busy={draftLoading}>{draftLoading ? "Preparing draft…" : "Prepare order draft"} <span>{draftLoading ? "…" : "→"}</span></button>
               {draftError && <p className="draft-error" role="alert">{draftError}</p>}
               <p className="draft-action-hint" aria-live="polite">{draftLoading ? "Please wait while the message is analysed." : draftError ? "No order was created. You can retry after the AI service issue is resolved." : draft ? "Draft prepared. Review every field before taking any action." : "Enter a customer message above, then select Prepare order draft."}</p>
