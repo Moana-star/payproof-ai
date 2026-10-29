@@ -1,10 +1,18 @@
 # PayProof AI — 2:45 Hackathon Demo Script
 
-**Demo URL:** https://payproof-ai-git-feat-persistent-order-storage-naom6083-2980.vercel.app/  
+**Demo URL:** https://payproof-ai-git-feat-judge-ready-evidence-7cb616-naom6083-2980.vercel.app/  
 **Source:** https://github.com/Moana-star/payproof-ai  
 **Purpose:** show the problem, the AI's bounded role, server-side payment verification, and human-controlled reconciliation.
 
 > Rehearse once using the exact deployed version. Use PayPal Sandbox buyer credentials only. Never show secret keys, real customer data, or private account pages in the recording. If a feature fails, do not edit the video to imply it worked—show the safe fallback or record again after fixing it.
+
+## Judging alignment
+
+- **Technological implementation:** show the PayPal Sandbox server verification and saved evidence; do not claim a redirect proves payment.
+- **Design:** show one coherent path from order message to payment evidence and reconciliation review.
+- **Potential impact:** explain how this reduces manual checking and the risk of fulfilling unpaid orders for small online sellers.
+- **Innovation:** emphasize the evidence-first boundary: AI drafts and explains; deterministic checks and a human reviewer control payment decisions.
+- **Presentation:** keep the end-to-end story under three minutes and state the Sandbox/simulated limits clearly.
 
 ## Timed walkthrough
 
