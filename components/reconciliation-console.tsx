@@ -137,6 +137,16 @@ export function ReconciliationConsole() {
       <div className="recon-import-controls"><input type="file" accept=".csv,text/csv" onChange={(e) => setFile(e.target.files?.[0] || null)} aria-label="Choose bank statement CSV" /><button className="primary-button" onClick={importCsv} disabled={!file || !!busy}>{busy === "import" ? "Importing…" : "Import statement"}</button></div>
       <details><summary>Required CSV format</summary><code>transaction_id,amount,currency,reference,description,posted_at</code><p>Example: BANK-1001,24.50,USD,PayPal-capture-or-order-ID,Coffee gift set,2026-10-28T10:00:00Z</p><small>Positive incoming amounts only. Transaction IDs are deduplicated. Keep the source file for your records.</small></details>
     </div>
+    <section className="recon-judge-kit" aria-labelledby="judge-kit-title">
+      <div className="recon-judge-kit-heading"><span className="recon-judge-kit-icon">✦</span><div><p className="eyebrow">FOR HACKATHON REVIEWERS</p><h3 id="judge-kit-title">Judge testing kit</h3><p>Start with the sample statement, then explore how PayProof AI handles payment evidence and exceptions.</p></div></div>
+      <a className="primary-button recon-download-sample" href="/payproof-demo-statement.csv" download>Download sample CSV <span>↓</span></a>
+      <div className="recon-judge-steps">
+        <div><strong>1. Download</strong><p>The CSV contains synthetic examples only. It is not a bank export and includes no customer data.</p></div>
+        <div><strong>2. Load evidence</strong><p>Use the private preview reviewer token supplied by the project owner to access protected reconciliation records. The website intentionally does not publish the token.</p></div>
+        <div><strong>3. Import &amp; review</strong><p>Upload the CSV and run matching. Sample references are illustrative; to demonstrate an exact match, replace a row’s reference and amount with those from a real, verified Sandbox capture.</p></div>
+      </div>
+      <p className="recon-judge-safety">Sandbox only · No real money · No live bank connection · Posting affects only the internal demo ledger.</p>
+    </section>
     <div className="recon-live-stats">
       <div><span>Potential matches</span><strong>{counts.candidates}</strong><small>Awaiting human approval</small></div>
       <div><span>Exceptions / unmatched</span><strong className="recon-red">{counts.exceptions}</strong><small>Never auto-approved</small></div>
