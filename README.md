@@ -18,11 +18,12 @@ Small merchants often receive order details in conversations while payment updat
 
 ## What the prototype includes
 
-- **Order intake:** Groq-backed structured extraction proposes a product, quantity, notes, and missing information. The seller reviews the draft; the model does not set trusted prices or payment status.
+- **AI order intake:** Groq-backed structured extraction proposes a catalogue product, quantity, customer note, and missing information. The seller reviews the draft; the model does not set trusted prices or payment status.
+- **Explicit ambiguity handling:** the acceptance checklist covers missing quantities, ambiguous/multiple products, unsupported items, prompt injection, and provider failure. These cases must be verified against the exact deployed version before they are described as passed.
 - **Server-priced checkout:** the application validates supported catalogue items and calculates totals outside the model.
 - **PayPal Sandbox verification:** server-side verification checks capture status and expected transaction details before treating an order as paid.
-- **Persistence:** Supabase-backed order storage is implemented. A successful Sandbox capture has been observed with the order saved as paid and its verification timestamp; perform a fresh end-to-end check before relying on this in a judging session.
-- **Payment evidence and AI explanation:** the assistant explains explicitly labelled synthetic evidence scenarios. It is advisory and cannot change payment state.
+- **User accounts and workspaces:** Supabase Auth sign-up/sign-in and editable profile/workspace names are implemented. Saved orders are scoped to the signed-in owner. The complete email-confirmation and login flow still needs a fresh end-to-end test.
+- **Payment evidence:** the assistant can explain explicitly labelled synthetic evidence scenarios. It is advisory and cannot change payment state.
 - **Reconciliation:** CSV statement import, duplicate transaction detection, exact-reference/amount/currency matching against verified Sandbox captures, exception review, reviewer approval, and internal demo-ledger posting.
 - **Audit trail:** import, matching, approval, and ledger-posting events are recorded. This is an operational prototype, not a tamper-proof or externally certified ledger.
 - **Responsive operations UI:** Overview, Orders, AI order intake, Payment activity, Reconciliation, Payment evidence, AI assistant, Exception review, and Audit trail.
@@ -41,7 +42,7 @@ The reconciliation workflow has been exercised with a **simulated statement row*
 8. A human reviewer approves a valid match; only then can an internal demo-ledger entry be posted.
 9. Audit events provide a reviewable history of the reconciliation actions.
 
-## Current implementation status
+## Current implementation and release status
 
 This is a hackathon prototype, **not production-ready**.
 
@@ -49,20 +50,28 @@ This is a hackathon prototype, **not production-ready**.
 - [x] Server-side PayPal Sandbox order creation/capture verification code
 - [x] Server-priced catalogue and structured AI order-extraction endpoint
 - [x] Supabase persistence code for orders and payment events
-- [x] Protected CSV import, duplicate detection, evidence matching, exception decisions, and reviewer-gated internal demo-ledger posting
-- [x] Idempotent posting guard and status-consistent posted-row explanation
+- [x] Supabase Auth account/profile/workspace foundation and owner-scoped saved orders
+- [x] Protected reconciliation write endpoints; public preview endpoint returns synthetic read-only rows only
+- [x] Reviewer-gated internal demo-ledger posting and duplicate-post guard
 - [x] MIT license and environment-variable template
-- [x] A successful Sandbox capture and saved paid order have been observed
-- [x] Reconciliation flow tested using clearly labelled simulated statement data
-- [x] Confirm `GROQ_API_KEY` is configured for Vercel Preview
-- [ ] Test AI order intake and the AI assistant on the active deployed Preview
+- [x] Smoke test for unauthenticated API boundaries and synthetic-only public preview
+- [ ] Add the Supabase redirect URLs and test sign-up, email confirmation, sign-in, sign-out, and profile updates with a fresh test account
+- [ ] Test that two test accounts cannot see or change each other's orders
+- [ ] Reconciliation records remain a protected reviewer/demo workflow and are **not yet a per-user workspace feature**; keep them restricted until owner scoping is implemented and verified
+- [ ] Test AI order intake and AI explanation on the active deployed Preview; capture both successful and safe-failure examples
 - [ ] Perform a fresh end-to-end Sandbox checkout and independently confirm the matching Supabase order and payment-event records
-- [ ] Run automated lint/build checks on the exact final commit and verify the resulting deployment
-- [ ] Exercise safe failure paths: incomplete order, cancelled/uncompleted payment, amount/currency/reference mismatch, provider outage, and duplicate request
+- [ ] Exercise cancellation, unapproved/incomplete payment, amount/currency/reference mismatch, provider outage, and duplicate requests
+- [ ] Run lint, production build, and smoke checks on the exact candidate commit; inspect CI result
 - [ ] Record and watch the public demo video (under three minutes)
 - [ ] Complete final hackathon submission fields and confirm the public links work
 
-A Git commit is not proof that an integration has been tested. During the demo, distinguish live verified Sandbox evidence from illustrative dashboard records and synthetic assistant scenarios.
+A Git commit or successful build is not proof that an integration has been tested. During the demo, distinguish live verified Sandbox evidence from illustrative dashboard records and synthetic assistant scenarios.
+
+## AI contribution and differentiation
+
+The AI component converts unstructured order messages into a constrained draft and surfaces missing or ambiguous details for human review. It is deliberately prevented from setting prices, claiming a payment succeeded, bypassing PayPal verification, or independently approving reconciliation.
+
+The useful claim is not “AI detects fraud.” The defensible claim is: **AI helps structure an order; deterministic server checks verify payment evidence; a person decides how to handle ambiguous reconciliation.** Measure the workflow during testing (time to review a draft, fields correctly extracted, missing details flagged, and unsafe claims rejected) before claiming that it saves a specific amount of time or reduces errors by a specific percentage.
 
 ## Run locally
 
@@ -77,7 +86,7 @@ A Git commit is not proof that an integration has been tested. During the demo, 
 ### 1. Install
 
 ```bash
-npm install
+npm ci
 ```
 
 ### 2. Configure environment variables
@@ -117,26 +126,23 @@ Keep credentials private. Never use `NEXT_PUBLIC_` for service keys, commit `.en
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open http://localhost:3000.
 
-### 4. Test a Sandbox payment
-
-Select **Test PayPal checkout** and approve with a PayPal Sandbox test buyer. Inspect the verification result, then independently confirm the order and payment-event records in Supabase. Payment verification and database persistence are separate outcomes.
-
-### 5. Run checks
+### 4. Run checks
 
 ```bash
 npm run lint
 npm run build
+npm run start
+# In another terminal:
+npm run test:smoke -- http://127.0.0.1:3000
 ```
 
-Resolve errors before deploying. These are the intended checks; they are not a claim that every environment or end-to-end flow has already passed.
+The smoke suite verifies public route availability, unauthenticated API rejection, and that the public read-only reconciliation preview contains only synthetic rows. It does **not** replace a real account, AI-provider, or PayPal Sandbox end-to-end test.
 
-## AI boundaries
+### 5. Test a Sandbox payment
 
-Groq is used for order-detail extraction and explanations of selected synthetic evidence scenarios. Model output is advisory and schema-validated. The seller reviews extracted fields. Price calculation, PayPal requests, payment-state decisions, and persistence remain application/server responsibilities.
-
-The AI assistant page currently explains synthetic examples, not private live orders. Do not allow model output to set prices, claim a payment succeeded, bypass PayPal verification, or label an exception as fraud without evidence.
+Select **Test PayPal checkout** and approve with a PayPal Sandbox test buyer. Inspect the verification result, then independently confirm the order and payment-event records in Supabase. Payment verification and database persistence are separate outcomes.
 
 ## Security, privacy, and limitations
 
@@ -147,9 +153,10 @@ The AI assistant page currently explains synthetic examples, not private live or
 5. Require human review for ambiguous order details and reconciliation matches.
 6. Use Sandbox transactions and synthetic records during the hackathon.
 7. Treat a browser return URL as a trigger to verify—not proof of payment.
-8. Do not expose real order history until authentication and owner-scoped authorization are implemented.
-9. The reconciliation ledger is internal demo data; there is no live bank API/feed or external accounting write.
-10. Before production use, add and test webhook signature verification, authentication/authorization, rate limits, retries, monitoring, privacy controls, and security review.
+8. Saved order reads and payment operations require authentication and are scoped to the signed-in owner; this needs a two-account isolation test before claiming end-to-end validation.
+9. The reconciliation workflow is a separate protected reviewer/demo console, not yet scoped to individual users. Do not expose real customer reconciliation records there.
+10. The reconciliation ledger is internal demo data; there is no live bank API/feed or external accounting write.
+11. Before production use, add and test webhook signature verification, rate limits, retries, monitoring, privacy controls, and a security review.
 
 ## Hackathon demo
 
@@ -161,7 +168,6 @@ Follow [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for a short, honest walkthrough. Show th
 - [Product requirements](prd.md)
 - [Technical specification](spec.md)
 - [Demo script](DEMO_SCRIPT.md)
-- [Hackathon submission draft](SUBMISSION_DRAFT.md)
 - [Judge readiness and acceptance tests](JUDGE_READINESS.md)
 - [Environment template](.env.example)
 - [MIT License](LICENSE)
