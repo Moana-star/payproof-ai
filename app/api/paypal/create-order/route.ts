@@ -72,13 +72,9 @@ export async function POST(request: NextRequest) {
     // Persist the server-priced draft before redirecting to PayPal. If storage
     // is configured but unavailable, fail closed rather than silently losing it.
     const pending = await createPendingOrder(orderRecord, user.id);
-    const appBaseUrl = (
-      process.env.APP_URL ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-      "http://localhost:3000"
-    ).replace(/\/$/, "");
+    // Keep the return on the same host where the signed-in checkout began.
+    // This preserves the browser session and returns to the correct workspace.
+    const appBaseUrl = request.nextUrl.origin.replace(/\/$/, "");
     const accessToken = await getPayPalAccessToken();
     const order = await paypalRequest<CreatedOrder>("/v2/checkout/orders", accessToken, {
       method: "POST",
