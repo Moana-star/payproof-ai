@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ReconciliationConsole } from "@/components/reconciliation-console";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type OrderStatus = "Paid" | "Awaiting payment" | "Review needed";
 type Order = {
@@ -34,14 +35,35 @@ const statusClass: Record<OrderStatus, string> = {
 };
 
 export default function Home() {
+  const [authUserName, setAuthUserName] = useState("");
+  const [authWorkspaceName, setAuthWorkspaceName] = useState("Demo workspace");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authReady, setAuthReady] = useState(false);
   const [orders, setOrders] = useState(initialOrders);
   const [ordersSource, setOrdersSource] = useState<"sample" | "saved" | "unavailable">("sample");
   const [ordersLoadNote, setOrdersLoadNote] = useState("");
 
   useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setAuthReady(true);
+      setOrdersSource("sample");
+      setOrdersLoadNote("Public demo mode. Sign in to save and view your own Sandbox orders.");
+      return;
+    }
     let active = true;
-    fetch("/api/orders", { cache: "no-store" })
-      .then(async (response) => {
+    const loadOrders = async (token: string | null) => {
+      if (!token) {
+        setOrders(initialOrders);
+        setOrdersSource("sample");
+        setOrdersLoadNote("Public demo mode. Sample rows are illustrative; sign in to see your own saved orders.");
+        return;
+      }
+      try {
+        const response = await fetch("/api/orders", {
+          cache: "no-store",
+          headers: { Authorization: `Bearer ${token}` }
+        });
         const data = await response.json() as {
           configured?: boolean;
           orders?: Array<{
@@ -54,16 +76,13 @@ export default function Home() {
         if (!active) return;
         if (!response.ok) throw new Error(data.error || "Saved orders could not be loaded.");
         if (!data.configured) {
-          setOrdersSource("sample");
-          setOrdersLoadNote("Persistent storage is not configured. The rows below are illustrative samples.");
+          setOrders([]);
+          setOrdersSource("unavailable");
+          setOrdersLoadNote("Order storage is not configured yet. Your account is signed in, but saved orders cannot be loaded.");
           return;
         }
         const saved = (data.orders || []).map((order) => {
-          const status: OrderStatus = order.payment_status === "paid"
-            ? "Paid"
-            : order.payment_status === "awaiting_payment"
-              ? "Awaiting payment"
-              : "Review needed";
+          const status: OrderStatus = order.payment_status === "paid" ? "Paid" : order.payment_status === "awaiting_payment" ? "Awaiting payment" : "Review needed";
           const amountValue = Number(order.total_amount);
           const amount = Number.isFinite(amountValue)
             ? new Intl.NumberFormat("en-US", { style: "currency", currency: order.currency || "USD" }).format(amountValue)
@@ -71,28 +90,50 @@ export default function Home() {
           const timestamp = order.verified_at || order.created_at;
           return {
             id: order.order_number,
-            customer: "Sandbox order",
+            customer: "Your Sandbox order",
             item: `${order.product_name} × ${order.quantity}`,
             amount,
             status,
-            time: status === "Paid"
-              ? (timestamp ? `Server verified · ${new Date(timestamp).toLocaleString()}` : "Server-verified Sandbox capture")
-              : status === "Awaiting payment" ? "Awaiting PayPal capture" : "Review required · Do not fulfil",
-            initials: "SB"
+            time: status === "Paid" ? (timestamp ? `Server verified · ${new Date(timestamp).toLocaleString()}` : "Server-verified Sandbox capture") : status === "Awaiting payment" ? "Awaiting PayPal capture" : "Review required · Do not fulfil",
+            initials: "ME"
           };
         });
         setOrders(saved);
         setOrdersSource("saved");
         setOrdersLoadNote(saved.length
-          ? "Showing saved Sandbox orders. Paid status comes from server-verified PayPal captures."
-          : "Persistent storage is connected, but no saved orders exist yet. Complete a Sandbox checkout to add one.");
-      })
-      .catch(() => {
+          ? "Showing only orders saved to your account. Paid status comes from server-verified PayPal captures."
+          : "Your workspace is ready. No saved orders yet; complete a Sandbox checkout to add one.");
+      } catch {
         if (!active) return;
         setOrdersSource("unavailable");
-        setOrdersLoadNote("Saved orders could not be loaded. The visible sample rows are illustrative and are not live payment evidence.");
-      });
-    return () => { active = false; };
+        setOrdersLoadNote("Your saved orders could not be loaded. Please refresh or check the Supabase configuration.");
+      }
+    };
+    const applySession = async (session: { access_token: string; user: { email?: string; user_metadata?: Record<string, unknown> } } | null) => {
+      if (!active) return;
+      if (!session) {
+        setAuthUserName("");
+        setAuthWorkspaceName("Demo workspace");
+        setAuthEmail("");
+        setAuthReady(true);
+        await loadOrders(null);
+        return;
+      }
+      const metadata = session.user.user_metadata || {};
+      setAuthUserName(typeof metadata.display_name === "string" && metadata.display_name.trim() ? metadata.display_name.trim() : (session.user.email?.split("@")[0] || "Account"));
+      setAuthWorkspaceName(typeof metadata.workspace_name === "string" && metadata.workspace_name.trim() ? metadata.workspace_name.trim() : "My workspace");
+      setAuthEmail(session.user.email || "");
+      setAuthReady(true);
+      await loadOrders(session.access_token);
+    };
+    supabase.auth.getSession().then(({ data }) => applySession(data.session ? {
+      access_token: data.session.access_token,
+      user: { email: data.session.user.email, user_metadata: data.session.user.user_metadata }
+    } : null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      void applySession(session ? { access_token: session.access_token, user: { email: session.user.email, user_metadata: session.user.user_metadata } } : null);
+    });
+    return () => { active = false; subscription.unsubscribe(); };
   }, []);
   const [message, setMessage] = useState("");
   const [draft, setDraft] = useState<{ item: string; quantity: string; note: string } | null>(null);
@@ -219,8 +260,8 @@ export default function Home() {
             <p>AI helps explain. Verified payment data decides.</p>
           </div>
           <div className="profile-row">
-            <div className="avatar profile-avatar">P</div>
-            <div><strong>Demo workspace</strong><span>Sandbox preview</span></div>
+            <div className="avatar profile-avatar">{authUserName ? authUserName.slice(0, 1).toUpperCase() : "P"}</div>
+            <div><strong>{authUserName ? authWorkspaceName : "Demo workspace"}</strong><span>{authUserName || "Public Sandbox preview"}</span></div>
             <span className="profile-dots">···</span>
           </div>
         </div>
@@ -229,12 +270,12 @@ export default function Home() {
       <section className="main-area">
         <header className="topbar">
           <div className="breadcrumb">Workspace <span>/</span> Overview</div>
-          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link><button className="sandbox-checkout-button" onClick={() => startSandboxCheckout()} disabled={checkoutLoading}>{checkoutLoading ? "Connecting…" : "Test PayPal checkout"} <span>↗</span></button><button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
+          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link>{authUserName ? <><Link className="demo-payment-guide-link" href="/profile">My profile ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
 
         <div className="content" id="overview">
           <div className="welcome-row">
-            <div><p className="eyebrow">YOUR PAYMENT WORKSPACE</p><h1>Welcome to PayProof AI <span>✳</span></h1><p className="subheading">A clearer view of orders, payments, and what needs your attention.</p></div>
+            <div><p className="eyebrow">YOUR PAYMENT WORKSPACE</p><h1>{authUserName ? `Welcome, ${authUserName}` : "Welcome to PayProof AI"} <span>✳</span></h1><p className="subheading">{authUserName ? `Your ${authWorkspaceName} workspace — orders, payment evidence, and what needs your attention.` : "Explore the public demo, or sign in to create your own private workspace."}</p></div>
             <button className="primary-button" onClick={() => document.getElementById("intake")?.scrollIntoView({ behavior: "smooth" })}><span>＋</span> New order</button>
           </div>
 
