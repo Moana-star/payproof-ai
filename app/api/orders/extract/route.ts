@@ -18,6 +18,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Messages must be ${MAX_MESSAGE_LENGTH} characters or fewer.` }, { status: 413 });
   }
 
+  const normalizedMessage = message.toLowerCase();
+  const mentionedProducts = PRODUCTS.filter((product) =>
+    product.aliases.some((alias) => normalizedMessage.includes(alias.toLowerCase()))
+  );
+  if (mentionedProducts.length > 1) {
+    return NextResponse.json({
+      draft: {
+        product: null,
+        quantity: null,
+        customerNote: message.slice(0, 500),
+        missingInformation: ["The message mentions multiple supported products. Confirm which product or products should be ordered before creating an order."],
+        confidenceNotes: "Multiple catalogue products were detected. No product was selected automatically."
+      },
+      advisoryOnly: true,
+      saved: false,
+      paymentVerified: false
+    });
+  }
+
   // Use Groq's no-card free tier. Do not silently fall back to Vercel AI Gateway,
   // which is currently blocked for this project by a payment-card verification gate.
   const apiKey = process.env.GROQ_API_KEY;
@@ -62,6 +81,12 @@ export async function POST(request: NextRequest) {
     if (typeof content !== "string") throw new Error("Missing model content");
     const draft = safeDraft(JSON.parse(content));
     if (!draft) throw new Error("Invalid draft schema");
+    const productWasExplicitlyMentioned = draft.product && PRODUCTS.find((product) => product.name === draft.product)?.aliases.some((alias) => normalizedMessage.includes(alias.toLowerCase()));
+    if (draft.product && !productWasExplicitlyMentioned) {
+      draft.product = null;
+      draft.missingInformation.unshift("Confirm the exact supported product; the AI suggestion was not explicit in the message.");
+      draft.confidenceNotes = "The suggested product was not clearly named in the original message and was removed for manual review.";
+    }
     if (!draft.product && !draft.missingInformation.length) {
       draft.missingInformation.push("Confirm the exact product before creating an order.");
     }
