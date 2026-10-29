@@ -14,6 +14,8 @@ type Audit = { id: string; action: string; actor: string; details: Record<string
 type Ledger = { id: string; transaction_id?: string; amount: string; currency: string; memo: string; posted_by: string; posted_at: string; statement_row_id: string };
 type WorkspaceData = { rows: Row[]; audit: Audit[]; ledger: Ledger[] };
 
+const DEMO_READ_ONLY_TOKEN = "PAYPROOF-DEMO-READONLY";
+
 const statusLabels: Record<Row["match_status"], string> = {
   unmatched: "Unmatched", matched_pending_review: "Match · needs approval", exception: "Exception", approved: "Approved · not posted", posted: "Posted to demo ledger", rejected: "Rejected"
 };
@@ -28,6 +30,7 @@ export function ReconciliationConsole() {
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("Enter the preview-only reviewer token to load protected reconciliation data.");
   const [error, setError] = useState("");
+  const readOnlyDemo = token === DEMO_READ_ONLY_TOKEN;
 
   async function api(path: string, body?: Record<string, unknown>) {
     const response = await fetch(path, {
@@ -46,12 +49,13 @@ export function ReconciliationConsole() {
     try {
       const result = await api("/api/reconciliation");
       setData({ rows: result.rows || [], audit: result.audit || [], ledger: result.ledger || [] });
-      setNotice(`Loaded ${(result.rows || []).length} protected statement rows, ${(result.ledger || []).length} internal ledger entries, and ${(result.audit || []).length} audit events.`);
+      setNotice(result.demo ? "Read-only sample workspace loaded. These are synthetic rows; no live records were accessed and all write actions are disabled." : `Loaded ${(result.rows || []).length} protected statement rows, ${(result.ledger || []).length} internal ledger entries, and ${(result.audit || []).length} audit events.`);
     } catch (e) { setError(e instanceof Error ? e.message : "Could not load reconciliation data."); }
     finally { setBusy(""); }
   }
 
   async function importCsv() {
+    if (readOnlyDemo) { setError("The sample token is read-only. Use private reviewer access to import or change records."); return; }
     if (!file) { setError("Choose a CSV statement file first."); return; }
     setBusy("import"); setError("");
     try {
@@ -66,6 +70,7 @@ export function ReconciliationConsole() {
   }
 
   async function match() {
+    if (readOnlyDemo) { setError("The sample token is read-only. Use private reviewer access to run matching."); return; }
     setBusy("match"); setError("");
     try {
       const result = await api("/api/reconciliation/match", { actor });
@@ -77,6 +82,7 @@ export function ReconciliationConsole() {
   }
 
   async function decide(row: Row, decision: "approve" | "reject") {
+    if (readOnlyDemo) { setError("The sample token is read-only. Private reviewer access is required for decisions."); return; }
     setBusy(row.id); setError("");
     try {
       const note = decision === "reject" ? window.prompt("Why are you rejecting this statement row? (Optional)") || "" : "";
@@ -88,6 +94,7 @@ export function ReconciliationConsole() {
   }
 
   async function approveAndPost(row: Row) {
+    if (readOnlyDemo) { setError("The sample token is read-only. Private reviewer access is required to post ledger entries."); return; }
     if (!window.confirm(`Approve this exact reference, amount and currency match, then post ${row.amount} ${row.currency} to the PayProof AI internal demo ledger? The approval will be audited before posting. No external bank/accounting system is changed.`)) return;
     setBusy(row.id); setError("");
     try {
@@ -100,6 +107,7 @@ export function ReconciliationConsole() {
   }
 
   async function post(row: Row) {
+    if (readOnlyDemo) { setError("The sample token is read-only. Private reviewer access is required to post ledger entries."); return; }
     if (!window.confirm(`Post ${row.amount} ${row.currency} to the PayProof AI internal demo ledger? This does not post to a bank or external accounting system.`)) return;
     setBusy(row.id); setError("");
     try {
@@ -127,14 +135,15 @@ export function ReconciliationConsole() {
     <div className="recon-access">
       <div className="recon-access-copy"><strong>Protected reconciliation access</strong><p>The reviewer token is used only in requests from this browser session and is not saved by this page. Live rows are not public.</p></div>
       <label>Reviewer name<input value={actor} onChange={(e) => setActor(e.target.value)} maxLength={80} placeholder="Your name or reviewer role" /></label>
-      <label>Preview reviewer token<input type="password" autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Enter RECONCILIATION_ADMIN_TOKEN" /></label>
-      <button className="secondary-button" onClick={load} disabled={!!busy}>{busy === "load" ? "Loading…" : "Load live reconciliation"}</button>
+      <label>Preview reviewer token<input type="password" autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Enter sample or private reviewer token" /></label>
+      <div className="recon-token-actions"><button className="secondary-button" onClick={() => { setToken(DEMO_READ_ONLY_TOKEN); setData({ rows: [], audit: [], ledger: [] }); setError(""); setNotice("Sample token filled in. Select Load workspace to view synthetic read-only data."); }} disabled={!!busy}>Use sample token</button><button className="secondary-button" onClick={load} disabled={!!busy}>{busy === "load" ? "Loading…" : readOnlyDemo ? "Load sample workspace" : "Load live reconciliation"}</button></div>
+      {readOnlyDemo && <p className="recon-readonly-note">Public sample token · Read-only synthetic data · Cannot import, approve, match or post.</p>}
     </div>
     <div className="recon-console-notice" role="status">{notice}</div>
     {error && <div className="recon-console-error" role="alert">{error}</div>}
     <div className="recon-import">
       <div><h3>1. Import bank statement CSV</h3><p>Upload a CSV export from your bank or payment provider. No bank account connection is implied.</p></div>
-      <div className="recon-import-controls"><input type="file" accept=".csv,text/csv" onChange={(e) => setFile(e.target.files?.[0] || null)} aria-label="Choose bank statement CSV" /><button className="primary-button" onClick={importCsv} disabled={!file || !!busy}>{busy === "import" ? "Importing…" : "Import statement"}</button></div>
+      <div className="recon-import-controls"><input type="file" accept=".csv,text/csv" onChange={(e) => setFile(e.target.files?.[0] || null)} aria-label="Choose bank statement CSV" /><button className="primary-button" onClick={importCsv} disabled={!file || !!busy || readOnlyDemo}>{busy === "import" ? "Importing…" : "Import statement"}</button></div>
       <details><summary>Required CSV format</summary><code>transaction_id,amount,currency,reference,description,posted_at</code><p>Example: BANK-1001,24.50,USD,PayPal-capture-or-order-ID,Coffee gift set,2026-10-28T10:00:00Z</p><small>Positive incoming amounts only. Transaction IDs are deduplicated. Keep the source file for your records.</small></details>
     </div>
     <section className="recon-judge-kit" aria-labelledby="judge-kit-title">
@@ -155,7 +164,7 @@ export function ReconciliationConsole() {
     </div>
     <div className="recon-queue-head">
       <div><h3>2. Match and review queue</h3><p>Only completed, persisted Sandbox PayPal captures with a verification timestamp are eligible evidence. Reference may be the internal PP order reference or PayPal order/capture ID.</p></div>
-      <button className="primary-button" onClick={match} disabled={!!busy || !token.trim()}>{busy === "match" ? "Matching…" : "Run safe matching"}</button>
+      <button className="primary-button" onClick={match} disabled={!!busy || !token.trim() || readOnlyDemo}>{busy === "match" ? "Matching…" : "Run safe matching"}</button>
     </div>
     <div className="reconciliation-table-heading">
       <div className="reconciliation-filters"><input aria-label="Search live reconciliation records" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search transaction or reference…" /><select aria-label="Filter live reconciliation status" value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">All statuses</option><option value="unmatched">Unmatched</option><option value="matched_pending_review">Needs approval</option><option value="exception">Exception</option><option value="approved">Approved</option><option value="posted">Posted</option><option value="rejected">Rejected</option></select></div>
@@ -169,7 +178,7 @@ export function ReconciliationConsole() {
         <td><span className={`recon-status ${row.match_status === "posted" ? "recon-status-good" : row.match_status === "matched_pending_review" || row.match_status === "approved" ? "recon-status-warn" : "recon-status-risk"}`}>{statusLabels[row.match_status]}</span></td>
         <td className="recon-reason-cell">{row.match_status === "posted" ? "Exact reference, amount and currency were verified against a server-verified completed PayPal capture. A human reviewer approved this row and it was posted to the PayProof AI internal demo ledger." : row.match_reason || "Run matching to evaluate this record."}</td>
         <td><div className="recon-row-actions">
-          {row.match_status === "matched_pending_review" && <><button onClick={() => approveAndPost(row)} disabled={!!busy} className="recon-post-button">{busy === row.id ? "Working…" : "Approve & post"}</button><button onClick={() => decide(row, "approve")} disabled={!!busy} className="recon-approve-button">Approve only</button><button onClick={() => decide(row, "reject")} disabled={!!busy} className="recon-reject-button">Reject</button></>}
+          {row.match_status === "matched_pending_review" && <><button onClick={() => approveAndPost(row)} disabled={!!busy || readOnlyDemo} className="recon-post-button">{busy === row.id ? "Working…" : "Approve & post"}</button><button onClick={() => decide(row, "approve")} disabled={!!busy || readOnlyDemo} className="recon-approve-button">Approve only</button><button onClick={() => decide(row, "reject")} disabled={!!busy || readOnlyDemo} className="recon-reject-button">Reject</button></>}
           {row.match_status === "approved" && <button onClick={() => post(row)} disabled={!!busy} className="recon-post-button">{busy === row.id ? "Posting…" : "Post to demo ledger"}</button>}
           {row.match_status === "exception" && <span className="recon-manual-only">Resolve at source</span>}
           {row.match_status === "posted" && <span className="recon-posted-label">✓ Audited</span>}
