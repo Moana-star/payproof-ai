@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
-import { isOrderStoreConfigured, saveVerifiedOrder } from "@/lib/order-store";
+import { getOwnedOrderByPayPalId, isOrderStoreConfigured, saveVerifiedOrder } from "@/lib/order-store";
+import { getAuthenticatedUser } from "@/lib/auth-server";
 import { getPayPalAccessToken, paypalRequest } from "@/lib/paypal";
 
 export const runtime = "nodejs";
@@ -74,7 +75,7 @@ function checkOrder(order: PayPalOrder) {
   };
 }
 
-async function resultResponse(order: PayPalOrder) {
+async function resultResponse(order: PayPalOrder, ownerId: string) {
   const checked = checkOrder(order);
   if (!checked.verified || !checked.details || !checked.capture?.id || !order.id) {
     return NextResponse.json({
@@ -104,7 +105,7 @@ async function resultResponse(order: PayPalOrder) {
         paypal_capture_id: checked.capture.id,
         paypal_reference_id: checked.details.referenceId,
         verified_at: verifiedAt
-      }, checked.capture.id);
+      }, checked.capture.id, ownerId);
       persisted = result.persisted;
     } catch {
       // The payment remains verified by PayPal, but do not claim it was saved.
@@ -141,6 +142,8 @@ async function resultResponse(order: PayPalOrder) {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getAuthenticatedUser(request);
+    if (!user) return NextResponse.json({ error: "Sign in to verify a payment for your workspace." }, { status: 401 });
     let body: { orderId?: unknown };
     try {
       body = await request.json();
@@ -153,6 +156,8 @@ export async function POST(request: NextRequest) {
     }
 
     const orderId = body.orderId;
+    const ownedOrder = await getOwnedOrderByPayPalId(orderId, user.id);
+    if (!ownedOrder) return NextResponse.json({ error: "This PayPal order does not belong to your workspace." }, { status: 404 });
     const accessToken = await getPayPalAccessToken();
     const existing = await paypalRequest<PayPalOrder>(
       `/v2/checkout/orders/${encodeURIComponent(orderId)}`,
@@ -177,7 +182,7 @@ export async function POST(request: NextRequest) {
 
     // A repeated browser return is safe: verify an existing capture instead of
     // attempting to capture the same PayPal order again.
-    if (existing.status === "COMPLETED") return resultResponse(existing);
+    if (existing.status === "COMPLETED") return resultResponse(existing, user.id);
 
     if (existing.status !== "APPROVED") {
       return NextResponse.json({
@@ -198,7 +203,7 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({})
       }
     );
-    return resultResponse(captured);
+    return resultResponse(captured, user.id);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to verify the PayPal payment.";
     const status = message.includes("credentials are not configured") ? 503 : 502;
