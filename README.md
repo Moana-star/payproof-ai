@@ -86,7 +86,7 @@ The useful claim is not “AI detects fraud.” The defensible claim is: **AI he
 ### 1. Install
 
 ```bash
-npm ci
+npm install
 ```
 
 ### 2. Configure environment variables
