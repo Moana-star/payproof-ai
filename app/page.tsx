@@ -180,7 +180,7 @@ export default function Home() {
       <section className="main-area">
         <header className="topbar">
           <div className="breadcrumb">Workspace <span>/</span> Overview</div>
-          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><button className="sandbox-checkout-button" onClick={() => startSandboxCheckout()} disabled={checkoutLoading}>{checkoutLoading ? "Connecting…" : "Test PayPal checkout"} <span>↗</span></button><button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
+          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link><button className="sandbox-checkout-button" onClick={() => startSandboxCheckout()} disabled={checkoutLoading}>{checkoutLoading ? "Connecting…" : "Test PayPal checkout"} <span>↗</span></button><button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
 
         <div className="content" id="overview">
