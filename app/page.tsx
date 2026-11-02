@@ -356,13 +356,12 @@ export default function Home() {
 
           <div className="notice" role="status"><span className="notice-icon">i</span><span>{notice}</span><button onClick={() => setNotice(isSignedIn ? "Private workspace · Your saved Sandbox evidence is under Payment evidence." : "Public demo · Sample rows are illustrative only. Sign in to view your private saved Sandbox orders.")} aria-label="Reset notice">×</button></div>
 
-          <section className="judge-quick-start" aria-label="Judge quick start">
-            <div className="judge-quick-copy"><p className="eyebrow">JUDGE QUICK START</p><h2>Test the core workflow</h2><p>Prepare an order, verify a Sandbox capture, review saved evidence, then inspect reconciliation exceptions.</p></div>
-            <div className="judge-quick-actions">
-              <button type="button" className="primary-button" onClick={() => { setFlowError(""); setFlowStep(2); }}>1. Create a new order</button>
-              <button type="button" className="secondary-button" onClick={() => startSandboxCheckout()}>2. Test PayPal Sandbox ↗</button>
-              <Link className="secondary-button" href="/payments">3. Review evidence ↗</Link>
-              <button type="button" className="secondary-button" onClick={() => document.getElementById("reconciliation")?.scrollIntoView({ behavior: "smooth" })}>4. Reconciliation ↓</button>
+          <section className="merchant-journey" aria-label="Three-step merchant payment journey">
+            <div className="merchant-journey-heading"><div><p className="eyebrow">YOUR WORKFLOW</p><h2>From dashboard to verified payment</h2><p>Three clear steps. One evidence-first checkout journey.</p></div><span className="merchant-journey-tag">STEP 1 · DASHBOARD</span></div>
+            <div className="merchant-journey-grid">
+              <article className="merchant-journey-card active"><span className="merchant-journey-number">01</span><div><strong>Dashboard</strong><p>Review your orders and payment activity in one workspace.</p><small>YOU ARE HERE</small></div></article>
+              <article className="merchant-journey-card"><span className="merchant-journey-number">02</span><div><strong>Create new order</strong><p>Add order details or use AI to prepare a draft for review.</p><button type="button" onClick={() => { setFlowError(""); setFlowStep(2); }}>Create order <span>→</span></button></div></article>
+              <article className="merchant-journey-card"><span className="merchant-journey-number">03</span><div><strong>PayPal checkout</strong><p>Approve payment in Sandbox, then verify the capture on the server.</p><small>SECURE SANDBOX HANDOFF</small></div></article>
             </div>
           </section>
 
