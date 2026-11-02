@@ -1,6 +1,6 @@
 # PayProof AI — Judge Testing Guide
 
-**Live application:** https://payproof-ai-beta.vercel.app/
+**Live application (sign-in enabled):** https://payproof-5jgb7rn9d-naom6083-2980.vercel.app/
 
 Welcome. This guide helps you evaluate the public hackathon prototype safely and reproduce its main workflows.
 
@@ -12,7 +12,7 @@ The core trust boundary is simple: **AI explains; verified payment data decides.
 
 ## 2. Open the public demo
 
-1. Visit https://payproof-ai-beta.vercel.app/.
+1. Visit https://payproof-5jgb7rn9d-naom6083-2980.vercel.app/.
 2. The public preview opens directly; it does not require an application sign-in for the visible demo workspace.
 3. The workspace is a demonstration interface. Its preloaded order counts and dashboard rows are sample/illustrative records, not a private account's live order history.
 4. Keep the Sandbox mode indicator visible during testing.
