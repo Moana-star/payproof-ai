@@ -481,3 +481,22 @@ body{font-size:15px}
 .order-flow-screen:has(.order-form-reference){justify-content:center}
 .order-flow-screen:has(.order-form-reference) .order-flow-card{margin:auto}
 @media(max-width:760px){.reference-overview-heading{align-items:flex-start;flex-direction:column}.reference-overview-heading .primary-button{align-self:flex-start}.dashboard-reference-panels{grid-template-columns:1fr}.order-form-reference .order-flow-form label{font-size:13px}.order-flow-card.order-form-reference{padding:25px 18px}}
+
+
+/* Expanded merchant workspace navigation and module previews. */
+.nav-group-label{padding:18px 13px 7px;color:#9a9eaa;font-size:9px;font-weight:800;letter-spacing:1.15px}
+.side-nav{padding-bottom:18px}
+.nav-item{min-height:39px}
+.workspace-modules{margin:28px 0 25px}
+.workspace-modules-heading{margin-bottom:15px}
+.workspace-modules-heading .eyebrow{font-size:9px;letter-spacing:1.1px;color:#438f85;font-weight:800;margin:0 0 6px}
+.workspace-modules-heading h2{font:800 17px Manrope,sans-serif;letter-spacing:-.35px;color:#292e3e;margin:0 0 6px}
+.workspace-modules-heading p:last-child{font-size:10px;line-height:1.6;color:#858a99;margin:0}
+.workspace-module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.workspace-module-card{display:flex;align-items:flex-start;gap:13px;min-width:0;padding:16px;background:#fff;border:1px solid #e6e8ee;border-radius:11px;scroll-margin-top:24px}
+.workspace-module-card>span{height:34px;width:34px;flex:none;display:grid;place-items:center;border-radius:9px;background:#edf6f3;color:#438f85;font-size:16px;font-weight:800}
+.workspace-module-card h3{font:800 12px Manrope,sans-serif;color:#303447;margin:1px 0 5px}
+.workspace-module-card p{font-size:10px;line-height:1.55;color:#858a99;margin:0 0 8px}
+.workspace-module-card small{font-size:8px;line-height:1.4;color:#9a9eaa;font-weight:700}
+#transactions,#reconciliation,#customers,#shipping,#analytics,#reports,#invoices{scroll-margin-top:24px}
+@media(max-width:760px){.workspace-module-grid{grid-template-columns:1fr}}
