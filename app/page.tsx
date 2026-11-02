@@ -42,6 +42,13 @@ export default function Home() {
   const [orders, setOrders] = useState(initialOrders);
   const [ordersSource, setOrdersSource] = useState<"sample" | "saved" | "unavailable">("sample");
   const [ordersLoadNote, setOrdersLoadNote] = useState("");
+  const [flowStep, setFlowStep] = useState<1 | 2 | 3>(1);
+  const [flowCustomer, setFlowCustomer] = useState("");
+  const [flowMessage, setFlowMessage] = useState("");
+  const [flowProduct, setFlowProduct] = useState("Coffee gift set");
+  const [flowQuantity, setFlowQuantity] = useState("1");
+  const [flowBusy, setFlowBusy] = useState(false);
+  const [flowError, setFlowError] = useState("");
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -184,6 +191,58 @@ export default function Home() {
     }
   }
 
+  async function prepareCheckoutOrder() {
+    if (flowBusy) return;
+    setFlowError("");
+    const quantity = Number(flowQuantity);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+      setFlowError("Enter a whole-number quantity from 1 to 100.");
+      return;
+    }
+    setFlowBusy(true);
+    try {
+      let product = flowProduct;
+      let finalQuantity = quantity;
+      if (flowMessage.trim()) {
+        const response = await fetch("/api/orders/extract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: flowMessage })
+        });
+        const data = await response.json() as {
+          draft?: { product: string | null; quantity: number | null; missingInformation: string[] };
+          error?: string;
+        };
+        if (!response.ok || !data.draft) throw new Error(data.error || "AI could not prepare this order. Check the message or choose the catalogue details manually.");
+        if (!data.draft.product || !Object.hasOwn(CATALOG_PRICES, data.draft.product)) {
+          throw new Error("The message did not identify a supported catalogue product. Choose a product manually before continuing.");
+        }
+        if (!data.draft.quantity || !Number.isInteger(data.draft.quantity) || data.draft.quantity < 1 || data.draft.quantity > 100) {
+          throw new Error("The message did not provide a valid quantity. Enter a quantity from 1 to 100.");
+        }
+        product = data.draft.product;
+        finalQuantity = data.draft.quantity;
+      }
+      if (!Object.hasOwn(CATALOG_PRICES, product)) throw new Error("Choose a product from the supported catalogue.");
+      setFlowProduct(product);
+      setFlowQuantity(String(finalQuantity));
+      setFlowStep(3);
+    } catch (error) {
+      setFlowError(error instanceof Error ? error.message : "The order could not be prepared. Please try again.");
+    } finally {
+      setFlowBusy(false);
+    }
+  }
+
+  function resetOrderFlow() {
+    setFlowStep(1);
+    setFlowError("");
+    setFlowMessage("");
+    setFlowCustomer("");
+    setFlowProduct("Coffee gift set");
+    setFlowQuantity("1");
+  }
+
   async function prepareDraft() {
     if (draftLoading) return;
     if (!message.trim()) {
@@ -290,7 +349,7 @@ export default function Home() {
         <div className="content" id="overview">
           <div className="welcome-row">
             <div><p className="eyebrow">YOUR PAYMENT WORKSPACE</p><h1>{authUserName ? `Welcome, ${authUserName}` : "Welcome to PayProof AI"} <span>✳</span></h1><p className="subheading">{authUserName ? `Your ${authWorkspaceName} workspace — orders, payment evidence, and what needs your attention.` : "Explore the public demo, or sign in to create your own private workspace."}</p></div>
-            <button className="primary-button" onClick={() => document.getElementById("intake")?.scrollIntoView({ behavior: "smooth" })}><span>＋</span> New order</button>
+            <button className="primary-button" onClick={() => { setFlowError(""); setFlowStep(2); }}><span>＋</span> New order</button>
           </div>
 
           {showGuide && <div className="guide-panel"><strong>How PayProof AI works</strong><p>Order messages become reviewable drafts. For a new checkout, PayProof AI verifies the PayPal Sandbox response server-side and attempts to save the verified order to Supabase. {isSignedIn ? "Your signed-in dashboard shows orders saved to your account." : "The public dashboard rows are illustrative demo data."}</p></div>}
@@ -300,7 +359,7 @@ export default function Home() {
           <section className="judge-quick-start" aria-label="Judge quick start">
             <div className="judge-quick-copy"><p className="eyebrow">JUDGE QUICK START</p><h2>Test the core workflow</h2><p>Prepare an order, verify a Sandbox capture, review saved evidence, then inspect reconciliation exceptions.</p></div>
             <div className="judge-quick-actions">
-              <button type="button" className="primary-button" onClick={() => document.getElementById("intake")?.scrollIntoView({ behavior: "smooth" })}>1. Prepare an order</button>
+              <button type="button" className="primary-button" onClick={() => { setFlowError(""); setFlowStep(2); }}>1. Create a new order</button>
               <button type="button" className="secondary-button" onClick={() => startSandboxCheckout()}>2. Test PayPal Sandbox ↗</button>
               <Link className="secondary-button" href="/payments">3. Review evidence ↗</Link>
               <button type="button" className="secondary-button" onClick={() => document.getElementById("reconciliation")?.scrollIntoView({ behavior: "smooth" })}>4. Reconciliation ↓</button>
@@ -370,6 +429,63 @@ export default function Home() {
 
           <footer className="footer"><span>PayProof AI <span className="footer-dot">·</span> Built for clearer payment operations</span><span><i /> Sandbox preview · No real payments</span></footer>
         </div>
+
+      {flowStep > 1 && (
+        <section className="order-flow-screen" aria-label={flowStep === 2 ? "Create new order" : "PayPal checkout review"}>
+          <div className="order-flow-top">
+            <a className="brand" href="#" onClick={(event) => { event.preventDefault(); resetOrderFlow(); }} aria-label="PayProof AI home">
+              <span className="brand-mark">P<span>✓</span></span><span className="brand-name">payproof<span>ai</span></span>
+            </a>
+            <span className="order-flow-mode"><i /> PayPal Sandbox · No real money</span>
+          </div>
+          <div className="order-flow-card">
+            <div className="order-flow-steps" aria-label="Checkout steps">
+              <div className="order-flow-step complete"><span>1</span><small>Dashboard</small></div><div className="order-flow-line" />
+              <div className={flowStep === 2 ? "order-flow-step current" : "order-flow-step complete"}><span>2</span><small>Create order</small></div><div className="order-flow-line" />
+              <div className={flowStep === 3 ? "order-flow-step current" : "order-flow-step"}><span>3</span><small>PayPal checkout</small></div>
+            </div>
+            {flowStep === 2 ? (
+              <>
+                <div className="order-flow-icon">▤</div>
+                <p className="eyebrow">STEP 2 OF 3</p>
+                <h1>Create new order</h1>
+                <p className="order-flow-intro">Add the customer reference and order details. You can type a message and let AI prepare the product and quantity.</p>
+                <div className="order-flow-form">
+                  <label htmlFor="flow-customer">Customer name <span>Optional</span></label>
+                  <input id="flow-customer" value={flowCustomer} onChange={(event) => setFlowCustomer(event.target.value)} placeholder="e.g. Fancy Restaurant" maxLength={80} />
+                  <label htmlFor="flow-message">Enter order text <span>Optional · AI-assisted</span></label>
+                  <textarea id="flow-message" value={flowMessage} onChange={(event) => { setFlowMessage(event.target.value); setFlowError(""); }} placeholder="Example: 2 coffee gift sets, please." rows={4} />
+                  <p className="order-flow-hint">If you enter a message, AI will suggest a supported product and quantity. Otherwise, choose them below. Suggestions are checked before checkout.</p>
+                  <div className="order-flow-manual">
+                    <div><label htmlFor="flow-product">Product</label><select id="flow-product" value={flowProduct} onChange={(event) => setFlowProduct(event.target.value)}><option>Coffee gift set</option><option>Ceramic mug pair</option><option>Handwoven market tote</option></select></div>
+                    <div><label htmlFor="flow-quantity">Quantity</label><input id="flow-quantity" type="number" min="1" max="100" step="1" value={flowQuantity} onChange={(event) => setFlowQuantity(event.target.value)} /></div>
+                  </div>
+                  {flowCustomer.trim() && <p className="order-flow-hint">Customer reference: {flowCustomer.trim()}. This is a session note and is not currently stored with the payment record.</p>}
+                  {flowError && <p className="order-flow-error" role="alert">{flowError}</p>}
+                </div>
+                <div className="order-flow-actions"><button className="secondary-button" onClick={resetOrderFlow}>Cancel</button><button className="primary-button" onClick={prepareCheckoutOrder} disabled={flowBusy}>{flowBusy ? "Preparing order…" : "Next"} <span>→</span></button></div>
+              </>
+            ) : (
+              <>
+                <div className="order-flow-icon paypal-icon">P</div>
+                <p className="eyebrow">STEP 3 OF 3</p>
+                <h1>Review and pay with PayPal</h1>
+                <p className="order-flow-intro">Your order is ready. PayProof AI will create a PayPal Sandbox checkout using server-side catalogue pricing.</p>
+                <div className="order-flow-summary">
+                  <div><span>Product</span><strong>{flowProduct}</strong></div>
+                  <div><span>Quantity</span><strong>{flowQuantity}</strong></div>
+                  <div><span>Customer reference</span><strong>{flowCustomer.trim() || "Not provided"}</strong></div>
+                  <div className="order-flow-total"><span>Estimated total</span><strong>${(CATALOG_PRICES[flowProduct] * Number(flowQuantity)).toFixed(2)} USD</strong></div>
+                </div>
+                <div className="order-flow-secure"><span>✓</span><p><strong>Payment status is not assumed.</strong> PayProof AI will verify the completed PayPal capture on the server after you return from checkout. Only verified payment data can establish a paid status.</p></div>
+                {flowError && <p className="order-flow-error" role="alert">{flowError}</p>}
+                <div className="order-flow-actions"><button className="secondary-button" onClick={() => { setFlowError(""); setFlowStep(2); }}>Back</button><button className="primary-button" onClick={() => startSandboxCheckout(flowProduct, Number(flowQuantity))} disabled={checkoutLoading}>{checkoutLoading ? "Connecting to PayPal…" : "Continue to PayPal"} <span>↗</span></button></div>
+              </>
+            )}
+          </div>
+          <p className="order-flow-footnote">Evidence first. AI helps explain. Verified payment data decides.</p>
+        </section>
+      )}
       </section>
     </main>
   );
