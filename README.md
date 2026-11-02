@@ -6,7 +6,7 @@ PayProof AI is an AI-assisted payment operations workspace for small online sell
 
 **The core promise:** make payment status easier to understand without allowing an AI model, screenshot, or customer message to become proof that money was received.
 
-[Open the live demo](https://payproof-ai-beta.vercel.app/) · [Judge testing guide](JUDGE_GUIDE.md) · [2:55 demo script](DEMO_SCRIPT.md) · [Final test checklist](TEST_PLAN.md)
+[Open the live demo](https://payproof-5jgb7rn9d-naom6083-2980.vercel.app/) · [Judge testing guide](JUDGE_GUIDE.md) · [2:55 demo script](DEMO_SCRIPT.md) · [Final test checklist](TEST_PLAN.md)
 
 ---
 
@@ -66,7 +66,7 @@ The AI provider is used for language tasks. PayPal verification and payment-stat
 
 ## Live demo
 
-**Application:** https://payproof-ai-beta.vercel.app/
+**Application (sign-in enabled):** https://payproof-5jgb7rn9d-naom6083-2980.vercel.app/
 
 The hosted project is a hackathon prototype and uses PayPal Sandbox. Use synthetic/demo records for exploratory pages. Do not enter real customer payment information or expect real-money processing.
 
@@ -74,7 +74,7 @@ For a guided walkthrough, see [JUDGE_GUIDE.md](JUDGE_GUIDE.md). For the recommen
 
 ## Judge quick start
 
-1. Open the [live application](https://payproof-ai-beta.vercel.app/).
+1. Open the [live application](https://payproof-5jgb7rn9d-naom6083-2980.vercel.app/).
 2. Follow the [Judge Testing Guide](JUDGE_GUIDE.md) for the current sign-in and Sandbox checkout flow.
 3. Use a dedicated PayPal Sandbox buyer account for checkout approval. Never use a personal PayPal account or share developer secrets.
 4. Inspect the server-verified payment result and distinguish it from the separate database persistence result.
