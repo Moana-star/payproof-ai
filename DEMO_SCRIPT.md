@@ -1,53 +1,54 @@
-# PayProof AI — 3-Minute Demo Script
+# PayProof AI — 2:55 Demo Script
 
 **Target runtime:** 2 minutes 40 seconds to 2 minutes 55 seconds  
 **Live application:** https://payproof-ai-beta.vercel.app/
 
-Record a clean browser session. Use only a dedicated app demo account and PayPal Sandbox buyer. Never show passwords, API keys, client secrets, tokens, personal customer data, or private dashboard settings.
+Record the actual deployed application in a clean browser window. Use only a dedicated PayPal Sandbox buyer account. Never show passwords, API keys, client secrets, tokens, personal data, or private dashboard settings.
 
-## 0:00–0:20 — The problem
+## 0:00–0:18 — The problem
 
-"Small sellers often receive orders in messages, while payment updates live somewhere else. Connecting the order, expected amount, and payment evidence manually creates delays and the risk of fulfilling before payment is confirmed. PayProof AI brings those steps into one reviewable workspace."
+"Small sellers receive orders in messages, while payment updates live somewhere else. Manually connecting the requested items, expected total, and payment evidence creates delays and can lead to fulfilment before payment is confirmed. PayProof AI brings those checks into one reviewable workflow."
 
-**Show:** landing/workspace overview.
+**Show:** public workspace overview. Briefly point out that the dashboard rows are labelled sample data.
 
-## 0:20–0:50 — AI-assisted order intake
+## 0:18–0:48 — AI-assisted order intake
 
 "Here, a seller can paste a customer message. AI extracts a proposed order draft, but it does not decide the price or mark anything paid. The seller reviews the details, and application code calculates the trusted total."
 
-**Show:** enter a short message such as "Please order two coffee gift sets"; prepare the draft; point out the product and quantity.
+**Show:** enter "Please order two coffee gift sets"; prepare the draft; show product and quantity; validate the supported catalogue item.
 
-## 0:50–1:35 — PayPal Sandbox and verification
+## 0:48–1:35 — PayPal Sandbox checkout and verification
 
-"From the reviewed order, the application creates a PayPal Sandbox checkout. After buyer approval, our server checks the provider result and compares the payment against the expected order details. The redirect itself is not proof; server-side verification is."
+"From a reviewed order, PayProof AI creates a PayPal Sandbox checkout. After buyer approval, our server retrieves the PayPal order and checks the completed capture, expected catalogue amount, currency, and order reference. The redirect itself is not proof; server-side verification is."
 
-**Show:** the completed Sandbox checkout and return result. Show the verified status and identifiers only if the test has genuinely completed. Do not imply that a sample record is a real transaction.
+**Show:** the actual PayPal Sandbox approval and return flow. Show the verified result and transaction identifiers only if this exact run completed successfully. Show whether the order was saved separately from whether PayPal verified the capture.
 
-## 1:35–2:10 — AI explains evidence, not authority
+## 1:35–2:08 — AI explains evidence, not authority
 
-"Payment operations also need to explain exceptions. Here is a clearly labelled sample amount-mismatch scenario. The assistant explains the difference and recommends review. It cannot change payment status, invent evidence, or trigger fulfilment."
+"Payment operations also need to explain exceptions. This is a clearly labelled synthetic amount-mismatch scenario: $42 expected and $40 captured. The assistant explains the discrepancy and recommends review. It cannot change payment status, invent evidence, or trigger fulfilment."
 
-**Show:** sample mismatch and AI explanation. Make the synthetic/demo label visible.
+**Show:** AI assistant, synthetic mismatch label, expected/captured amounts, and advisory-only result.
 
-## 2:10–2:35 — Reconciliation and human control
+## 2:08–2:35 — Human review and reconciliation
 
-"PayProof AI helps reviewers inspect references, amounts, and currencies. A possible match is not the same as an approved match. Human review remains part of the process."
+"PayProof AI makes uncertainty visible. A possible match is not an approved match, and incomplete evidence stays under review. Sample reconciliation rows are illustrative, not a live bank feed."
 
-**Show:** reconciliation or exception review, highlighting the review state and approval boundary.
+**Show:** reconciliation or exception review; point out sample labels and the human-review boundary.
 
 ## 2:35–2:55 — Close
 
-"Our principle is simple: evidence first. AI helps people understand the record, while verified payment data decides. PayProof AI is a PayPal Sandbox hackathon prototype built to make payment operations clearer and safer for small sellers."
+"Our principle is simple: evidence first. AI helps people understand the record, while verified payment data decides. PayProof AI is a PayPal Sandbox prototype built to make payment operations clearer and safer for small sellers."
 
-**Show:** final overview or product name and live URL.
+**Show:** product name and live URL.
 
 ## Recording checklist
 
-- [ ] Keep the final video under three minutes.
-- [ ] Use a stable browser window and readable zoom.
-- [ ] Use a dedicated demo account and Sandbox buyer.
-- [ ] Show a genuinely completed Sandbox transaction if claiming the happy path.
-- [ ] Keep sample scenarios visibly labelled as synthetic.
-- [ ] Do not show credentials, tokens, secrets, or personal data.
-- [ ] Explain the role of PayPal and the role of AI clearly.
-- [ ] Upload to YouTube with visibility set to Public, then add the video URL to the hackathon submission.
+- [ ] Final video is publicly viewable on YouTube and under 3 minutes.
+- [ ] Show the actual deployed product, not slides alone.
+- [ ] Use a dedicated Sandbox buyer account; never show credentials.
+- [ ] Show a genuinely completed Sandbox transaction if describing a successful payment.
+- [ ] Show the verification result and persistence result as separate facts.
+- [ ] Keep synthetic/illustrative labels visible on sample scenarios.
+- [ ] Demonstrate the AI mismatch explanation and its advisory-only boundary.
+- [ ] Do not claim that sample reconciliation is a live bank feed or that the public workspace is a private authenticated merchant account.
+- [ ] Add the public YouTube URL to the Devpost submission.
