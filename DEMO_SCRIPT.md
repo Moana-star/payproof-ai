@@ -1,7 +1,7 @@
 # PayProof AI — 2:55 Demo Script
 
 **Target runtime:** 2 minutes 40 seconds to 2 minutes 55 seconds  
-**Live application:** https://payproof-ai-beta.vercel.app/
+**Live application (sign-in enabled):** https://payproof-5jgb7rn9d-naom6083-2980.vercel.app/
 
 Record the actual deployed application in a clean browser window. Use only a dedicated PayPal Sandbox buyer account. Never show passwords, API keys, client secrets, tokens, personal data, or private dashboard settings.
 
