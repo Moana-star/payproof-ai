@@ -397,3 +397,24 @@ body{font-size:15px}
 .merchant-journey-card button{border:0;background:none;padding:0;color:#398f85;font-size:10px;font-weight:800;cursor:pointer}
 .merchant-journey-card button span{font-size:14px;margin-left:4px}
 @media(max-width:760px){.merchant-journey{padding:16px}.merchant-journey-heading{align-items:flex-start;flex-direction:column}.merchant-journey-grid{grid-template-columns:1fr}.merchant-journey-card{padding:12px}}
+
+/* Reference-matched three-screen checkout presentation. */
+.dashboard-search{display:flex;align-items:center;gap:12px;width:min(100%,650px);height:42px;color:#858a99}
+.dashboard-search>span:first-child{font-size:20px;color:#777d8b}
+.dashboard-search input{flex:1;min-width:80px;height:38px;border:1px solid #e1e3e9;border-radius:9px;background:#fff;padding:0 13px;color:#303447;font:12px 'DM Sans',sans-serif;outline:none}
+.dashboard-search input:focus{border-color:#8bbab1;box-shadow:0 0 0 3px #438f8518}
+.dashboard-date{white-space:nowrap;border:1px solid #e1e3e9;border-radius:9px;padding:11px 13px;background:#fff;font-size:10px;color:#626879}
+.order-form-reference{width:min(100%,660px);padding:30px 31px 24px;border-radius:10px;box-shadow:0 12px 40px rgba(31,37,56,.08)}
+.order-form-reference .order-flow-icon{width:60px;height:60px;margin:0 auto 20px;font-size:25px}
+.order-form-reference h1{font-size:23px;margin:0 0 27px}
+.order-form-reference .order-flow-form{gap:9px}
+.order-form-reference .order-flow-form label{font-size:15px;font-weight:700;color:#303443;margin-top:5px}
+.order-form-reference .order-flow-form select{height:52px;min-height:52px;font-size:14px;border-radius:9px}
+.order-form-reference .order-flow-form textarea{min-height:143px;font-size:14px;border:2px solid #62a89d;border-radius:9px;padding:13px 14px}
+.order-form-reference .order-flow-hint{font-size:12px;line-height:1.55;margin:2px 0 0;color:#969aa6}
+.order-form-actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:30px}
+.order-form-actions button{width:100%;min-height:48px;border-radius:8px;font-size:14px;font-weight:750}
+.order-form-actions .primary-button{background:#438f85;box-shadow:none}
+.order-form-actions .secondary-button{background:#f5fbfa;border:1px solid #6da99f;color:#438f85}
+.order-form-customer-note{margin:16px 0 0;text-align:center;font-size:10px;line-height:1.5;color:#999daa}
+@media(max-width:600px){.dashboard-search{gap:7px}.dashboard-date{font-size:9px;padding:10px 8px}.order-form-reference{padding:24px 18px}.order-form-reference .order-flow-form label{font-size:13px}.order-form-reference .order-flow-form textarea{min-height:125px}}
