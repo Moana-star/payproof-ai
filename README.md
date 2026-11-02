@@ -6,7 +6,7 @@ PayProof AI is an AI-assisted payment operations workspace for small online sell
 
 **The core promise:** make payment status easier to understand without allowing an AI model, screenshot, or customer message to become proof that money was received.
 
-[Open the live demo](https://payproof-ai-beta.vercel.app/) · [Judge testing guide](JUDGE_GUIDE.md) · [3-minute demo script](DEMO_SCRIPT.md) · [Final test checklist](TEST_PLAN.md)
+[Open the live demo](https://payproof-ai-beta.vercel.app/) · [Judge testing guide](JUDGE_GUIDE.md) · [2:55 demo script](DEMO_SCRIPT.md) · [Final test checklist](TEST_PLAN.md)
 
 ---
 
