@@ -194,39 +194,34 @@ export default function Home() {
   async function prepareCheckoutOrder() {
     if (flowBusy) return;
     setFlowError("");
-    const quantity = Number(flowQuantity);
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
-      setFlowError("Enter a whole-number quantity from 1 to 100.");
+    if (!flowMessage.trim()) {
+      setFlowError("Enter the customer's order details before continuing.");
       return;
     }
     setFlowBusy(true);
     try {
-      let product = flowProduct;
-      let finalQuantity = quantity;
-      if (flowMessage.trim()) {
-        const response = await fetch("/api/orders/extract", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: flowMessage })
-        });
-        const data = await response.json() as {
-          draft?: { product: string | null; quantity: number | null; missingInformation: string[] };
-          error?: string;
-        };
-        if (!response.ok || !data.draft) throw new Error(data.error || "AI could not prepare this order. Check the message or choose the catalogue details manually.");
-        if (!data.draft.product || !Object.hasOwn(CATALOG_PRICES, data.draft.product)) {
-          throw new Error("The message did not identify a supported catalogue product. Choose a product manually before continuing.");
-        }
-        if (!data.draft.quantity || !Number.isInteger(data.draft.quantity) || data.draft.quantity < 1 || data.draft.quantity > 100) {
-          throw new Error("The message did not provide a valid quantity. Enter a quantity from 1 to 100.");
-        }
-        product = data.draft.product;
-        finalQuantity = data.draft.quantity;
+      const response = await fetch("/api/orders/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: flowMessage })
+      });
+      const data = await response.json() as {
+        draft?: { product: string | null; quantity: number | null; missingInformation: string[] };
+        error?: string;
+      };
+      if (!response.ok || !data.draft) throw new Error(data.error || "AI could not prepare this order. Please review the order text.");
+      const product = data.draft.product;
+      const quantity = data.draft.quantity;
+      if (!product || !Object.hasOwn(CATALOG_PRICES, product)) {
+        throw new Error("The order text does not identify a supported catalogue product. Please use Coffee gift set, Ceramic mug pair, or Handwoven market tote.");
       }
-      if (!Object.hasOwn(CATALOG_PRICES, product)) throw new Error("Choose a product from the supported catalogue.");
+      if (!quantity || !Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+        throw new Error("The order text must include a valid whole-number quantity from 1 to 100.");
+      }
       setFlowProduct(product);
-      setFlowQuantity(String(finalQuantity));
-      setFlowStep(3);
+      setFlowQuantity(String(quantity));
+      // Step 3 is the real PayPal-hosted Sandbox login/checkout page.
+      await startSandboxCheckout(product, quantity);
     } catch (error) {
       setFlowError(error instanceof Error ? error.message : "The order could not be prepared. Please try again.");
     } finally {
@@ -342,7 +337,7 @@ export default function Home() {
 
       <section className="main-area">
         <header className="topbar">
-          <div className="breadcrumb">Workspace <span>/</span> Overview</div>
+          <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" onChange={(event) => setMessage(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
           <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link>{authUserName ? <><Link className="demo-payment-guide-link" href="/profile">My profile ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
 
@@ -429,58 +424,32 @@ export default function Home() {
           <footer className="footer"><span>PayProof AI <span className="footer-dot">·</span> Built for clearer payment operations</span><span><i /> Sandbox preview · No real payments</span></footer>
         </div>
 
-      {flowStep > 1 && (
-        <section className="order-flow-screen" aria-label={flowStep === 2 ? "Create new order" : "PayPal checkout review"}>
+      {flowStep === 2 && (
+        <section className="order-flow-screen" aria-label="Create new order">
           <div className="order-flow-top">
             <a className="brand" href="#" onClick={(event) => { event.preventDefault(); resetOrderFlow(); }} aria-label="PayProof AI home">
               <span className="brand-mark">P<span>✓</span></span><span className="brand-name">payproof<span>ai</span></span>
             </a>
             <span className="order-flow-mode"><i /> PayPal Sandbox · No real money</span>
           </div>
-          <div className="order-flow-card">
-            <div className="order-flow-steps" aria-label="Checkout steps">
-              <div className="order-flow-step complete"><span>1</span><small>Dashboard</small></div><div className="order-flow-line" />
-              <div className={flowStep === 2 ? "order-flow-step current" : "order-flow-step complete"}><span>2</span><small>Create order</small></div><div className="order-flow-line" />
-              <div className={flowStep === 3 ? "order-flow-step current" : "order-flow-step"}><span>3</span><small>PayPal checkout</small></div>
+          <div className="order-flow-card order-form-reference">
+            <div className="order-flow-icon">▤</div>
+            <h1>Create New Order</h1>
+            <div className="order-flow-form">
+              <label htmlFor="flow-customer">Customer Name</label>
+              <select id="flow-customer" value={flowCustomer} onChange={(event) => setFlowCustomer(event.target.value)}>
+                <option value="">Select a customer</option>
+                <option value="Fancy Restaurant">Fancy Restaurant</option>
+                <option value="Walk-in customer">Walk-in customer</option>
+                <option value="Returning customer">Returning customer</option>
+              </select>
+              <label htmlFor="flow-message">Enter Order Text (optional)</label>
+              <textarea id="flow-message" value={flowMessage} onChange={(event) => { setFlowMessage(event.target.value); setFlowError(""); }} placeholder="Example: Coffee gift set x 2" rows={4} />
+              <p className="order-flow-hint">Order text will be used to prepare the sales order with AI. Review the extracted product and quantity before payment.</p>
+              {flowError && <p className="order-flow-error" role="alert">{flowError}</p>}
             </div>
-            {flowStep === 2 ? (
-              <>
-                <div className="order-flow-icon">▤</div>
-                <p className="eyebrow">STEP 2 OF 3</p>
-                <h1>Create new order</h1>
-                <p className="order-flow-intro">Add the customer reference and order details. You can type a message and let AI prepare the product and quantity.</p>
-                <div className="order-flow-form">
-                  <label htmlFor="flow-customer">Customer name <span>Optional</span></label>
-                  <input id="flow-customer" value={flowCustomer} onChange={(event) => setFlowCustomer(event.target.value)} placeholder="e.g. Fancy Restaurant" maxLength={80} />
-                  <label htmlFor="flow-message">Enter order text <span>Optional · AI-assisted</span></label>
-                  <textarea id="flow-message" value={flowMessage} onChange={(event) => { setFlowMessage(event.target.value); setFlowError(""); }} placeholder="Example: 2 coffee gift sets, please." rows={4} />
-                  <p className="order-flow-hint">If you enter a message, AI will suggest a supported product and quantity. Otherwise, choose them below. Suggestions are checked before checkout.</p>
-                  <div className="order-flow-manual">
-                    <div><label htmlFor="flow-product">Product</label><select id="flow-product" value={flowProduct} onChange={(event) => setFlowProduct(event.target.value)}><option>Coffee gift set</option><option>Ceramic mug pair</option><option>Handwoven market tote</option></select></div>
-                    <div><label htmlFor="flow-quantity">Quantity</label><input id="flow-quantity" type="number" min="1" max="100" step="1" value={flowQuantity} onChange={(event) => setFlowQuantity(event.target.value)} /></div>
-                  </div>
-                  {flowCustomer.trim() && <p className="order-flow-hint">Customer reference: {flowCustomer.trim()}. This is a session note and is not currently stored with the payment record.</p>}
-                  {flowError && <p className="order-flow-error" role="alert">{flowError}</p>}
-                </div>
-                <div className="order-flow-actions"><button className="secondary-button" onClick={resetOrderFlow}>Cancel</button><button className="primary-button" onClick={prepareCheckoutOrder} disabled={flowBusy}>{flowBusy ? "Preparing order…" : "Next"} <span>→</span></button></div>
-              </>
-            ) : (
-              <>
-                <div className="order-flow-icon paypal-icon">P</div>
-                <p className="eyebrow">STEP 3 OF 3</p>
-                <h1>Review and pay with PayPal</h1>
-                <p className="order-flow-intro">Your order is ready. PayProof AI will create a PayPal Sandbox checkout using server-side catalogue pricing.</p>
-                <div className="order-flow-summary">
-                  <div><span>Product</span><strong>{flowProduct}</strong></div>
-                  <div><span>Quantity</span><strong>{flowQuantity}</strong></div>
-                  <div><span>Customer reference</span><strong>{flowCustomer.trim() || "Not provided"}</strong></div>
-                  <div className="order-flow-total"><span>Estimated total</span><strong>${(CATALOG_PRICES[flowProduct] * Number(flowQuantity)).toFixed(2)} USD</strong></div>
-                </div>
-                <div className="order-flow-secure"><span>✓</span><p><strong>Payment status is not assumed.</strong> PayProof AI will verify the completed PayPal capture on the server after you return from checkout. Only verified payment data can establish a paid status.</p></div>
-                {flowError && <p className="order-flow-error" role="alert">{flowError}</p>}
-                <div className="order-flow-actions"><button className="secondary-button" onClick={() => { setFlowError(""); setFlowStep(2); }}>Back</button><button className="primary-button" onClick={() => startSandboxCheckout(flowProduct, Number(flowQuantity))} disabled={checkoutLoading}>{checkoutLoading ? "Connecting to PayPal…" : "Continue to PayPal"} <span>↗</span></button></div>
-              </>
-            )}
+            <div className="order-flow-actions order-form-actions"><button className="primary-button" onClick={prepareCheckoutOrder} disabled={flowBusy}>{flowBusy ? "Preparing…" : "Next"}</button><button className="secondary-button" onClick={resetOrderFlow}>Cancel</button></div>
+            <p className="order-flow-customer-note">Customer name is a session reference and is not currently stored with the payment record.</p>
           </div>
           <p className="order-flow-footnote">Evidence first. AI helps explain. Verified payment data decides.</p>
         </section>
