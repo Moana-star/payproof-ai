@@ -447,12 +447,6 @@ export default function Home() {
 
       {flowStep === 2 && (
         <section className="order-flow-screen" aria-label="Create new order">
-          <div className="order-flow-top">
-            <a className="brand" href="#" onClick={(event) => { event.preventDefault(); resetOrderFlow(); }} aria-label="PayProof AI home">
-              <span className="brand-mark">P<span>✓</span></span><span className="brand-name">payproof<span>ai</span></span>
-            </a>
-            <span className="order-flow-mode"><i /> PayPal Sandbox · No real money</span>
-          </div>
           <div className="order-flow-card order-form-reference">
             <div className="order-flow-icon">▤</div>
             <h1>Create New Order</h1>
@@ -470,9 +464,7 @@ export default function Home() {
               {flowError && <p className="order-flow-error" role="alert">{flowError}</p>}
             </div>
             <div className="order-flow-actions order-form-actions"><button className="primary-button" onClick={prepareCheckoutOrder} disabled={flowBusy}>{flowBusy ? "Preparing…" : "Next"}</button><button className="secondary-button" onClick={resetOrderFlow}>Cancel</button></div>
-            <p className="order-flow-customer-note">Customer name is a session reference and is not currently stored with the payment record.</p>
           </div>
-          <p className="order-flow-footnote">Evidence first. AI helps explain. Verified payment data decides.</p>
         </section>
       )}
       </section>
