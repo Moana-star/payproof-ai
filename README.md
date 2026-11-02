@@ -1,55 +1,114 @@
 # PayProof AI
 
-**Know what was paid. Understand what needs attention.**
+**Evidence first. AI explains the record. Verified payment data decides.**
 
-PayProof AI is an evidence-first payment operations prototype for small online sellers. It combines reviewable order-message intake, PayPal Sandbox checkout verification, exception guidance and AI-assisted explanations.
+PayProof AI is an AI-assisted payment operations workspace for small online sellers. It turns customer order messages into reviewable drafts, supports PayPal Sandbox checkout, verifies payment evidence on the server, and helps explain exceptions in plain language.
 
-> **Trust rule:** AI can organise and explain information. Only server-side verification against PayPal can establish payment status. A screenshot, customer claim or AI answer is not payment proof.
+**The core promise:** make payment status easier to understand without allowing an AI model, screenshot, or customer message to become proof that money was received.
 
-## The problem
+[Open the live demo](https://payproof-ai-beta.vercel.app/) · [Judge testing guide](JUDGE_GUIDE.md) · [3-minute demo script](DEMO_SCRIPT.md) · [Final test checklist](TEST_PLAN.md)
 
-Small merchants often have order details in conversations and payment updates in separate tools. That creates manual work and the risk of fulfilling an order before a payment is confirmed.
+---
 
-## What the prototype includes
+## Why this matters
 
-- **Overview workspace:** clearly labelled sample dashboard, order-intake workflow and Sandbox checkout entry point.
-- **Payment evidence:** order references, expected verification checks, amount/currency comparison and a visual checkout-to-record flow.
-- **AI payment assistant:** asks questions about synthetic evidence scenarios and uses Groq to explain what the supplied fields mean. It is advisory and cannot change payment status.
-- **Exception review:** sample scenarios for amount mismatch, missing capture evidence and records that need source confirmation, each with safe next steps.
-- **Audit trail:** an illustrative event timeline showing which identifiers and verification outcomes should be retained.
-- **PayPal Sandbox integration:** server-priced catalogue checkout, capture verification, and Supabase order/event persistence code.
-- **Responsive design:** desktop and mobile layouts, clear statuses, loading/error messaging, and keyboard-friendly controls.
+Small sellers often receive orders through chat while payment information lives elsewhere. They manually connect customer messages, expected totals, checkout references, and payment updates. That makes it easy to miss a mismatch or fulfil an order before payment is confirmed.
 
-The operations pages intentionally label their example records as synthetic or illustrative. They do not expose real customer orders. Live order-history access should not be added until authentication and owner-scoped authorisation are implemented.
+PayProof AI brings those steps into one reviewable workflow. It is designed around a simple trust boundary:
 
-## How the workflow is designed
+> **AI can organise and explain information. Only server-side verification against PayPal can establish payment status.**
 
-1. Paste a customer message and prepare a reviewable order draft.
-2. Confirm product and quantity; the server determines the catalogue price.
-3. Create a PayPal Sandbox checkout.
-4. After the buyer returns, the server checks PayPal order/capture status, expected amount, currency and internal order reference.
-5. The server attempts to persist the order and capture event in Supabase.
-6. If evidence is incomplete or inconsistent, the workflow stays in review rather than claiming payment success.
-7. The AI assistant can explain a selected synthetic scenario and recommend a safe next step.
+## What you can do
 
-## Current implementation status
+| Capability | What it does | Trust boundary |
+|---|---|---|
+| Order intake | Extracts a proposed order from a customer message | Seller reviews and confirms the draft |
+| Deterministic pricing | Uses application-side catalogue data to calculate totals | The model and browser do not set trusted prices |
+| PayPal Sandbox checkout | Creates a checkout for a confirmed order | Uses Sandbox credentials; no live-money processing |
+| Payment verification | Checks provider transaction status and expected payment details server-side | A browser return or success screen alone is not proof |
+| Payment evidence | Presents payment references and verification outcomes | Unverified or conflicting evidence remains under review |
+| AI explanations | Explains selected evidence scenarios and suggests safe next steps | Advisory only; cannot mark an order paid or execute a financial action |
+| Reconciliation and exception workflows | Helps reviewers understand sample records and discrepancies | Clearly labelled demo/synthetic data; human review remains necessary |
+| Audit-oriented views | Demonstrates the identifiers and events a reviewer should inspect | Illustrative views are not represented as a complete production audit system |
 
-This is an active prototype, **not production-ready**.
+## How the main workflow works
 
-- [x] Next.js dashboard and responsive operations pages
-- [x] Server-side PayPal OAuth helper and Orders API routes
-- [x] Server-priced Sandbox checkout and return/cancel screens
-- [x] Server-side checks for completed capture, amount, currency and expected reference
-- [x] Groq-backed structured order extraction endpoint (requires `GROQ_API_KEY`)
-- [x] Groq-backed evidence explanation endpoint for synthetic scenarios (requires `GROQ_API_KEY`)
-- [x] Supabase REST persistence code for pending/verified orders and idempotent capture events
-- [ ] Complete a fresh end-to-end Sandbox checkout and confirm both expected Supabase rows exist
-- [ ] Confirm the Groq key is configured in the Vercel environments and test the AI UI there
-- [ ] Add automated tests for successful, cancelled, pending, duplicate and mismatched transactions
-- [ ] Add authenticated, owner-scoped real order history before displaying live customer data
-- [ ] Before any production use, review webhook verification, rate limits, retries, monitoring and privacy/security controls
+1. A seller pastes a customer order message.
+2. AI proposes structured order details and identifies missing information.
+3. The seller reviews and confirms the draft.
+4. Application code validates the selected catalogue items and calculates the total.
+5. The server creates a PayPal Sandbox checkout.
+6. The buyer approves the checkout in PayPal Sandbox.
+7. The application server checks the PayPal result, including final status and expected payment details.
+8. The application reports verification and persistence outcomes separately.
+9. The AI assistant can explain known evidence and suggest next steps, but cannot change the verified payment state.
 
-Committed code is not proof that an integration has been tested. Until a fresh end-to-end test succeeds, treat the dashboard and operations-page records as illustrative and do not claim that real customer payments are being processed.
+## What makes PayProof AI different
+
+- **Evidence-led decisions:** payment state comes from server-side provider verification, not a model's opinion.
+- **Human-in-the-loop order intake:** AI proposes; the seller confirms.
+- **Deterministic money logic:** catalogue prices and totals are calculated by application code.
+- **Safe handling of uncertainty:** missing, pending, or conflicting evidence is not presented as successful payment.
+- **Useful AI, bounded authority:** language understanding helps with order intake and explanations without controlling financial decisions.
+- **A practical seller workflow:** order intake, checkout, payment evidence, and exception understanding are brought together.
+
+## Technology
+
+- Next.js 15
+- React 19
+- TypeScript
+- PayPal Orders API — Sandbox environment
+- Supabase — server-side persistence integration
+- Groq — structured order extraction and evidence explanations
+- Vercel — deployment and hosting
+
+The AI provider is used for language tasks. PayPal verification and payment-state decisions remain deterministic server-side application responsibilities.
+
+## Live demo
+
+**Application:** https://payproof-ai-beta.vercel.app/
+
+The hosted project is a hackathon prototype and uses PayPal Sandbox. Use synthetic/demo records for exploratory pages. Do not enter real customer payment information or expect real-money processing.
+
+For a guided walkthrough, see [JUDGE_GUIDE.md](JUDGE_GUIDE.md). For the recommended narration and sequence, see [DEMO_SCRIPT.md](DEMO_SCRIPT.md).
+
+## Judge quick start
+
+1. Open the [live application](https://payproof-ai-beta.vercel.app/).
+2. Follow the [Judge Testing Guide](JUDGE_GUIDE.md) for the current sign-in and Sandbox checkout flow.
+3. Use a dedicated PayPal Sandbox buyer account for checkout approval. Never use a personal PayPal account or share developer secrets.
+4. Inspect the server-verified payment result and distinguish it from the separate database persistence result.
+5. Explore the clearly labelled sample exception and AI explanation scenarios.
+6. Use the [Final Test Checklist](TEST_PLAN.md) to understand the scenarios and expected safe behaviour.
+
+**Credentials:** do not publish app passwords, PayPal Sandbox buyer passwords, PayPal client secrets, Supabase service-role keys, AI-provider keys, or reviewer tokens in this public repository, README, screenshots, or public Devpost description. Provide any temporary judge credentials only through an approved private channel, if the judging process requires them. Rotate temporary credentials after the event.
+
+## AI use and safeguards
+
+AI is used for:
+- Extracting a proposed order draft from unstructured customer text.
+- Explaining known fields in selected payment-evidence scenarios.
+- Translating technical or operational evidence into understandable next steps.
+
+AI is not used to:
+- Verify that money was received.
+- Set authoritative catalogue prices or calculate trusted totals.
+- Invent PayPal transaction IDs, capture records, or payment evidence.
+- Change payment status or bypass provider verification.
+- Trigger fulfilment, refunds, payouts, or other financial actions.
+
+Model output is treated as untrusted input, validated, and presented as advisory. A model outage must not turn into a false payment success.
+
+## Security, privacy, and demo boundaries
+
+- PayPal and AI-provider credentials remain server-side environment variables.
+- Supabase service credentials must remain server-side and must never use a `NEXT_PUBLIC_` prefix.
+- The repository contains placeholders only in `.env.example`.
+- PayPal Sandbox and synthetic data are used for the hackathon demonstration.
+- A browser redirect is a prompt to verify, not proof of payment.
+- Do not use the prototype to process real customer funds.
+- The current sample operations pages are clearly labelled; they must not be mistaken for a private, owner-scoped production order-history system.
+- Before production use, complete a security and privacy review, including account-scoped authorisation, webhook strategy, rate limits, retries, monitoring, retention, and operational controls.
 
 ## Run locally
 
@@ -57,98 +116,85 @@ Committed code is not proof that an integration has been tested. Until a fresh e
 
 - Node.js 20 or another supported Node.js release
 - npm
-- A PayPal Developer account with a **Sandbox** REST app
-- A Supabase project if you want to test persistence
-- A Groq API key if you want to use the AI features
+- A PayPal Developer account with a Sandbox REST app
+- A Supabase project for persistence testing
+- A Groq API key for AI features
 
-### 1. Install dependencies
-
-From the repository root:
+### 1. Install
 
 ```bash
 npm install
 ```
 
-### 2. Configure environment variables
+### 2. Configure environment
 
-Create `.env.local` beside `package.json`, then copy the variable names from `.env.example` and set your private values.
-
-Required for PayPal Sandbox checkout:
+Create `.env.local` in the repository root, next to `package.json`. Copy the variable names from `.env.example` and supply your own private values.
 
 ```env
 PAYPAL_CLIENT_ID=your_sandbox_client_id
 PAYPAL_CLIENT_SECRET=your_sandbox_client_secret
 PAYPAL_BASE_URL=https://api-m.sandbox.paypal.com
 APP_URL=http://localhost:3000
-```
 
-For persistence:
-
-```env
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_server_side_service_role_key
-```
 
-For AI order intake and evidence explanations:
-
-```env
 GROQ_API_KEY=your_groq_api_key
 GROQ_MODEL=openai/gpt-oss-20b
 ```
 
-Keep all credentials server-side. Never use `NEXT_PUBLIC_` for service keys, commit `.env.local`, or paste secret values into issues or chat. Do not use PayPal Live credentials for the hackathon demo.
+Do not commit `.env.local`. Do not put secrets in client-side variables. Do not use PayPal Live credentials for the hackathon demo.
 
-### 3. Start the app
+### 3. Start
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open http://localhost:3000.
 
-### 4. Test a Sandbox payment
-
-Select **Test PayPal checkout** and approve the order with a PayPal Sandbox personal/test buyer. Inspect the verification result page. If it reports that the order was saved, independently confirm the matching row in Supabase; payment verification and persistence are separate outcomes.
-
-### 5. Run checks
+### 4. Verify locally
 
 ```bash
 npm run lint
 npm run build
 ```
 
-Resolve errors before deploying. These instructions describe the intended validation workflow; they do not claim that all checks or end-to-end flows have passed in every environment.
+Use a PayPal Sandbox buyer to approve a test checkout. Check the application verification result and independently inspect the expected Supabase records. Verification and persistence are separate outcomes: a verified payment does not, by itself, prove that a database write succeeded.
 
-## AI boundaries
+## Repository guide
 
-Groq is used for order-detail extraction and explanations of selected synthetic evidence scenarios. Model output is advisory only. Sellers must review extracted product and quantity details. Price calculation, PayPal requests, payment-state decisions and persistence remain server-side deterministic operations.
+| File | Purpose |
+|---|---|
+| [scope.md](scope.md) | Product scope, boundaries, and acceptance criteria |
+| [prd.md](prd.md) | Product requirements and user scenarios |
+| [spec.md](spec.md) | Technical architecture, state model, and test design |
+| [JUDGE_GUIDE.md](JUDGE_GUIDE.md) | Judge-facing instructions and safe demo walkthrough |
+| [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | Concise video/demo narration |
+| [TEST_PLAN.md](TEST_PLAN.md) | Final manual verification checklist |
+| [.env.example](.env.example) | Environment variable names with placeholders |
+| [LICENSE](LICENSE) | MIT open-source licence |
 
-The AI assistant page currently explains synthetic examples, not private live orders. Do not allow model output to set prices, claim a payment succeeded, bypass PayPal verification or label an exception as fraud without evidence.
+## Current scope and honest limitations
 
-## Security and privacy principles
+PayProof AI is a **hackathon prototype**, not a production payment processor, wallet, accounting platform, or fraud-detection service. It uses PayPal Sandbox rather than live transactions. Sample exception/reconciliation scenarios are synthetic or illustrative unless a screen explicitly shows a verified Sandbox transaction.
 
-1. Keep PayPal and Supabase secrets server-side.
-2. Never treat screenshots, customer messages or model output as payment evidence.
-3. Calculate prices and totals in application code, not with an LLM.
-4. Verify payment state against PayPal on the server.
-5. Require human review for ambiguous order details.
-6. Use Sandbox credentials and synthetic records during development.
-7. Treat a browser return URL as a trigger to verify—not proof of payment.
-8. Do not expose real order history without authentication and owner-scoped authorisation.
-9. Before production use, add and test webhook verification, rate limiting, retries, monitoring and appropriate access controls.
+The project includes server-side PayPal integration, AI endpoints, and Supabase persistence code. The maintainer should demonstrate the complete checkout and independently verify persistence in the deployed environment before describing that exact run as successful. Do not infer production readiness from a successful build or a working UI.
 
-## Hackathon demo
+Production deployment would require further security, privacy, reliability, and operational work, including owner-scoped access controls, webhook verification where used, rate limiting, retry/idempotency review, monitoring, and incident handling.
 
-A strong demo should show a real Sandbox checkout, the server-verified result, the separate database persistence outcome, and a live AI explanation of a clearly labelled sample evidence case. Keep the public demo under three minutes and do not claim untested functionality.
+## Hackathon evaluation focus
 
-## Project documents
+The project is presented to make the following strengths easy to evaluate:
 
-- [Scope](scope.md)
-- [Product requirements](prd.md)
-- [Technical specification](spec.md)
-- [Environment variable template](.env.example)
-- [MIT License](LICENSE)
+1. **Technological implementation:** a real application workflow connecting order intake, PayPal Sandbox checkout, server-side verification, persistence integration, and AI assistance.
+2. **Design:** a focused payment-operations workspace with clear evidence, statuses, and next actions.
+3. **Potential impact:** fewer manual handoffs and a lower risk of acting on incomplete payment information for small sellers.
+4. **Innovation:** AI is deliberately constrained to language tasks while deterministic verification controls payment state.
+5. **Presentation:** a short, reproducible walkthrough that shows the workflow, the evidence, the safeguards, and the limitations.
 
-## License
+No outcome, score, or prize placement is guaranteed. The best demonstration is specific, honest, and reproducible.
 
-MIT. See [LICENSE](LICENSE).
+## Licence
+
+Released under the [MIT License](LICENSE).
