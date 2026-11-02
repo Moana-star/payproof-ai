@@ -368,7 +368,7 @@ export default function Home() {
                 <label>API credentials <span>Protected</span><input value="••••••••••••••••••••••••" readOnly aria-label="Protected PayPal credentials" /></label>
                 <small>PayPal credentials are stored securely on the server and never displayed here.</small>
                 <label>Webhook endpoint <span>Server managed</span><input value="Configured server-side" readOnly aria-label="Webhook endpoint configuration status" /></label>
-                <small>Payment events are verified against PayPal's server-side records.</small>
+                <small>Payment events are verified against PayPal&apos;s server-side records.</small>
                 <label>Merchant name<input value={authWorkspaceName || "Demo workspace"} readOnly aria-label="Merchant workspace name" /></label>
               </div>
               <p className="config-safe-note">Sandbox environment · No real money is processed.</p>
