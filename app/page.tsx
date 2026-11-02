@@ -315,14 +315,19 @@ export default function Home() {
         </a>
         <div className="workspace-label">WORKSPACE</div>
         <nav className="side-nav" aria-label="Main navigation">
-          <a className="nav-item active" href="#overview"><span className="nav-icon">▦</span> Overview</a>
-          <a className="nav-item" href="#orders"><span className="nav-icon">▤</span> Orders <span className="nav-count">{orders.length}</span></a>
-          <a className="nav-item" href="#intake"><span className="nav-icon">✳</span> AI order intake</a>
-          <a className="nav-item" href="#activity"><span className="nav-icon">↗</span> Payment activity</a>
+          <a className="nav-item active" href="#overview"><span className="nav-icon">▦</span> Dashboard</a>
+          <a className="nav-item" href="/payments"><span className="nav-icon">◈</span> Payments</a>
+          <a className="nav-item" href="#customers"><span className="nav-icon">♙</span> Customers</a>
+          <a className="nav-item" href="#shipping"><span className="nav-icon">▣</span> Shipping</a>
+          <a className="nav-item" href="#analytics"><span className="nav-icon">▥</span> Analytics</a>
+          <a className="nav-item" href="#reports"><span className="nav-icon">▤</span> Reports</a>
+          <a className="nav-item" href="#invoices"><span className="nav-icon">▧</span> Invoices</a>
+          <a className="nav-item" href="#transactions"><span className="nav-icon">↗</span> Transactions</a>
           <a className="nav-item" href="#reconciliation"><span className="nav-icon">⇄</span> Reconciliation</a>
-          <a className="nav-item" href="/payments"><span className="nav-icon">✓</span> Payment evidence</a>
-          <a className="nav-item" href="/assistant"><span className="nav-icon">✳</span> AI assistant</a>
-          {!isSignedIn && <><a className="nav-item" href="/exceptions"><span className="nav-icon">!</span> Exception review</a><a className="nav-item" href="/audit"><span className="nav-icon">⌁</span> Audit trail</a></>}
+          <a className="nav-item" href="/exceptions"><span className="nav-icon">!</span> Exceptions</a>
+          <div className="nav-group-label">PREFERENCES</div>
+          <a className="nav-item" href="/demo-guide"><span className="nav-icon">?</span> Help &amp; support</a>
+          <a className="nav-item" href="/profile"><span className="nav-icon">⚙</span> Settings</a>
         </nav>
         <div className="sidebar-bottom">
           <div className="trust-card">
@@ -412,7 +417,7 @@ export default function Home() {
             {!authChecked ? <p className="workspace-isolation-note">Checking workspace access…</p> : isSignedIn ? <div className="workspace-isolation-note"><strong>Reconciliation workspace</strong><p>Open the reconciliation workspace to review the protected statement-matching demo. Your saved orders and payment evidence remain private to your account; shared judge-preview records are kept separate.</p><Link className="primary-button" href="/reconciliation">Open reconciliation workspace ↗</Link><p className="recon-judge-safety">Private reviewer access is required for protected import, review decisions and internal-ledger posting. This preview does not connect to a bank or external accounting platform.</p></div> : <ReconciliationConsole />}
           </section>
 
-          <div className="section-heading" id="orders"><div><h2>Recent orders</h2><p>Track each order without guessing about payment status.</p></div><button className="text-button" onClick={() => setNotice(ordersSource === "saved" ? "Showing saved Sandbox orders. For capture details and verification timestamps, open Payment evidence." : "Showing illustrative sample orders. These are not saved payment records.")}>View all orders <span>→</span></button></div>
+          <div className="section-heading" id="transactions"><div id="orders"><div><h2>Recent orders</h2><p>Track each order without guessing about payment status.</p></div><button className="text-button" onClick={() => setNotice(ordersSource === "saved" ? "Showing saved Sandbox orders. For capture details and verification timestamps, open Payment evidence." : "Showing illustrative sample orders. These are not saved payment records.")}>View all orders <span>→</span></button></div>
 
           <section className="orders-card">
             <div className="table-toolbar"><div className="table-title">{ordersSource === "saved" ? "Saved orders" : "Sample orders"} <span className="table-count">{orders.length}</span></div><div className="table-filters"><span className="filter-label">Status</span><button className="filter-button" onClick={() => setOrders(orders.slice().reverse())}>Recent activity ↕</button></div></div>
@@ -441,6 +446,17 @@ export default function Home() {
               <div className="evidence-note"><span>✓</span><p><strong>Never trust a screenshot alone.</strong><br />A paid status requires server-side PayPal verification.</p></div>
             </section>
           </div>
+
+          <section className="workspace-modules" aria-label="Additional workspace modules">
+            <div className="workspace-modules-heading"><div><p className="eyebrow">WORKSPACE MODULES</p><h2>More ways to manage your business</h2><p>These sections are navigation-ready previews. They are not yet connected to live merchant records.</p></div></div>
+            <div className="workspace-module-grid">
+              <article className="workspace-module-card" id="customers"><span>♙</span><div><h3>Customers</h3><p>Customer profiles, contact details and order history.</p><small>Module preview · Customer records not connected</small></div></article>
+              <article className="workspace-module-card" id="shipping"><span>▣</span><div><h3>Shipping</h3><p>Fulfilment status, delivery details and shipment tracking.</p><small>Module preview · Carrier integration not connected</small></div></article>
+              <article className="workspace-module-card" id="analytics"><span>▥</span><div><h3>Analytics</h3><p>Payment trends, order performance and exception patterns.</p><small>Module preview · No live analytics calculated</small></div></article>
+              <article className="workspace-module-card" id="reports"><span>▤</span><div><h3>Reports</h3><p>Prepare operational summaries and exportable reports.</p><small>Module preview · Report generation not connected</small></div></article>
+              <article className="workspace-module-card" id="invoices"><span>▧</span><div><h3>Invoices</h3><p>Invoice records, due dates and payment references.</p><small>Module preview · Invoice issuing not connected</small></div></article>
+            </div>
+          </section>
 
           <footer className="footer"><span>PayProof AI <span className="footer-dot">·</span> Built for clearer payment operations</span><span><i /> Sandbox preview · No real payments</span></footer>
         </div>
