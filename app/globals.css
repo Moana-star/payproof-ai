@@ -448,3 +448,36 @@ body{font-size:15px}
 .transaction-paid{color:#31866f}.transaction-review{color:#b45b60}.transaction-pending{color:#a17b3f}
 .dashboard-empty{font-size:10px;color:#9297a4;padding:20px 0;text-align:center}
 @media(max-width:850px){.dashboard-reference-panels{grid-template-columns:1fr}}
+
+/* Final visual pass: match the supplied dashboard and order-form proportions. */
+.reference-overview-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:4px 0 22px}
+.reference-overview-heading .eyebrow{font-size:9px;letter-spacing:1.2px;margin:0 0 7px;color:#8b91a0;font-weight:800}
+.reference-overview-heading h1{font:800 27px Manrope,sans-serif;letter-spacing:-.8px;line-height:1.1;margin:0 0 7px;color:#252a3a}
+.reference-overview-heading p:last-child{font-size:11px;color:#858a99;margin:0}
+.reference-overview-heading .primary-button{min-height:39px;padding:0 15px;font-size:11px;white-space:nowrap}
+.dashboard-reference-panels{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:stretch;margin-top:15px}
+.dashboard-config-card,.dashboard-transactions-card{min-height:275px;padding:20px 21px;border-radius:11px}
+.dashboard-panel-heading h2{font-size:15px}
+.dashboard-panel-heading p{font-size:10px}
+.configuration-fields{display:grid;gap:7px}
+.configuration-fields label{display:grid;gap:7px;font-size:11px;font-weight:750;color:#34394a;margin-top:3px}
+.configuration-fields label span{font-size:9px;font-weight:500;color:#9297a4;display:inline;margin-left:5px}
+.configuration-fields input{width:100%;height:39px;border:1px solid #dedfe6;border-radius:8px;background:#fdfdfd;padding:0 12px;color:#555c6c;font:12px 'DM Sans',sans-serif;letter-spacing:.4px}
+.configuration-fields>small{font-size:9px;line-height:1.45;color:#9297a4;margin:0 0 3px}
+.config-safe-note{margin-top:11px}
+.order-flow-screen{background:#f7f8fa;padding:24px 16px}
+.order-flow-card.order-form-reference{width:min(100%,662px);padding:30px 31px 25px;border:1px solid #e7e8ec;border-radius:10px;box-shadow:0 5px 22px rgba(35,42,59,.045)}
+.order-form-reference .order-flow-icon{width:62px;height:62px;border-radius:50%;background:#ddf7f1;color:#5a9f94;margin:0 auto 22px;font-size:25px}
+.order-form-reference h1{font:800 23px Manrope,sans-serif;letter-spacing:-.55px;color:#202431;margin:0 0 27px}
+.order-form-reference .order-flow-form{gap:9px}
+.order-form-reference .order-flow-form label{font-size:15px;line-height:1.3;font-weight:700;color:#272c3a;margin:4px 0 1px}
+.order-form-reference .order-flow-form select{height:53px;min-height:53px;border:1px solid #d9dbe1;border-radius:9px;background:#fff;padding:0 14px;font-size:14px;color:#303544}
+.order-form-reference .order-flow-form textarea{height:144px;min-height:144px;border:2px solid #579e94;border-radius:9px;background:#fff;padding:13px 14px;font-size:14px;line-height:1.6;color:#303544}
+.order-form-reference .order-flow-hint{font-size:12px;color:#9a9eaa;line-height:1.5;margin:2px 0 0}
+.order-form-reference .order-flow-actions.order-form-actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:29px}
+.order-form-reference .order-form-actions button{height:48px;min-height:48px;border-radius:8px;font-size:14px;font-weight:750}
+.order-form-reference .order-form-actions .primary-button{background:#438f85;color:#fff}
+.order-form-reference .order-form-actions .secondary-button{background:#f3fbf9;color:#438f85;border:1px solid #64a99e}
+.order-flow-screen:has(.order-form-reference){justify-content:center}
+.order-flow-screen:has(.order-form-reference) .order-flow-card{margin:auto}
+@media(max-width:760px){.reference-overview-heading{align-items:flex-start;flex-direction:column}.reference-overview-heading .primary-button{align-self:flex-start}.dashboard-reference-panels{grid-template-columns:1fr}.order-form-reference .order-flow-form label{font-size:13px}.order-flow-card.order-form-reference{padding:25px 18px}}
