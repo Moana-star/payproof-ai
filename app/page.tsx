@@ -196,7 +196,9 @@ export default function Home() {
     if (flowBusy) return;
     setFlowError("");
     if (!flowMessage.trim()) {
-      setFlowError("Enter the customer's order details before continuing.");
+      setFlowProduct("Coffee gift set");
+      setFlowQuantity("1");
+      await startSandboxCheckout("Coffee gift set", 1);
       return;
     }
     setFlowBusy(true);
@@ -343,8 +345,8 @@ export default function Home() {
         </header>
 
         <div className="content" id="overview">
-          <div className="welcome-row">
-            <div><p className="eyebrow">YOUR PAYMENT WORKSPACE</p><h1>{authUserName ? `Welcome, ${authUserName}` : "Welcome to PayProof AI"} <span>✳</span></h1><p className="subheading">{authUserName ? `Your ${authWorkspaceName} workspace — orders, payment evidence, and what needs your attention.` : "Explore the public demo, or sign in to create your own private workspace."}</p></div>
+          <div className="reference-overview-heading">
+            <div><p className="eyebrow">PAYMENT WORKSPACE</p><h1>Overview</h1><p>Monitor your payments and configure your settings</p></div>
             <button className="primary-button" onClick={() => { setFlowError(""); setFlowStep(2); }}><span>＋</span> New order</button>
           </div>
 
@@ -362,10 +364,14 @@ export default function Home() {
           <section className="dashboard-reference-panels">
             <article className="dashboard-config-card">
               <div className="dashboard-panel-heading"><div><h2>Payment Configuration</h2><p>How this workspace handles payment and order evidence</p></div><span className="config-status">SANDBOX</span></div>
-              <div className="config-row"><span className="config-symbol">P</span><div><strong>PayPal Sandbox</strong><small>Test checkout · No real money</small></div><span className="config-indicator">Enabled in demo</span></div>
-              <div className="config-row"><span className="config-symbol">✓</span><div><strong>Payment verification</strong><small>Server-side PayPal capture verification</small></div><span className="config-indicator">Evidence-based</span></div>
-              <div className="config-row"><span className="config-symbol">✳</span><div><strong>AI order assistance</strong><small>Order text extraction and explanation</small></div><span className="config-indicator">Advisory only</span></div>
-              <p className="config-safe-note">Secret keys are never displayed in this dashboard.</p>
+              <div className="configuration-fields">
+                <label>API credentials <span>Protected</span><input value="••••••••••••••••••••••••" readOnly aria-label="Protected PayPal credentials" /></label>
+                <small>PayPal credentials are stored securely on the server and never displayed here.</small>
+                <label>Webhook endpoint <span>Server managed</span><input value="Configured server-side" readOnly aria-label="Webhook endpoint configuration status" /></label>
+                <small>Payment events are verified against PayPal's server-side records.</small>
+                <label>Merchant name<input value={authWorkspaceName || "Demo workspace"} readOnly aria-label="Merchant workspace name" /></label>
+              </div>
+              <p className="config-safe-note">Sandbox environment · No real money is processed.</p>
             </article>
             <article className="dashboard-transactions-card">
               <div className="dashboard-panel-heading"><div><h2>Recent Transactions</h2><p>Latest order and payment activity</p></div><span className="transaction-count">{orders.length}</span></div>
