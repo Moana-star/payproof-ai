@@ -49,6 +49,7 @@ export default function Home() {
   const [flowQuantity, setFlowQuantity] = useState("1");
   const [flowBusy, setFlowBusy] = useState(false);
   const [flowError, setFlowError] = useState("");
+  const [dashboardSearch, setDashboardSearch] = useState("");
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -337,7 +338,7 @@ export default function Home() {
 
       <section className="main-area">
         <header className="topbar">
-          <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" onChange={(event) => setMessage(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
+          <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" value={dashboardSearch} onChange={(event) => setDashboardSearch(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
           <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link>{authUserName ? <><Link className="demo-payment-guide-link" href="/profile">My profile ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
 
@@ -351,14 +352,6 @@ export default function Home() {
 
           <div className="notice" role="status"><span className="notice-icon">i</span><span>{notice}</span><button onClick={() => setNotice(isSignedIn ? "Private workspace · Your saved Sandbox evidence is under Payment evidence." : "Public demo · Sample rows are illustrative only. Sign in to view your private saved Sandbox orders.")} aria-label="Reset notice">×</button></div>
 
-          <section className="merchant-journey" aria-label="Three-step merchant payment journey">
-            <div className="merchant-journey-heading"><div><p className="eyebrow">YOUR WORKFLOW</p><h2>From dashboard to verified payment</h2><p>Three clear steps. One evidence-first checkout journey.</p></div><span className="merchant-journey-tag">STEP 1 · DASHBOARD</span></div>
-            <div className="merchant-journey-grid">
-              <article className="merchant-journey-card active"><span className="merchant-journey-number">01</span><div><strong>Dashboard</strong><p>Review your orders and payment activity in one workspace.</p><small>YOU ARE HERE</small></div></article>
-              <article className="merchant-journey-card"><span className="merchant-journey-number">02</span><div><strong>Create new order</strong><p>Add order details or use AI to prepare a draft for review.</p><button type="button" onClick={() => { setFlowError(""); setFlowStep(2); }}>Create order <span>→</span></button></div></article>
-              <article className="merchant-journey-card"><span className="merchant-journey-number">03</span><div><strong>PayPal checkout</strong><p>Approve payment in Sandbox, then verify the capture on the server.</p><small>SECURE SANDBOX HANDOFF</small></div></article>
-            </div>
-          </section>
 
           <div className="metrics-grid">
             <article className="metric-card"><div className="metric-top"><span>Total orders</span><span className="metric-icon violet">▤</span></div><div className="metric-value">{orders.length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">{ordersSource === "saved" ? "Connected records" : "Sample workspace"}</span><span>All orders</span></div></article>
@@ -366,6 +359,28 @@ export default function Home() {
             <article className="metric-card"><div className="metric-top"><span>Awaiting payment</span><span className="metric-icon amber">◷</span></div><div className="metric-value">{orders.filter(o => o.status === "Awaiting payment").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">No action yet</span><span>Checkout pending</span></div></article>
             <article className="metric-card"><div className="metric-top"><span>Needs attention</span><span className="metric-icon red">!</span></div><div className="metric-value">{orders.filter(o => o.status === "Review needed").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-red">Review required</span><span>Before fulfilment</span></div></article>
           </div>
+          <section className="dashboard-reference-panels">
+            <article className="dashboard-config-card">
+              <div className="dashboard-panel-heading"><div><h2>Payment Configuration</h2><p>How this workspace handles payment and order evidence</p></div><span className="config-status">SANDBOX</span></div>
+              <div className="config-row"><span className="config-symbol">P</span><div><strong>PayPal Sandbox</strong><small>Test checkout · No real money</small></div><span className="config-indicator">Enabled in demo</span></div>
+              <div className="config-row"><span className="config-symbol">✓</span><div><strong>Payment verification</strong><small>Server-side PayPal capture verification</small></div><span className="config-indicator">Evidence-based</span></div>
+              <div className="config-row"><span className="config-symbol">✳</span><div><strong>AI order assistance</strong><small>Order text extraction and explanation</small></div><span className="config-indicator">Advisory only</span></div>
+              <p className="config-safe-note">Secret keys are never displayed in this dashboard.</p>
+            </article>
+            <article className="dashboard-transactions-card">
+              <div className="dashboard-panel-heading"><div><h2>Recent Transactions</h2><p>Latest order and payment activity</p></div><span className="transaction-count">{orders.length}</span></div>
+              <div className="dashboard-transaction-search-note">{dashboardSearch.trim() ? `Matching “${dashboardSearch.trim()}”` : "Recent activity"}</div>
+              {(orders.filter((order) => `${order.id} ${order.customer} ${order.item} ${order.amount} ${order.status}`.toLowerCase().includes(dashboardSearch.trim().toLowerCase())).slice(0,4)).map((order) => (
+                <div className="dashboard-transaction-row" key={order.id}>
+                  <div className="dashboard-transaction-person"><span className="dashboard-transaction-avatar">{order.initials}</span><div><strong>{order.customer}</strong><small>{order.item}</small><small>{order.time}</small></div></div>
+                  <div className="dashboard-transaction-amount"><strong>{order.amount}</strong><span className={order.status === "Paid" ? "transaction-paid" : order.status === "Review needed" ? "transaction-review" : "transaction-pending"}>{ordersSource === "sample" && order.status === "Paid" ? "Sample" : order.status}</span></div>
+                </div>
+              ))}
+              {orders.filter((order) => `${order.id} ${order.customer} ${order.item} ${order.amount} ${order.status}`.toLowerCase().includes(dashboardSearch.trim().toLowerCase())).length === 0 && <p className="dashboard-empty">No matching transactions.</p>}
+              <p className="dashboard-sample-note">{ordersSource === "sample" ? "Sample activity · Not live payment evidence" : "Account orders · Paid status requires server verification"}</p>
+            </article>
+          </section>
+
 
           <section className="reconciliation-panel" id="reconciliation" aria-labelledby="reconciliation-title">
             <div className="reconciliation-header">
