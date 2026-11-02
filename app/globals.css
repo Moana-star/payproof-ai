@@ -418,3 +418,33 @@ body{font-size:15px}
 .order-form-actions .secondary-button{background:#f5fbfa;border:1px solid #6da99f;color:#438f85}
 .order-form-customer-note{margin:16px 0 0;text-align:center;font-size:10px;line-height:1.5;color:#999daa}
 @media(max-width:600px){.dashboard-search{gap:7px}.dashboard-date{font-size:9px;padding:10px 8px}.order-form-reference{padding:24px 18px}.order-form-reference .order-flow-form label{font-size:13px}.order-form-reference .order-flow-form textarea{min-height:125px}}
+
+/* Dashboard composition aligned to the supplied VoltPay reference, branded for PayProof AI. */
+.dashboard-reference-panels{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin:20px 0 26px}
+.dashboard-config-card,.dashboard-transactions-card{min-width:0;background:#fff;border:1px solid #e5e7ed;border-radius:12px;padding:19px 20px;box-shadow:0 4px 15px rgba(31,37,56,.025)}
+.dashboard-panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:15px}
+.dashboard-panel-heading h2{font:800 15px Manrope,sans-serif;letter-spacing:-.25px;margin:0 0 5px;color:#292e3e}
+.dashboard-panel-heading p{font-size:10px;color:#858a99;margin:0;line-height:1.5}
+.config-status,.transaction-count{flex:none;border-radius:6px;padding:6px 8px;font-size:8px;font-weight:800;letter-spacing:.5px;background:#eaf6f2;color:#388b7d}
+.transaction-count{font-size:10px;letter-spacing:0}
+.config-row{display:flex;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #eff0f3}
+.config-row:last-of-type{border-bottom:0}
+.config-symbol{width:30px;height:30px;display:grid;place-items:center;flex:none;border-radius:8px;background:#f0f2fa;color:#5e68a7;font-size:13px;font-weight:800}
+.config-row>div{display:grid;gap:4px;min-width:0;flex:1}
+.config-row strong{font-size:10px;color:#33384a}
+.config-row small{font-size:9px;color:#8c91a0;line-height:1.4}
+.config-indicator{font-size:8px;font-weight:750;color:#4c8a7d;text-align:right}
+.config-safe-note,.dashboard-sample-note{font-size:9px;color:#9297a4;line-height:1.5;margin:12px 0 0;padding-top:10px;border-top:1px solid #eff0f3}
+.dashboard-transaction-search-note{font-size:9px;color:#999daa;margin:-5px 0 5px}
+.dashboard-transaction-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #eff0f3}
+.dashboard-transaction-person{display:flex;align-items:center;gap:9px;min-width:0}
+.dashboard-transaction-avatar{width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:50%;background:#eef0f7;color:#606a92;font-size:9px;font-weight:800}
+.dashboard-transaction-person>div{display:grid;gap:3px;min-width:0}
+.dashboard-transaction-person strong{font-size:10px;color:#33384a}
+.dashboard-transaction-person small{font-size:8px;color:#9297a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.dashboard-transaction-amount{display:grid;justify-items:end;gap:5px;flex:none}
+.dashboard-transaction-amount strong{font-size:10px;color:#303447}
+.dashboard-transaction-amount span{font-size:8px;font-weight:750}
+.transaction-paid{color:#31866f}.transaction-review{color:#b45b60}.transaction-pending{color:#a17b3f}
+.dashboard-empty{font-size:10px;color:#9297a4;padding:20px 0;text-align:center}
+@media(max-width:850px){.dashboard-reference-panels{grid-template-columns:1fr}}
