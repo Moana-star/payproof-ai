@@ -106,7 +106,7 @@ export default function AssistantPage() {
     const history = [...messages, user];
     const currentFiles = attachments;
     const imageFiles = currentFiles.filter((file) => file.type.startsWith("image/"));
-    const textFiles = currentFiles.filter((file) => /^(text\\/|application\\/json)/i.test(file.type) || /\\.(txt|md|csv|json|log)$/i.test(file.name));
+    const textFiles = currentFiles.filter((file) => file.type.startsWith("text/") || file.type === "application/json" || [".txt", ".md", ".csv", ".json", ".log"].some((ext) => file.name.toLowerCase().endsWith(ext)));
     setInput(""); setAttachments([]); setError(""); setLoading(true);
     updateThread((thread) => ({
       ...thread,
