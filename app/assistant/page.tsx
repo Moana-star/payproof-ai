@@ -68,7 +68,7 @@ export default function AssistantPage() {
       if (imagesOnly && !file.type.startsWith("image/")) return false;
       return true;
     });
-    setAttachments((current) => [...current, ...accepted].slice(0, 5));
+    setAttachments((current) => [...current, ...accepted].slice(0, 4));
     setToolsOpen(false);
   }
 
@@ -90,7 +90,7 @@ export default function AssistantPage() {
     instance.onresult = (event) => {
       let transcript = "";
       for (let i = event.resultIndex; i < event.results.length; i++) transcript += event.results[i][0].transcript;
-      setInput((current) => (current ? current + " " : "") + transcript);
+      setInput((current) => { const prefix = current === initialText ? initialText : current.slice(0, initialText.length); return (prefix ? prefix + " " : "") + transcript; });
     };
     instance.onerror = () => { setRecording(false); setError("Microphone access failed. Check your browser's microphone permission."); };
     instance.onend = () => { setRecording(false); recognition.current = null; };
@@ -101,8 +101,8 @@ export default function AssistantPage() {
 
   async function send(value?: string) {
     const text = (value ?? input).trim();
-    if (!text || loading || !activeId) return;
-    const user: Message = { role: "user", content: text };
+    if ((!text && attachments.length === 0) || loading || !activeId) return;
+    const user: Message = { role: "user", content: text || "Please review the attached file(s)." };
     const history = [...messages, user];
     const currentFiles = attachments;
     const imageFiles = currentFiles.filter((file) => file.type.startsWith("image/"));
@@ -116,9 +116,27 @@ export default function AssistantPage() {
     }));
     if (composer.current) composer.current.style.height = "auto";
     try {
+      const imageData = await Promise.all(imageFiles.map(async (file) => {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error("Could not read " + file.name));
+          reader.readAsDataURL(file);
+        });
+        return { name: file.name, dataUrl };
+      }));
+      const textContents = await Promise.all(textFiles.map(async (file) => {
+        const contents = await file.text();
+        return "\\n\\n[Attached file: " + file.name + "]\\n" + contents.slice(0, 4500);
+      }));
+      const otherFiles = currentFiles.filter((file) => !file.type.startsWith("image/") && !textFiles.includes(file));
+      const attachmentNote = otherFiles.map((file) => "[Attached file: " + file.name + " (" + (file.type || "unknown type") + ")]").join("\\n");
+      const messageContent = (text || "Please review the attached file(s).") + textContents.join("") +
+        (attachmentNote ? "\\n" + attachmentNote + "\\nThis file type is attached by name only; its contents are not readable here." : "");
+      if (messageContent.length > 5900) throw new Error("The message and attached text are too long. Please shorten them.");
       const response = await fetch("/api/assistant/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history.slice(-24), caseId: caseId || undefined })
+        body: JSON.stringify({ messages: [...messages, { role: "user", content: messageContent }].slice(-24), images: imageData, caseId: caseId || undefined })
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({})) as { error?: string };
