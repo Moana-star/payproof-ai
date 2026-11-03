@@ -514,3 +514,18 @@ a.workspace-module-card:hover{border-color:#c9c1ff;box-shadow:0 8px 22px rgba(58
 a.workspace-module-card:focus-visible{outline:3px solid rgba(109,92,231,.28);outline-offset:3px}
 a.workspace-module-card small{color:#6757d5}
 a.workspace-module-card small b{padding-left:5px;font-size:12px}
+
+
+/* Keep secondary workspace destinations available without crowding the payment overview. */
+.workspace-modules{padding:15px 17px;background:#fff;border:1px solid #e6e8ee;border-radius:11px}
+.workspace-modules-summary{display:flex;align-items:center;justify-content:space-between;gap:16px;list-style:none;cursor:pointer}
+.workspace-modules-summary::-webkit-details-marker{display:none}
+.workspace-modules-summary>span:first-child{display:grid;gap:4px;min-width:0}
+.workspace-modules-summary .eyebrow{font-size:9px;letter-spacing:1.1px;color:#438f85;font-weight:800}
+.workspace-modules-summary strong{font:800 14px Manrope,sans-serif;color:#292e3e}
+.workspace-modules-summary small{font-size:10px;line-height:1.5;color:#858a99}
+.workspace-modules-toggle{display:flex;align-items:center;gap:8px;flex:none;font-size:10px;font-weight:750;color:#438f85}
+.workspace-modules-toggle b{font-size:15px;transition:transform .18s ease}
+.workspace-modules[open] .workspace-modules-toggle b{transform:rotate(45deg)}
+.workspace-modules .workspace-module-grid{margin-top:16px}
+.workspace-modules-summary:focus-visible{outline:2px solid #579e94;outline-offset:5px;border-radius:4px}
