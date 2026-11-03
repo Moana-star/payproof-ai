@@ -354,7 +354,34 @@ export default function Home() {
         .dashboard-menu-foot div { display: grid; gap: 3px; }
         .dashboard-menu-foot strong { color: #26344c; font-size: 12px; }
         .dashboard-menu-foot small { color: #78849a; font-size: 10px; line-height: 1.45; }
-        @media (max-width: 820px) { .topbar { flex-wrap: wrap; } .dashboard-menu-panel { position: fixed; top: 76px; left: 14px; } }
+        @media (max-width: 820px) {
+          .topbar { height: auto; min-height: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "menu search" "actions actions"; align-items: center; gap: 12px; padding: 14px 18px; }
+          .dashboard-menu-wrap { grid-area: menu; }
+          .dashboard-search { grid-area: search; width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; height: auto; }
+          .dashboard-search > span:first-child { display: none; }
+          .dashboard-search input { width: 100%; min-width: 0; height: 40px; font-size: 13px; }
+          .dashboard-date { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 7px 10px; font-size: 10px; }
+          .topbar-actions { grid-area: actions; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 8px; }
+          .topbar-actions > * { min-width: 0; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; text-align: center; white-space: normal; line-height: 1.3; border-radius: 8px; padding: 8px 9px; font-size: 11px; }
+          .topbar-actions .sandbox-pill { justify-content: center; }
+          .topbar-actions .demo-payment-guide-link, .topbar-actions .sandbox-checkout-button { border: 1px solid #e7e8ef; background: #fff; color: #565d70; text-decoration: none; }
+          .topbar-actions .help-button { border: 1px solid #e7e8ef; background: #fff; }
+          .dashboard-menu-panel { position: fixed; top: 14px; left: 14px; width: min(320px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); z-index: 120; }
+          .reference-overview-heading { align-items: flex-start; gap: 12px; margin: 2px 0 18px; }
+          .reference-overview-heading > div { min-width: 0; }
+          .reference-overview-heading h1 { font-size: clamp(22px, 6vw, 27px); }
+          .reference-overview-heading p:last-child { max-width: 34ch; line-height: 1.55; }
+          .reference-overview-heading .primary-button { flex: 0 0 auto; min-height: 38px; padding: 0 11px; font-size: 10px; }
+        }
+        @media (max-width: 480px) {
+          .topbar { padding: 12px 12px; gap: 10px; }
+          .dashboard-menu-trigger { width: 42px; height: 42px; }
+          .topbar-actions { gap: 7px; }
+          .topbar-actions > * { min-height: 40px; font-size: 10px; padding: 7px 6px; }
+          .content { padding: 20px 12px 18px; }
+          .reference-overview-heading { flex-direction: column; }
+          .reference-overview-heading .primary-button { align-self: flex-start; }
+        }
       `}</style>
       <section className="main-area">
         <header className="topbar">
