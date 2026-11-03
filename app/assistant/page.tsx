@@ -32,7 +32,7 @@ export default function AssistantPage() {
   const bottom = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLTextAreaElement>(null);
   const active = threads.find((thread) => thread.id === activeId);
-  const messages = active?.messages || [];
+  const messages = active ? active.messages : [];
 
   useEffect(() => {
     try {
@@ -104,7 +104,6 @@ export default function AssistantPage() {
     const text = (value ?? input).trim();
     if ((!text && attachments.length === 0) || loading || !activeId) return;
     const user: Message = { role: "user", content: (text || "Please review the attached file(s).") + (attachments.length ? "\\n[Attachments: " + attachments.map((file) => file.name).join(", ") + "]" : "") };
-    const history = [...messages, user];
     const currentFiles = attachments;
     const imageFiles = currentFiles.filter((file) => file.type.startsWith("image/"));
     const textFiles = currentFiles.filter((file) => file.type.startsWith("text/") || file.type === "application/json" || [".txt", ".md", ".csv", ".json", ".log"].some((ext) => file.name.toLowerCase().endsWith(ext)));
@@ -208,7 +207,7 @@ export default function AssistantPage() {
               <footer>✦ Evidence first. AI explains the record. Verified payment data decides.</footer>
             </div> : <div className="pp-chat-messages">
               {messages.map((message, index) => <article key={index} className={"pp-chat-message " + message.role}>
-                <div className="pp-message-avatar">{message.role === "assistant" ? "✳" : "You"}</div>
+                <div className="pp-message-avatar">{message.role === "assistant" ? "✳" : "U"}</div>
                 <div className="pp-message-content"><b>{message.role === "assistant" ? "PayProof AI" : "You"}</b><div>{message.content || (loading && index === messages.length - 1 ? <span className="pp-chat-thinking">● ● ● Thinking</span> : "")}</div>
                   {message.role === "assistant" && message.content && <button type="button" onClick={() => navigator.clipboard?.writeText(message.content)}>Copy response</button>}
                 </div>
@@ -219,6 +218,7 @@ export default function AssistantPage() {
 
           <div className="pp-composer-wrap">
             {error && <div className="pp-chat-error" role="alert">{error}<button type="button" onClick={() => setError("")}>Dismiss</button></div>}
+            {attachments.length > 0 && <div className="pp-attachment-list">{attachments.map((file, index) => <div className="pp-attachment-chip" key={file.name + index}><span>{file.type.startsWith("image/") ? "▧" : "↥"}</span><span title={file.name}>{file.name}</span><button type="button" aria-label={"Remove " + file.name} onClick={() => setAttachments((current) => current.filter((_, i) => i !== index))}>×</button></div>)}</div>}
             <form className="pp-chat-composer" onSubmit={(event) => { event.preventDefault(); send(); }}>
               <textarea ref={composer} value={input} rows={1} maxLength={6000} placeholder="Message PayProof AI…" aria-label="Message PayProof AI"
                 onChange={(event) => { setInput(event.target.value); event.currentTarget.style.height = "auto"; event.currentTarget.style.height = Math.min(event.currentTarget.scrollHeight, 160) + "px"; }}
@@ -247,7 +247,7 @@ export default function AssistantPage() {
         </div>
       </section>
       <style jsx global>{`
-        .pp-chat{display:grid;grid-template-columns:250px minmax(0,1fr);height:min(76vh,850px);min-height:660px;background:#fff;border:1px solid #e6eaf1;border-radius:16px;overflow:hidden;box-shadow:0 9px 32px #1d2a4308}
+        .pp-chat{display:grid;grid-template-columns:250px minmax(0,1fr);height:clamp(620px,78vh,850px);min-height:620px;background:#fff;border:1px solid #e6eaf1;border-radius:16px;overflow:hidden;box-shadow:0 9px 32px #1d2a4308}
         .pp-chat-history{display:flex;flex-direction:column;min-width:0;padding:14px 12px;background:#f8f9fc;border-right:1px solid #e9edf3}.pp-chat-history.hidden{display:none}
         .pp-history-top{display:flex;gap:7px}.pp-history-top button:first-child{flex:1;text-align:left;padding:0 12px;height:40px;border:1px solid #dfe4ed;border-radius:9px;background:#fff;color:#35425b;font-size:12px;font-weight:700}.pp-history-top button:first-child:first-letter{color:#6656d7}
         .pp-hide-history{width:36px;border:1px solid #e2e6ee;border-radius:9px;background:#fff;color:#65728a;font-size:19px}
