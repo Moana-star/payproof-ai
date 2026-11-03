@@ -33,6 +33,7 @@ const statusClass: Record<OrderStatus, string> = {
 export default function Home() {
   const [authUserName, setAuthUserName] = useState("");
   const [authAvatarUrl, setAuthAvatarUrl] = useState("");
+  const [authAvatarUrl, setAuthAvatarUrl] = useState("");
   const [authChecked, setAuthChecked] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [authWorkspaceName, setAuthWorkspaceName] = useState("Demo workspace");
@@ -140,6 +141,7 @@ export default function Home() {
       setAuthUserName(typeof metadata.display_name === "string" && metadata.display_name.trim() ? metadata.display_name.trim() : (session.user.email?.split("@")[0] || "Account"));
       setAuthAvatarUrl(typeof metadata.avatar_url === "string" ? metadata.avatar_url : "");
       setAuthWorkspaceName(typeof metadata.workspace_name === "string" && metadata.workspace_name.trim() ? metadata.workspace_name.trim() : "My workspace");
+      setAuthAvatarUrl(typeof metadata.avatar_url === "string" ? metadata.avatar_url : "");
       await loadOrders(session.access_token);
     };
     supabase.auth.getSession().then(({ data }) => applySession(data.session ? {
