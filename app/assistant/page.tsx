@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { WorkspaceLayout } from "@/components/workspace-layout";
 
 type Message = { role: "user" | "assistant"; content: string };
@@ -25,7 +25,7 @@ function renderInline(text: string) {
 
 function renderAssistantContent(content: string) {
   const lines = content.replace(/\r/g, "").split("\n");
-  const blocks: JSX.Element[] = [];
+  const blocks: ReactNode[] = [];
   let paragraph: string[] = [];
   let list: { ordered: boolean; items: string[] } | null = null;
   let code: string[] | null = null;
