@@ -150,7 +150,8 @@ export default function Home() {
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
   const [message, setMessage] = useState("");
-  const [draft, setDraft] = useState<{ item: string; quantity: string; note: string } | null>(null);
+  const [messageCustomerName, setMessageCustomerName] = useState("");
+  const [draft, setDraft] = useState<{ customerName: string; item: string; quantity: string; note: string } | null>(null);
   const [notice, setNotice] = useState("Checking workspace status…");
   const [showGuide, setShowGuide] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -278,11 +279,12 @@ export default function Home() {
       const item = extracted.product || "Unmatched item — needs review";
       const quantity = extracted.quantity ? String(extracted.quantity) : "Not specified";
       setDraft({
+        customerName: messageCustomerName.trim(),
         item,
         quantity,
         note: [extracted.missingInformation.length ? `Needs confirmation: ${extracted.missingInformation.join(" ")}` : "", extracted.confidenceNotes ? `Confidence notes: ${extracted.confidenceNotes}` : ""].filter(Boolean).join(" · ")
       });
-      setNotice("AI extracted a draft. Review the product and quantity; nothing has been saved and payment is not verified.");
+      setNotice("AI extracted a draft. Review the customer name, product and quantity; nothing has been saved and payment is not verified.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "AI order intake is temporarily unavailable.";
       setDraftError(message);
@@ -292,7 +294,7 @@ export default function Home() {
     }
   }
 
-  function updateDraftField(field: "item" | "quantity", value: string) {
+  function updateDraftField(field: "customerName" | "item" | "quantity", value: string) {
     setDraft((current) => current ? { ...current, [field]: value } : current);
     setValidationResult(null);
   }
@@ -300,8 +302,10 @@ export default function Home() {
   function validateDraftDetails() {
     if (!draft) return;
     const issues: string[] = [];
+    const customerName = draft.customerName.trim();
     const product = draft.item.trim();
     const quantity = draft.quantity.trim();
+    if (!customerName) issues.push("Enter the customer name.");
     if (!Object.prototype.hasOwnProperty.call(CATALOG_PRICES, product)) {
       issues.push("Choose one supported catalogue product exactly: Coffee gift set, Ceramic mug pair, or Handwoven market tote.");
     }
@@ -313,7 +317,7 @@ export default function Home() {
       setNotice("Draft needs your attention. Correct the highlighted details, then validate again.");
       return;
     }
-    setValidationResult({ valid: true, message: "The product is in the supported catalogue and the quantity is valid. Confirm both against the original customer message. The server will calculate the price; this draft is not saved and payment is not verified." });
+    setValidationResult({ valid: true, message: "The customer name is provided, the product is in the supported catalogue and the quantity is valid. Confirm all details against the original customer message. The server will calculate the price; this draft is not saved and payment is not verified." });
     setNotice("Draft details checked. Nothing has been saved and payment is not verified.");
   }
 
@@ -438,17 +442,19 @@ export default function Home() {
 
           <div className="lower-grid">
             <section className="intake-card" id="intake">
-              <div className="panel-heading"><div><span className="panel-icon">✳</span><div><h2>AI Message-to-Order</h2><p>Turn customer messages into reviewable sales-order drafts.</p></div></div><span className="beta-badge">AI-ASSISTED · REVIEW REQUIRED</span></div>
+              <div className="panel-heading"><div><span className="panel-icon">✳</span><div><h2>AI Message-to-Order</h2><p>Turn customer messages into reviewable sales orders with customer details.</p></div></div><span className="beta-badge">AI-ASSISTED · REVIEW REQUIRED</span></div>
               <div className="intake-sample-row">
                 <label className="field-label" htmlFor="customer-message">PASTE CUSTOMER MESSAGE</label>
                 <button type="button" className="sample-message-button" onClick={() => { setMessage("Hi, I'd like 2 Coffee gift sets, please. Can you prepare the order for me?"); setDraft(null); setDraftError(null); setValidationResult(null); setNotice("Sample customer message loaded. Select Extract order details to test AI extraction."); }}>Load sample message</button>
               </div>
+              <label className="field-label" htmlFor="intake-customer-name">CUSTOMER NAME</label>
+              <input id="intake-customer-name" className="draft-edit-input" type="text" value={messageCustomerName} maxLength={100} autoComplete="name" placeholder="Enter customer name" onChange={(event) => { setMessageCustomerName(event.target.value); setDraft(null); setValidationResult(null); }} />
               <textarea id="customer-message" value={message} onChange={(event) => { setMessage(event.target.value); if (draftError) setDraftError(null); }} placeholder={'Try the sample message, or paste a customer message here. Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
-              <div className="field-hint">Paste a message from WhatsApp, email, or another channel. AI identifies the product and quantity for your review. Nothing is saved automatically.</div>
+              <div className="field-hint">Add the customer name, then paste a message from WhatsApp, email, or another channel. AI identifies the product and quantity for your review. Nothing is saved automatically.</div>
               <button type="button" className="secondary-button full-button" onClick={prepareDraft} disabled={draftLoading} aria-busy={draftLoading}>{draftLoading ? "Preparing draft…" : "Prepare order draft"} <span>{draftLoading ? "…" : "→"}</span></button>
               {draftError && <p className="draft-error" role="alert">{draftError}</p>}
               <p className="draft-action-hint" aria-live="polite">{draftLoading ? "Please wait while the message is analysed." : draftError ? "No sales order was created. You can try again." : draft ? "Draft ready. Check every detail against the original customer message." : "Paste a customer message above, then select Extract order details."}</p>
-              {draft && <div className="draft-result"><div className="draft-title">Extracted sales order <span>REVIEW REQUIRED · NOT SAVED</span></div><p className="draft-review-hint">Edit the suggested fields, then compare them with the original customer message above.</p><label className="draft-field-label" htmlFor="draft-product">PRODUCT NAME</label><input id="draft-product" className="draft-edit-input" type="text" value={draft.item} maxLength={120} autoComplete="off" onChange={(event) => updateDraftField("item", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-quantity">QUANTITY</label><input id="draft-quantity" className="draft-edit-input" type="number" min="1" max="100000" step="1" inputMode="numeric" value={draft.quantity === "Not specified" ? "" : draft.quantity} placeholder="Enter quantity" onChange={(event) => updateDraftField("quantity", event.target.value)} aria-describedby="draft-review-help" /><p id="draft-review-help" className="draft-review-hint">Validation checks formatting only; it cannot confirm product availability, price, customer intent, or payment.</p>{draft.note && <p className="draft-note">{draft.note}</p>}<button type="button" className="primary-button full-button" onClick={validateDraftDetails}>Validate draft details</button>{validationResult && <div className={`draft-validation ${validationResult.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{validationResult.valid ? "✓ Details checked" : "Review required"}</strong><p>{validationResult.message}</p></div>}{validationResult?.valid && <div className="draft-checkout"><div className="draft-total"><span>Estimated total · {draft.item}</span><strong>${(CATALOG_PRICES[draft.item] * Number(draft.quantity)).toFixed(2)} USD</strong></div><p>Sandbox checkout only. The server independently validates the product and calculates the final amount. This does not save an order record.</p><button type="button" className="primary-button full-button" onClick={() => startSandboxCheckout(draft.item, Number(draft.quantity))} disabled={checkoutLoading}>{checkoutLoading ? "Connecting to PayPal…" : "Continue to PayPal Sandbox"} <span>↗</span></button></div>}</div>}
+              {draft && <div className="draft-result"><div className="draft-title">Extracted sales order <span>REVIEW REQUIRED · NOT SAVED</span></div><p className="draft-review-hint">Confirm the customer name and edit the suggested fields, then compare them with the original customer message above.</p><label className="draft-field-label" htmlFor="draft-customer-name">CUSTOMER NAME</label><input id="draft-customer-name" className="draft-edit-input" type="text" value={draft.customerName} maxLength={100} autoComplete="name" onChange={(event) => updateDraftField("customerName", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-product">PRODUCT NAME</label><input id="draft-product" className="draft-edit-input" type="text" value={draft.item} maxLength={120} autoComplete="off" onChange={(event) => updateDraftField("item", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-quantity">QUANTITY</label><input id="draft-quantity" className="draft-edit-input" type="number" min="1" max="100000" step="1" inputMode="numeric" value={draft.quantity === "Not specified" ? "" : draft.quantity} placeholder="Enter quantity" onChange={(event) => updateDraftField("quantity", event.target.value)} aria-describedby="draft-review-help" /><p id="draft-review-help" className="draft-review-hint">Validation checks formatting only; it cannot confirm product availability, price, customer intent, or payment.</p>{draft.note && <p className="draft-note">{draft.note}</p>}<button type="button" className="primary-button full-button" onClick={validateDraftDetails}>Validate draft details</button>{validationResult && <div className={`draft-validation ${validationResult.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{validationResult.valid ? "✓ Details checked" : "Review required"}</strong><p>{validationResult.message}</p></div>}{validationResult?.valid && <div className="draft-checkout"><div className="draft-total"><span>Estimated total · {draft.item}</span><strong>${(CATALOG_PRICES[draft.item] * Number(draft.quantity)).toFixed(2)} USD</strong></div><p>Sandbox checkout only. The server independently validates the product and calculates the final amount. This does not save an order record.</p><button type="button" className="primary-button full-button" onClick={() => startSandboxCheckout(draft.item, Number(draft.quantity), draft.customerName.trim())} disabled={checkoutLoading}>{checkoutLoading ? "Connecting to PayPal…" : "Continue to PayPal Sandbox"} <span>↗</span></button></div>}</div>}
             </section>
 
             <section className="attention-card" id="activity">
