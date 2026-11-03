@@ -14,7 +14,15 @@ export default function AuthPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  async function continueWithGoogle() {\n    setBusy(true); setError(""); setMessage("");\n    const supabase = getSupabaseBrowserClient();\n    if (!supabase) { setError("Sign-in is not configured. Add your Supabase URL and publishable key in Vercel."); setBusy(false); return; }\n    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/` } });\n    if (oauthError) { setError(oauthError.message); setBusy(false); }\n  }\n\n  async function submit(event: FormEvent<HTMLFormElement>) {
+  async function continueWithGoogle() {
+    setBusy(true); setError(""); setMessage("");
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) { setError("Sign-in is not configured. Add your Supabase URL and publishable key in Vercel."); setBusy(false); return; }
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/` } });
+    if (oauthError) { setError(oauthError.message); setBusy(false); }
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true); setError(""); setMessage("");
     const supabase = getSupabaseBrowserClient();
@@ -58,7 +66,9 @@ export default function AuthPage() {
       <p className="eyebrow">YOUR PAYMENT WORKSPACE</p>
       <h1>{mode === "signup" ? "Create your workspace" : "Welcome back"}</h1>
       <p className="auth-intro">{mode === "signup" ? "Create an account to save your own orders and see your name in your workspace." : "Sign in to continue to your personal PayProof AI workspace."}</p>
-      <button type="button" className="secondary-button full-button" onClick={continueWithGoogle} disabled={busy}>Continue with Google <span>→</span></button>\n      <div className="auth-divider"><span>OR CONTINUE WITH EMAIL</span></div>\n      <form onSubmit={submit} className="auth-form">
+      <button type="button" className="secondary-button full-button" onClick={continueWithGoogle} disabled={busy}>Continue with Google <span>→</span></button>
+      <div className="auth-divider"><span>OR CONTINUE WITH EMAIL</span></div>
+      <form onSubmit={submit} className="auth-form">
         {mode === "signup" && <>
           <label htmlFor="display-name">Your name</label>
           <input id="display-name" autoComplete="name" value={name} onChange={e => setName(e.target.value)} required minLength={2} maxLength={80} placeholder="e.g. Moana Kenagwa" />
@@ -73,7 +83,8 @@ export default function AuthPage() {
         {message && <p className="auth-success" role="status">{message}</p>}
         <button className="primary-button auth-submit" type="submit" disabled={busy}>{busy ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"} <span>→</span></button>
       </form>
-      {mode === "signin" && <p className="auth-switch"><Link href="/auth/forgot-password">Forgot password?</Link></p>}\n      <p className="auth-switch">{mode === "signup" ? "Already have an account?" : "New to PayProof AI?"} <button type="button" onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError(""); setMessage(""); }}>{mode === "signup" ? "Sign in" : "Create an account"}</button></p>
+      {mode === "signin" && <p className="auth-switch"><Link href="/auth/forgot-password">Forgot password?</Link></p>}
+      <p className="auth-switch">{mode === "signup" ? "Already have an account?" : "New to PayProof AI?"} <button type="button" onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError(""); setMessage(""); }}>{mode === "signup" ? "Sign in" : "Create an account"}</button></p>
       <p className="auth-footnote">Sandbox mode only. PayProof AI never treats a screenshot as proof of payment.</p>
       <Link className="auth-back-link" href="/">← Explore the public demo</Link>
     </section>
