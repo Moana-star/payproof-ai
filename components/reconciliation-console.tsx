@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type Row = {
   id: string; statement_id: string; transaction_id: string; amount: string; currency: string;
@@ -17,7 +18,7 @@ type WorkspaceData = { rows: Row[]; audit: Audit[]; ledger: Ledger[] };
 const DEMO_READ_ONLY_TOKEN = "PAYPROOF-DEMO-READONLY";
 
 const statusLabels: Record<Row["match_status"], string> = {
-  unmatched: "Unmatched", matched_pending_review: "Match · needs approval", exception: "Exception", approved: "Approved · not posted", posted: "Posted to demo ledger", rejected: "Rejected"
+  unmatched: "Unmatched", matched_pending_review: "Match · needs approval", exception: "Exception", approved: "Approved · not posted", posted: "Posted to workspace ledger", rejected: "Rejected"
 };
 
 export function ReconciliationConsole() {
@@ -33,9 +34,18 @@ export function ReconciliationConsole() {
   const readOnlyDemo = token === DEMO_READ_ONLY_TOKEN;
 
   async function api(path: string, body?: Record<string, unknown>) {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (readOnlyDemo) headers["x-reconciliation-token"] = DEMO_READ_ONLY_TOKEN;
+    else {
+      const supabase = getSupabaseBrowserClient();
+      const sessionResult = supabase ? await supabase.auth.getSession() : null;
+      const accessToken = sessionResult?.data.session?.access_token;
+      if (!accessToken) throw new Error("Please sign in before accessing your private reconciliation workspace.");
+      headers.Authorization = "Bearer " + accessToken;
+    }
     const response = await fetch(path, {
       method: body ? "POST" : "GET",
-      headers: { "Content-Type": "application/json", "x-reconciliation-token": token, ...(body ? {} : {}) },
+      headers,
       ...(body ? { body: JSON.stringify(body) } : {})
     });
     const result = await response.json();
@@ -206,11 +216,14 @@ export function ReconciliationConsole() {
 
   return <div className="recon-console">
     <div className="recon-access">
-      <div className="recon-access-copy"><strong>Protected reconciliation access</strong><p>The reviewer token is used only in requests from this browser session and is not saved by this page. Live rows are not public.</p></div>
+      <div className="recon-access-copy"><strong>Your private reconciliation workspace</strong><p>Live statements, payment evidence, approvals, ledger entries and audit events are saved to your authenticated Supabase workspace. No reviewer token is required.</p></div>
       <label>Reviewer name<input value={actor} onChange={(e) => setActor(e.target.value)} maxLength={80} placeholder="Your name or reviewer role" /></label>
-      <label>Preview reviewer token<input type={readOnlyDemo ? "text" : "password"} autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Enter sample or private reviewer token" /></label>
-      <div className="recon-token-actions"><button className="secondary-button" onClick={() => { setToken(DEMO_READ_ONLY_TOKEN); setData({ rows: [], audit: [], ledger: [] }); setError(""); setNotice("Sample token filled in. Load the workspace to try the interactive synthetic demo."); }} disabled={!!busy}>Use sample token</button><button className="secondary-button" onClick={load} disabled={!!busy}>{busy === "load" ? "Loading…" : readOnlyDemo ? "Load sample workspace" : "Load live reconciliation"}</button><button className="primary-button" onClick={async () => { setToken(DEMO_READ_ONLY_TOKEN); setBusy("sample"); setError(""); setNotice("Loading synthetic reviewer case…"); try { const response = await fetch("/api/reconciliation", { headers: { "x-reconciliation-token": DEMO_READ_ONLY_TOKEN } }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not load the sample review."); setData({ rows: result.rows || [], audit: result.audit || [], ledger: result.ledger || [] }); setNotice("Sample review loaded. Run matching to evaluate the synthetic fixture; all demo actions remain local and do not affect live records."); } catch (e) { setError(e instanceof Error ? e.message : "Could not load the sample review."); } finally { setBusy(""); } }} disabled={!!busy}>{busy === "sample" ? "Loading sample…" : "Try sample review"} <span>↗</span></button></div>
-      {readOnlyDemo && <p className="recon-readonly-note">Public demo token: <code>{DEMO_READ_ONLY_TOKEN}</code> · Demo actions run only on synthetic data in this browser session. No live payment records or external accounts are changed.</p>}
+      <div className="recon-token-actions">
+        <button className="secondary-button" onClick={() => { setToken("AUTHENTICATED-WORKSPACE"); setData({ rows: [], audit: [], ledger: [] }); setError(""); setNotice("Ready to load your private workspace."); }} disabled={!!busy}>Use my workspace</button>
+        <button className="secondary-button" onClick={load} disabled={!!busy}>{busy === "load" ? "Loading…" : readOnlyDemo ? "Load sample workspace" : "Load my workspace"}</button>
+        <button className="primary-button" onClick={async () => { setToken(DEMO_READ_ONLY_TOKEN); setBusy("sample"); setError(""); try { const response = await fetch("/api/reconciliation", { headers: { "x-reconciliation-token": DEMO_READ_ONLY_TOKEN } }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not load sample review."); setData({ rows: result.rows || [], audit: result.audit || [], ledger: result.ledger || [] }); setNotice("Sample review loaded. Synthetic actions remain separate from your real workspace."); } catch (e) { setError(e instanceof Error ? e.message : "Could not load sample review."); } finally { setBusy(""); } }} disabled={!!busy}>{busy === "sample" ? "Loading sample…" : "Try sample review"} <span>↗</span></button>
+      </div>
+      {readOnlyDemo && <p className="recon-readonly-note">Sample workspace · Synthetic data only · No live payment records or external accounts are changed.</p>}
     </div>
     <div className="recon-console-notice" role="status">{notice}</div>
     {error && <div className="recon-console-error" role="alert">{error}</div>}
@@ -236,7 +249,7 @@ export function ReconciliationConsole() {
       <div><span>Internal ledger entries</span><strong>{counts.posted}</strong><small>Explicitly posted</small></div>
     </div>
     <div className="recon-queue-head">
-      <div><h3>2. Match and review queue</h3><p>Only completed, persisted Sandbox PayPal captures with a verification timestamp are eligible evidence. Reference may be the internal PP order reference or PayPal order/capture ID.</p></div>
+      <div><h3>2. Match and review queue</h3><p>Only completed, persisted PayPal Sandbox or Live captures with a server verification timestamp are eligible evidence. Reference may be the internal PP order reference or PayPal order/capture ID.</p></div>
       <button className="primary-button" onClick={match} disabled={!!busy || !token.trim()}>{busy === "match" ? "Matching…" : "Run safe matching"}</button>
     </div>
     <div className="reconciliation-table-heading">
@@ -252,7 +265,7 @@ export function ReconciliationConsole() {
         <td className="recon-reason-cell">{row.match_status === "posted" ? "Exact reference, amount and currency were verified against a server-verified completed PayPal capture. A human reviewer approved this row and it was posted to the PayProof AI internal demo ledger." : row.match_reason || "Run matching to evaluate this record."}</td>
         <td><div className="recon-row-actions">
           {row.match_status === "matched_pending_review" && <><button onClick={() => approveAndPost(row)} disabled={!!busy} className="recon-post-button">{busy === row.id ? "Working…" : "Approve & post"}</button><button onClick={() => decide(row, "approve")} disabled={!!busy} className="recon-approve-button">Approve only</button><button onClick={() => decide(row, "reject")} disabled={!!busy} className="recon-reject-button">Reject</button></>}
-          {row.match_status === "approved" && <button onClick={() => post(row)} disabled={!!busy} className="recon-post-button">{busy === row.id ? "Posting…" : "Post to demo ledger"}</button>}
+          {row.match_status === "approved" && <button onClick={() => post(row)} disabled={!!busy} className="recon-post-button">{busy === row.id ? "Posting…" : "Post to workspace ledger"}</button>}
           {row.match_status === "exception" && <span className="recon-manual-only">Resolve at source</span>}
           {row.match_status === "posted" && <span className="recon-posted-label">✓ Audited</span>}
           {row.match_status === "unmatched" && <span className="recon-manual-only">Needs investigation</span>}
@@ -260,9 +273,9 @@ export function ReconciliationConsole() {
         </div></td>
       </tr>)}{visible.length === 0 && <tr><td colSpan={6} className="recon-empty">No live statement rows loaded. Enter the reviewer token, load the workspace, and import a CSV to begin.</td></tr>}</tbody>
     </table></div>
-    <div className="recon-safety-note"><strong>Posting guardrails</strong><span>Exact reference + amount + currency → manual approval → internal ledger. Exceptions cannot be force-approved. Duplicate ledger posts are blocked. This prototype does not write to a real bank or external accounting platform.</span></div>
+    <div className="recon-safety-note"><strong>Posting guardrails</strong><span>Exact reference + amount + currency → manual approval → internal ledger. Exceptions cannot be force-approved. Duplicate ledger posts are blocked. This records reconciliation in PayProof AI; it does not transfer funds or write to a bank’s own ledger.</span></div>
     <div className="recon-console-bottom">
-      <section><h3>3. Internal demo ledger</h3><p>Latest entries created only after explicit approval and posting.</p>{data.ledger.length ? data.ledger.slice(0,8).map((entry) => <div className="recon-ledger-row" key={entry.id}><span>{entry.memo}</span><strong>{entry.amount} {entry.currency}</strong><small>{entry.posted_by} · {new Date(entry.posted_at).toLocaleString()}</small></div>) : <p className="recon-muted">No entries posted yet.</p>}</section>
+      <section><h3>3. Persistent workspace ledger</h3><p>Approved entries saved to Supabase after explicit posting.</p>{data.ledger.length ? data.ledger.slice(0,8).map((entry) => <div className="recon-ledger-row" key={entry.id}><span>{entry.memo}</span><strong>{entry.amount} {entry.currency}</strong><small>{entry.posted_by} · {new Date(entry.posted_at).toLocaleString()}</small></div>) : <p className="recon-muted">No entries posted yet.</p>}</section>
       <section><h3>4. Auditable activity</h3><p>Import, matching, review, rejection and posting decisions.</p>{data.audit.length ? data.audit.slice(0,10).map((event) => <div className="recon-audit-row" key={event.id}><span>{event.action.replaceAll("_", " ")}</span><small>{event.actor} · {new Date(event.created_at).toLocaleString()}</small></div>) : <p className="recon-muted">No audit events yet.</p>}</section>
     </div>
   </div>;
