@@ -279,7 +279,8 @@ export function ReconciliationConsole() {
       </div>
       <p className="recon-judge-safety">Important: PayPal capture evidence confirms provider-side activity; it is not proof of bank settlement. The public sample is synthetic and demo actions affect only the local demo session.</p>
     </section>
-    <p className="recon-load-hint">{readOnlyDemo ? "Sample workspace selected. Load sample workspace to refresh its demo records and activity." : "Your private workspace is not displayed until you select “Load my workspace”. Load it to view your statement rows, pending matches, exceptions, ledger entries and audit activity."}</p>\n    <div className="recon-live-stats">
+    <p className="recon-load-hint">{readOnlyDemo ? "Sample workspace selected. Load sample workspace to refresh its demo records and activity." : "Your private workspace is not displayed until you select “Load my workspace”. Load it to view your statement rows, pending matches, exceptions, ledger entries and audit activity."}</p>
+    <div className="recon-live-stats">
       <div><span>Potential matches</span><strong>{counts.candidates}</strong><small>Awaiting human approval</small></div>
       <div><span>Exceptions / unmatched</span><strong className="recon-red">{counts.exceptions}</strong><small>Never auto-approved</small></div>
       <div><span>Approved</span><strong className="recon-amber">{counts.approved}</strong><small>Not yet posted</small></div>
