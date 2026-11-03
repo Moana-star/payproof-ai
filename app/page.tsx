@@ -48,6 +48,7 @@ export default function Home() {
   const [flowDraft, setFlowDraft] = useState<{ item: string; quantity: string; note: string } | null>(null);
   const [flowValidation, setFlowValidation] = useState<{ valid: boolean; message: string } | null>(null);
   const [dashboardSearch, setDashboardSearch] = useState("");
+  const [dashboardMenuOpen, setDashboardMenuOpen] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -100,7 +101,7 @@ export default function Home() {
           const timestamp = order.verified_at || order.created_at;
           return {
             id: order.order_number,
-            customer: order.customer_name?.trim() || "Customer details not recorded",
+            customer: order.customer_name?.trim() || "Customer name not captured",
             item: `${order.product_name} × ${order.quantity}`,
             amount,
             status,
@@ -198,14 +199,12 @@ export default function Home() {
   async function prepareCheckoutOrder() {
     if (flowBusy) return;
     setFlowError("");
-    if (!flowCustomer.trim()) {
-      setFlowError("Enter the customer name before continuing.");
+    if (flowCustomer.trim().length < 2) {
+      setFlowError("Enter a customer name with at least 2 characters before continuing.");
       return;
     }
     if (!flowMessage.trim()) {
-      setFlowProduct("Coffee gift set");
-      setFlowQuantity("1");
-      await startSandboxCheckout("Coffee gift set", 1, flowCustomer.trim());
+      setFlowError("Add the customer's order message so the product and quantity can be reviewed before checkout.");
       return;
     }
     setFlowBusy(true);
@@ -259,8 +258,8 @@ export default function Home() {
 
   async function prepareDraft() {
     if (draftLoading) return;
-    if (!messageCustomerName.trim()) {
-      const error = "Enter the customer name before extracting order details.";
+    if (messageCustomerName.trim().length < 2) {
+      const error = "Enter a customer name with at least 2 characters before extracting order details.";
       setDraftError(error);
       setNotice(error);
       return;
@@ -315,7 +314,7 @@ export default function Home() {
     const customerName = draft.customerName.trim();
     const product = draft.item.trim();
     const quantity = draft.quantity.trim();
-    if (!customerName) issues.push("Enter the customer name.");
+    if (customerName.length < 2) issues.push("Enter a customer name with at least 2 characters.");
     if (!Object.prototype.hasOwnProperty.call(CATALOG_PRICES, product)) {
       issues.push("Choose one supported catalogue product exactly: Coffee gift set, Ceramic mug pair, or Handwoven market tote.");
     }
@@ -333,46 +332,107 @@ export default function Home() {
 
   return (
     <main className="app-shell">
-      <aside className="sidebar">
-        <a className="brand" href="#" aria-label="PayProof AI home">
-          <span className="brand-mark">P<span>✓</span></span>
-          <span className="brand-name">payproof<span>ai</span></span>
-        </a>
-        <div className="workspace-label">WORKSPACE</div>
-        <nav className="side-nav" aria-label="Main navigation">
-          <a className="nav-item active" href="#overview"><span className="nav-icon">▦</span> Dashboard</a>
-          <a className="nav-item" href="/payments"><span className="nav-icon">◈</span> Payments</a>
-          <a className="nav-item" href="#customers"><span className="nav-icon">♙</span> Customers</a>
-          <a className="nav-item" href="#shipping"><span className="nav-icon">▣</span> Shipping</a>
-          <a className="nav-item" href="#analytics"><span className="nav-icon">▥</span> Analytics</a>
-          <a className="nav-item" href="#reports"><span className="nav-icon">▤</span> Reports</a>
-          <a className="nav-item" href="#invoices"><span className="nav-icon">▧</span> Invoices</a>
-          <a className="nav-item" href="#transactions"><span className="nav-icon">↗</span> Transactions</a>
-          <a className="nav-item" href="#reconciliation"><span className="nav-icon">⇄</span> Reconciliation</a>
-          <a className="nav-item" href="/exceptions"><span className="nav-icon">!</span> Exceptions</a>
-          <div className="nav-group-label">PREFERENCES</div>
-          <a className="nav-item" href="/demo-guide"><span className="nav-icon">?</span> Help &amp; support</a>
-          <a className="nav-item" href="/profile"><span className="nav-icon">⚙</span> Settings</a>
-        </nav>
-        <div className="sidebar-bottom">
-          <div className="trust-card">
-            <span className="trust-icon">✓</span>
-            <strong>Evidence first</strong>
-            <p>AI helps explain. Verified payment data decides.</p>
-          </div>
-          <div className="profile-row">
-            <div className="avatar profile-avatar" aria-hidden="true">{authUserName ? authUserName.trim().split(/\s+/)[0].slice(0, 1).toUpperCase() : "P"}</div>
-            <div><strong>{authUserName ? authUserName.trim().split(/\s+/)[0] : "Demo workspace"}</strong><span>{authUserName || "Public Sandbox preview"}</span></div>
-            <span className="profile-dots">···</span>
-          </div>
-        </div>
-      </aside>
 
+
+      <style jsx global>{`
+        .sidebar { display: none !important; }
+        .topbar { position: relative; display: flex; align-items: center; gap: 14px; }
+        .dashboard-menu-wrap { position: relative; flex: 0 0 auto; z-index: 90; }
+        .desktop-main-nav { display: none; }
+        @media (min-width: 821px) {
+          .dashboard-menu-wrap { display: none !important; }
+          .desktop-main-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 28px; border-bottom: 1px solid #e9edf4; background: #fff; }
+          .desktop-main-nav a { padding: 9px 11px; border-radius: 8px; color: #526078; text-decoration: none; font-size: 12px; font-weight: 650; white-space: nowrap; }
+          .desktop-main-nav a:hover { background: #f0f4ff; color: #263f82; }
+        }
+        .header-icon-actions { display: inline-flex; align-items: center; gap: 8px; }
+        .header-icon-button { position: relative; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #dfe4ed; border-radius: 12px; background: #fff; color: #34415a; text-decoration: none; flex: 0 0 auto; }
+        .header-icon-button:hover { background: #f4f7fc; border-color: #a9b5ca; }
+        .header-icon-button:focus-visible { outline: 3px solid #8ba8ff; outline-offset: 3px; }
+        .header-icon-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .notification-count { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px; display: grid; place-items: center; border: 2px solid #fff; border-radius: 999px; background: #d94b55; color: #fff; font-size: 9px; font-weight: 800; line-height: 1; }
+        .account-name-link { white-space: nowrap; }
+        .dashboard-menu-trigger { width: 44px; height: 44px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; border: 1px solid #dfe4ed; border-radius: 12px; background: #fff; cursor: pointer; }
+        .dashboard-menu-trigger span { width: 19px; height: 2px; border-radius: 3px; background: #17233b; }
+        .dashboard-menu-trigger:hover { background: #f7f9fd; border-color: #a9b5ca; }
+        .dashboard-menu-trigger:focus-visible, .dashboard-menu-item:focus-visible { outline: 3px solid #8ba8ff; outline-offset: 3px; }
+        .dashboard-menu-panel { position: absolute; top: calc(100% + 10px); left: 0; width: min(320px, calc(100vw - 28px)); max-height: min(76vh, 620px); overflow-y: auto; padding: 12px; border: 1px solid #e3e8f0; border-radius: 16px; background: #fff; box-shadow: 0 18px 50px rgba(20, 35, 65, .18); }
+        .dashboard-menu-heading { display: grid; gap: 3px; padding: 8px 10px 12px; border-bottom: 1px solid #edf0f5; margin-bottom: 7px; }
+        .dashboard-menu-heading strong { color: #17233b; font-size: 14px; }
+        .dashboard-menu-heading span { color: #78849a; font-size: 11px; }
+        .dashboard-menu-panel nav { display: grid; gap: 3px; }
+        .dashboard-menu-item { display: flex; align-items: center; gap: 11px; min-height: 42px; padding: 9px 11px; border-radius: 10px; color: #48556d; text-decoration: none; font-size: 13px; font-weight: 600; }
+        .dashboard-menu-item > span { width: 22px; text-align: center; color: #63769b; font-size: 17px; }
+        .dashboard-menu-item:hover, .dashboard-menu-item.active { color: #263f82; background: #f0f4ff; }
+        .dashboard-menu-foot { display: flex; gap: 10px; align-items: flex-start; margin-top: 9px; padding: 12px 10px 5px; border-top: 1px solid #edf0f5; color: #1e8b69; }
+        .dashboard-menu-foot div { display: grid; gap: 3px; }
+        .dashboard-menu-foot strong { color: #26344c; font-size: 12px; }
+        .dashboard-menu-foot small { color: #78849a; font-size: 10px; line-height: 1.45; }
+        @media (max-width: 820px) {
+          .topbar { height: auto; min-height: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "menu search" "actions actions"; align-items: center; gap: 12px; padding: 14px 18px; }
+          .dashboard-menu-wrap { grid-area: menu; }
+          .dashboard-search { grid-area: search; width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; height: auto; }
+          .dashboard-search > span:first-child { display: none; }
+          .dashboard-search input { width: 100%; min-width: 0; height: 40px; font-size: 13px; }
+          .dashboard-date { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 7px 10px; font-size: 10px; }
+          .topbar-actions { grid-area: actions; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 8px; }
+          .header-icon-actions { grid-column: 1 / -1; justify-content: flex-end; }
+          .header-icon-button { width: 42px; height: 42px; }
+          .account-name-link { display: none !important; }
+          .topbar-actions > * { min-width: 0; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; text-align: center; white-space: normal; line-height: 1.3; border-radius: 8px; padding: 8px 9px; font-size: 11px; }
+          .topbar-actions .sandbox-pill { justify-content: center; }
+          .topbar-actions .demo-payment-guide-link, .topbar-actions .sandbox-checkout-button { border: 1px solid #e7e8ef; background: #fff; color: #565d70; text-decoration: none; }
+          .topbar-actions .help-button { border: 1px solid #e7e8ef; background: #fff; }
+          .dashboard-menu-panel { position: fixed; top: 14px; left: 14px; width: min(320px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); z-index: 120; }
+          .reference-overview-heading { align-items: flex-start; gap: 12px; margin: 2px 0 18px; }
+          .reference-overview-heading > div { min-width: 0; }
+          .reference-overview-heading h1 { font-size: clamp(22px, 6vw, 27px); }
+          .reference-overview-heading p:last-child { max-width: 34ch; line-height: 1.55; }
+          .reference-overview-heading .primary-button { flex: 0 0 auto; min-height: 38px; padding: 0 11px; font-size: 10px; }
+        }
+        @media (max-width: 480px) {
+          .topbar { padding: 12px 12px; gap: 10px; }
+          .dashboard-menu-trigger { width: 42px; height: 42px; }
+          .topbar-actions { gap: 7px; }
+          .topbar-actions > * { min-height: 40px; font-size: 10px; padding: 7px 6px; }
+          .content { padding: 20px 12px 18px; }
+          .reference-overview-heading { flex-direction: column; }
+          .reference-overview-heading .primary-button { align-self: flex-start; }
+        }
+      `}</style>
       <section className="main-area">
         <header className="topbar">
+          <div className="dashboard-menu-wrap">
+            <button type="button" className="dashboard-menu-trigger" aria-label={dashboardMenuOpen ? "Close main menu" : "Open main menu"} aria-expanded={dashboardMenuOpen} aria-controls="dashboard-main-menu" onClick={() => setDashboardMenuOpen((open) => !open)}>
+              <span /><span /><span />
+            </button>
+            {dashboardMenuOpen && <div className="dashboard-menu-panel" id="dashboard-main-menu">
+              <div className="dashboard-menu-heading"><strong>PayProof AI</strong><span>Workspace navigation</span></div>
+              <nav aria-label="Main navigation">
+                <a className="dashboard-menu-item active" href="#overview" onClick={() => setDashboardMenuOpen(false)}><span>▦</span>Dashboard</a>
+                <a className="dashboard-menu-item" href="/payments" onClick={() => setDashboardMenuOpen(false)}><span>◈</span>Payment evidence</a>
+                <a className="dashboard-menu-item" href="#reconciliation" onClick={() => setDashboardMenuOpen(false)}><span>⇄</span>Reconciliation</a>
+                <a className="dashboard-menu-item" href="/assistant" onClick={() => setDashboardMenuOpen(false)}><span>✳</span>AI assistant</a>
+                <a className="dashboard-menu-item" href="/exceptions" onClick={() => setDashboardMenuOpen(false)}><span>!</span>Exception review</a>
+                <a className="dashboard-menu-item" href="/audit" onClick={() => setDashboardMenuOpen(false)}><span>↗</span>Audit trail</a>
+                <a className="dashboard-menu-item" href="/customers" onClick={() => setDashboardMenuOpen(false)}><span>♙</span>Customers</a>
+                <a className="dashboard-menu-item" href="/shipping" onClick={() => setDashboardMenuOpen(false)}><span>▣</span>Shipping</a>
+                <a className="dashboard-menu-item" href="/analytics" onClick={() => setDashboardMenuOpen(false)}><span>▥</span>Analytics</a>
+                <a className="dashboard-menu-item" href="/reports" onClick={() => setDashboardMenuOpen(false)}><span>▤</span>Reports</a>
+                <a className="dashboard-menu-item" href="/invoices" onClick={() => setDashboardMenuOpen(false)}><span>▧</span>Invoices</a>
+                <a className="dashboard-menu-item" href="#transactions" onClick={() => setDashboardMenuOpen(false)}><span>↗</span>Transactions</a>
+                <a className="dashboard-menu-item" href="/demo-guide" onClick={() => setDashboardMenuOpen(false)}><span>?</span>Help &amp; support</a>
+                <a className="dashboard-menu-item" href="/profile" onClick={() => setDashboardMenuOpen(false)}><span>⚙</span>Settings</a>
+              </nav>
+              <div className="dashboard-menu-foot"><span>✓</span><div><strong>Evidence first</strong><small>AI helps explain. Verified payment data decides.</small></div></div>
+            </div>}
+          </div>
           <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" value={dashboardSearch} onChange={(event) => setDashboardSearch(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
-          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link>{authUserName ? <><Link className="demo-payment-guide-link" href="/profile">{authUserName.trim().split(/\s+/)[0] || "Profile"} ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
+          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link><div className="header-icon-actions"><Link className="header-icon-button notification-button" href="/exceptions" aria-label={`Notifications: ${orders.filter((order) => order.status !== "Paid").length} items needing attention`} title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{orders.filter((order) => order.status !== "Paid").length > 0 && <span className="notification-count">{orders.filter((order) => order.status !== "Paid").length > 9 ? "9+" : orders.filter((order) => order.status !== "Paid").length}</span>}</Link><Link className="header-icon-button profile-icon-button" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open profile" : "Sign in"} title={isSignedIn ? "Profile" : "Sign in"}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></svg></Link></div>{authUserName ? <><Link className="demo-payment-guide-link account-name-link" href="/profile">{authUserName.trim().split(/\s+/)[0] || "Profile"} ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
+        <nav className="desktop-main-nav" aria-label="Desktop navigation">
+          <a href="#overview">Overview</a><a href="/payments">Payment evidence</a><a href="#reconciliation">Reconciliation</a><a href="/assistant">AI assistant</a><a href="/exceptions">Exception review</a><a href="/audit">Audit trail</a><a href="/customers">Customers</a><a href="/shipping">Shipping</a><a href="/analytics">Analytics</a><a href="/reports">Reports</a><a href="/invoices">Invoices</a><a href="/profile">Settings</a>
+        </nav>
 
         <div className="content" id="overview">
           <div className="reference-overview-heading">
@@ -389,7 +449,7 @@ export default function Home() {
             <article className="metric-card"><div className="metric-top"><span>Total orders</span><span className="metric-icon violet">▤</span></div><div className="metric-value">{orders.length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">{ordersSource === "saved" ? "Connected records" : "Sample workspace"}</span><span>All orders</span></div></article>
             <article className="metric-card"><div className="metric-top"><span>{ordersSource === "saved" ? "Verified paid" : "Sample paid"}</span><span className="metric-icon green">✓</span></div><div className="metric-value">{paidTotal.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-green">{ordersSource === "saved" ? "Server verified" : "Illustrative only"}</span><span>{ordersSource === "saved" ? "Saved Sandbox records" : "Not a live payment count"}</span></div></article>
             <article className="metric-card"><div className="metric-top"><span>Awaiting payment</span><span className="metric-icon amber">◷</span></div><div className="metric-value">{orders.filter(o => o.status === "Awaiting payment").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">No action yet</span><span>Checkout pending</span></div></article>
-            <article className="metric-card"><div className="metric-top"><span>Needs attention</span><span className="metric-icon red">!</span></div><div className="metric-value">{orders.filter(o => o.status === "Review needed").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-red">Review required</span><span>Exceptions only</span></div></article>
+            <article className="metric-card"><div className="metric-top"><span>Open exceptions</span><span className="metric-icon red">!</span></div><div className="metric-value">{orders.filter(o => o.status === "Review needed").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-red">Review required</span><span>Exceptions only</span></div></article>
           </div>
           <section className="dashboard-reference-panels">
             <article className="dashboard-config-card">
@@ -427,7 +487,7 @@ export default function Home() {
                 <p>Import a statement, match against verified PayPal captures, review exceptions, and approve ledger entries with an audit trail.</p>
               </div>
               <div className="reconciliation-actions">
-                <span className="reconciliation-demo-tag"><i /> Protected preview · Manual import</span>
+                <span className="reconciliation-demo-tag"><i /> Account-scoped · Sign-in required</span>
                 <a className="secondary-button" href="/exceptions">Exception review ↗</a>
               </div>
             </div>
@@ -438,9 +498,9 @@ export default function Home() {
               <div className="reconciliation-flow-line" />
               <div className="reconciliation-flow-step review-step"><span>3</span><div><strong>Human approval</strong><small>Exceptions stay blocked</small></div></div>
               <div className="reconciliation-flow-line" />
-              <div className="reconciliation-flow-step"><span>4</span><div><strong>Post &amp; audit</strong><small>Internal demo ledger</small></div></div>
+              <div className="reconciliation-flow-step"><span>4</span><div><strong>Post &amp; audit</strong><small>Persistent internal ledger</small></div></div>
             </div>
-            {!authChecked ? <p className="workspace-isolation-note">Checking workspace access…</p> : isSignedIn ? <div className="workspace-isolation-note"><strong>Reconciliation workspace</strong><p>Open the reconciliation workspace to review the protected statement-matching demo. Your saved orders and payment evidence remain private to your account; shared judge-preview records are kept separate.</p><Link className="primary-button" href="/reconciliation">Open reconciliation workspace ↗</Link><p className="recon-judge-safety">Private reviewer access is required for protected import, review decisions and internal-ledger posting. This preview does not connect to a bank or external accounting platform.</p></div> : <ReconciliationConsole />}
+            {!authChecked ? <p className="workspace-isolation-note">Checking workspace access…</p> : isSignedIn ? <div className="workspace-isolation-note"><strong>Reconciliation workspace</strong><p>Open your private reconciliation workspace to import original bank or provider statements, match them against your own server-verified PayPal captures, review candidates and post approved entries to your account&apos;s persistent internal ledger. The public synthetic judge sample remains separate.</p><Link className="primary-button" href="/reconciliation">Open reconciliation workspace ↗</Link><p className="recon-judge-safety">A PayPal capture confirms provider-side activity, not bank settlement. PayProof records approved entries in its own ledger; it does not connect to a bank or external accounting platform.</p></div> : <ReconciliationConsole />}
           </section>
 
           <div className="section-heading" id="transactions"><div><h2>Recent orders</h2><p>Track each order without guessing about payment status.</p></div><button className="text-button" onClick={() => setNotice(ordersSource === "saved" ? "Showing saved Sandbox orders. For capture details and verification timestamps, open Payment evidence." : "Showing illustrative sample orders. These are not saved payment records.")}>View all orders <span>→</span></button></div>
@@ -448,7 +508,7 @@ export default function Home() {
           <section className="orders-card">
             <div className="table-toolbar"><div className="table-title">{ordersSource === "saved" ? "Saved orders" : "Your orders"} <span className="table-count">{orders.length}</span></div><div className="table-filters"><span className="filter-label">Status</span><button className="filter-button" onClick={() => setOrders(orders.slice().reverse())}>Recent activity ↕</button></div></div>
             <div className="order-table-wrap"><table className="order-table"><thead><tr><th>ORDER</th><th>CUSTOMER / ITEM</th><th>AMOUNT</th><th>PAYMENT STATUS</th><th>LAST ACTIVITY</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><span className="order-id">{order.id}</span></td><td><div className="customer-cell"><div className="avatar">{order.initials}</div><div><strong>{order.customer}</strong><span>{order.item}</span></div></div></td><td className="amount">{order.amount}</td><td><span className={`status-badge ${statusClass[order.status]}`}><i />{order.status === "Paid" ? (ordersSource === "saved" ? "Verified paid" : "Sample · unverified") : order.status}</span></td><td className="activity-text">{order.time}</td></tr>)}{orders.length === 0 && <tr><td colSpan={5}>{"No orders yet. Create a Sandbox checkout; verified and pending orders will appear here from your account records."}</td></tr>}</tbody></table></div>
-            <div className="table-footer"><span>{ordersLoadNote || (ordersSource === "saved" ? "Persistent Sandbox order records" : "Illustrative records · Not live payment evidence")}</span><span>{orders.length ? `1–${orders.length} of ${orders.length}` : "0 orders"}</span></div>
+            <div className="table-footer"><span>{ordersLoadNote || (ordersSource === "saved" ? "Persistent Sandbox order records" : "Illustrative records · Not live payment evidence")}{orders.some((order) => order.customer === "Customer name not captured") ? " Older orders may not include a customer name if it was not supplied at checkout; names are never inferred." : ""}</span><span>{orders.length ? `1–${orders.length} of ${orders.length}` : "0 orders"}</span></div>
           </section>
 
           <div className="lower-grid">
@@ -459,13 +519,13 @@ export default function Home() {
                 <button type="button" className="sample-message-button" onClick={() => { setMessage("Hi, I'd like 2 Coffee gift sets, please. Can you prepare the order for me?"); setDraft(null); setDraftError(null); setValidationResult(null); setMessageCustomerName("Alex Morgan"); setNotice("Sample customer message and sample customer name loaded. Select Prepare order draft to test AI extraction."); }}>Load sample message</button>
               </div>
               <label className="field-label" htmlFor="intake-customer-name">CUSTOMER NAME</label>
-              <input id="intake-customer-name" className="draft-edit-input" type="text" value={messageCustomerName} maxLength={100} autoComplete="name" placeholder="Customer full name (required)" aria-required="true" onChange={(event) => { setMessageCustomerName(event.target.value); setDraft(null); setDraftError(null); setValidationResult(null); }} />
+              <input id="intake-customer-name" className="draft-edit-input" type="text" value={messageCustomerName} maxLength={100} autoComplete="name" placeholder="Customer full name (required)" minLength={2} aria-required="true" onChange={(event) => { setMessageCustomerName(event.target.value); setDraft(null); setDraftError(null); setValidationResult(null); }} />
               <textarea id="customer-message" value={message} onChange={(event) => { setMessage(event.target.value); if (draftError) setDraftError(null); }} placeholder={'Try the sample message, or paste a customer message here. Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
               <div className="field-hint">Enter the customer name, then paste a message from WhatsApp, email, or another channel. AI identifies the product and quantity for your review. Nothing is saved automatically.</div>
               <button type="button" className="secondary-button full-button" onClick={prepareDraft} disabled={draftLoading} aria-busy={draftLoading}>{draftLoading ? "Preparing draft…" : "Prepare order draft"} <span>{draftLoading ? "…" : "→"}</span></button>
               {draftError && <p className="draft-error" role="alert">{draftError}</p>}
               <p className="draft-action-hint" aria-live="polite">{draftLoading ? "Please wait while the message is analysed." : draftError ? "No sales order was created. You can try again." : draft ? "Draft ready. Check every detail against the original customer message." : "Enter the customer name and message, then select Prepare order draft."}</p>
-              {draft && <div className="draft-result"><div className="draft-title">Extracted sales order <span>REVIEW REQUIRED · NOT SAVED</span></div><p className="draft-review-hint">Confirm the customer name and edit the suggested fields, then compare them with the original customer message above.</p><label className="draft-field-label" htmlFor="draft-customer-name">CUSTOMER NAME</label><input id="draft-customer-name" className="draft-edit-input" type="text" value={draft.customerName} maxLength={100} autoComplete="name" onChange={(event) => updateDraftField("customerName", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-product">PRODUCT NAME</label><input id="draft-product" className="draft-edit-input" type="text" value={draft.item} maxLength={120} autoComplete="off" onChange={(event) => updateDraftField("item", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-quantity">QUANTITY</label><input id="draft-quantity" className="draft-edit-input" type="number" min="1" max="100000" step="1" inputMode="numeric" value={draft.quantity === "Not specified" ? "" : draft.quantity} placeholder="Enter quantity" onChange={(event) => updateDraftField("quantity", event.target.value)} aria-describedby="draft-review-help" /><p id="draft-review-help" className="draft-review-hint">Validation checks formatting only; it cannot confirm product availability, price, customer intent, or payment.</p>{draft.note && <p className="draft-note">{draft.note}</p>}<button type="button" className="primary-button full-button" onClick={validateDraftDetails}>Validate draft details</button>{validationResult && <div className={`draft-validation ${validationResult.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{validationResult.valid ? "✓ Details checked" : "Review required"}</strong><p>{validationResult.message}</p></div>}{validationResult?.valid && <div className="draft-checkout"><div className="draft-total"><span>Estimated total · {draft.item}</span><strong>${(CATALOG_PRICES[draft.item] * Number(draft.quantity)).toFixed(2)} USD</strong></div><p>Sandbox checkout only. The server independently validates the product and calculates the final amount. This does not save an order record.</p><button type="button" className="primary-button full-button" onClick={() => startSandboxCheckout(draft.item, Number(draft.quantity), draft.customerName.trim())} disabled={checkoutLoading}>{checkoutLoading ? "Connecting to PayPal…" : "Continue to PayPal Sandbox"} <span>↗</span></button></div>}</div>}
+              {draft && <div className="draft-result"><div className="draft-title">Extracted sales order <span>REVIEW REQUIRED · NOT SAVED</span></div><p className="draft-review-hint">Confirm the customer name and edit the suggested fields, then compare them with the original customer message above.</p><label className="draft-field-label" htmlFor="draft-customer-name">CUSTOMER NAME</label><input id="draft-customer-name" className="draft-edit-input" type="text" value={draft.customerName} maxLength={100} minLength={2} autoComplete="name" onChange={(event) => updateDraftField("customerName", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-product">PRODUCT NAME</label><input id="draft-product" className="draft-edit-input" type="text" value={draft.item} maxLength={120} autoComplete="off" onChange={(event) => updateDraftField("item", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-quantity">QUANTITY</label><input id="draft-quantity" className="draft-edit-input" type="number" min="1" max="100000" step="1" inputMode="numeric" value={draft.quantity === "Not specified" ? "" : draft.quantity} placeholder="Enter quantity" onChange={(event) => updateDraftField("quantity", event.target.value)} aria-describedby="draft-review-help" /><p id="draft-review-help" className="draft-review-hint">Validation checks formatting only; it cannot confirm product availability, price, customer intent, or payment.</p>{draft.note && <p className="draft-note">{draft.note}</p>}<button type="button" className="primary-button full-button" onClick={validateDraftDetails}>Validate draft details</button>{validationResult && <div className={`draft-validation ${validationResult.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{validationResult.valid ? "✓ Details checked" : "Review required"}</strong><p>{validationResult.message}</p></div>}{validationResult?.valid && <div className="draft-checkout"><div className="draft-total"><span>Estimated total · {draft.item}</span><strong>${(CATALOG_PRICES[draft.item] * Number(draft.quantity)).toFixed(2)} USD</strong></div><p>Sandbox checkout only. The server independently validates the product and calculates the final amount. This does not save an order record.</p><button type="button" className="primary-button full-button" onClick={() => startSandboxCheckout(draft.item, Number(draft.quantity), draft.customerName.trim())} disabled={checkoutLoading}>{checkoutLoading ? "Connecting to PayPal…" : "Continue to PayPal Sandbox"} <span>↗</span></button></div>}</div>}
             </section>
 
             <section className="attention-card" id="activity">
@@ -496,10 +556,10 @@ export default function Home() {
             <h1>Create New Order</h1>
             <div className="order-flow-form">
               <label htmlFor="flow-customer">Customer Name</label>
-              <input id="flow-customer" type="text" value={flowCustomer} onChange={(event) => { setFlowCustomer(event.target.value); setFlowError(""); }} placeholder="Enter customer name" autoComplete="name" maxLength={100} required />
-              <label htmlFor="flow-message">Enter Order Text <span className="order-optional-label">(optional)</span></label>
+              <input id="flow-customer" type="text" value={flowCustomer} onChange={(event) => { setFlowCustomer(event.target.value); setFlowError(""); }} placeholder="Enter customer name" autoComplete="name" minLength={2} maxLength={100} required />
+              <label htmlFor="flow-message">Customer Order Message <span className="order-optional-label">(required)</span></label>
               <textarea id="flow-message" value={flowMessage} onChange={(event) => { setFlowMessage(event.target.value); setFlowError(""); }} placeholder="Example: 2 Coffee gift sets" rows={4} />
-              <p className="order-flow-hint">Your order text will be used to prepare a suggested sales order. Review and validate the extracted product and quantity before continuing to PayPal. Nothing is saved at this stage.</p>
+              <p className="order-flow-hint">Paste the customer&apos;s message. AI will suggest a product and quantity for your review. Confirm the customer name and extracted details before continuing to PayPal. Nothing is saved until you start checkout.</p>
               {flowError && <p className="order-flow-error" role="alert">{flowError}</p>}
               {flowDraft && <div className="draft-result flow-draft-result">
                 <div className="draft-title">Extracted sales order <span>REVIEW REQUIRED · NOT SAVED</span></div>

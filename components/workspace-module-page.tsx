@@ -62,9 +62,64 @@ export function WorkspaceModulePage({ module }: { module: ModuleKey }) {
     return [...map.values()];
   }, [orders]);
   const paid = orders.filter(o => o.payment_status === "paid");
+  const revenueCurrencies = [...new Set(paid.map(order => order.currency || "USD"))];
+  const primaryRevenueCurrency = revenueCurrencies[0] || orders[0]?.currency || "USD";
+  const orderCurrencies = [...new Set(orders.map(order => order.currency || "USD"))];
+  const recordedCurrency = orderCurrencies[0] || "USD";
+  const recordedCurrencyOrders = orders.filter(order => (order.currency || "USD") === recordedCurrency);
+  const primaryCurrencyPaid = paid.filter(order => (order.currency || "USD") === primaryRevenueCurrency);
+  const revenueByCurrency = revenueCurrencies.map(currency => ({
+    currency,
+    amount: paid.filter(order => (order.currency || "USD") === currency).reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0)
+  }));
   const pending = orders.filter(o => o.payment_status === "awaiting_payment");
   const review = orders.filter(o => ["payment_review", "failed"].includes(o.payment_status));
-  const total = orders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+  const total = recordedCurrencyOrders.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
+  const monthlyAnalytics = useMemo(() => {
+    const now = new Date();
+    const months = Array.from({ length: 6 }, (_, index) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
+      return { key: date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0"), label: date.toLocaleDateString("en-US", { month: "short" }), revenue: 0, orders: 0 };
+    });
+    const monthIndex = new Map(months.map((month, index) => [month.key, index]));
+    primaryCurrencyPaid.forEach(order => {
+      const timestamp = order.verified_at || order.created_at;
+      if (!timestamp) return;
+      const date = new Date(timestamp);
+      if (Number.isNaN(date.getTime())) return;
+      const key = date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0");
+      const index = monthIndex.get(key);
+      if (index === undefined) return;
+      months[index].revenue += Number(order.total_amount) || 0;
+      months[index].orders += 1;
+    });
+    return months;
+  }, [orders, primaryRevenueCurrency]);
+  const statusSlices = [
+    { label: "Verified paid", count: paid.length, color: "#16a36a" },
+    { label: "Awaiting payment", count: pending.length, color: "#e7a23b" },
+    { label: "Review / failed", count: review.length, color: "#dc6262" },
+    { label: "Other statuses", count: Math.max(0, orders.length - paid.length - pending.length - review.length), color: "#8490a3" }
+  ].filter(slice => slice.count > 0);
+  const statusTotal = statusSlices.reduce((sum, slice) => sum + slice.count, 0);
+  let statusCursor = 0;
+  const statusGradient = statusSlices.map(slice => {
+    const start = statusCursor;
+    statusCursor += statusTotal ? (slice.count / statusTotal) * 100 : 0;
+    return slice.color + " " + start.toFixed(2) + "% " + statusCursor.toFixed(2) + "%";
+  }).join(", ");
+  const maxRevenue = Math.max(1, ...monthlyAnalytics.map(month => month.revenue));
+  const revenuePoints = monthlyAnalytics.map((month, index) => {
+    const x = 32 + index * 116;
+    const y = 174 - (month.revenue / maxRevenue) * 140;
+    return x + "," + y;
+  }).join(" ");
+  const productMix = useMemo(() => {
+    const grouped = new Map<string, number>();
+    paid.forEach(order => grouped.set(order.product_name, (grouped.get(order.product_name) || 0) + 1));
+    return [...grouped.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 5);
+  }, [orders]);
+  const maxProductCount = Math.max(1, ...productMix.map(product => product.count));
   function exportCsv() {
     const columns = ["order_number","customer_name","product_name","quantity","total_amount","currency","payment_status","paypal_order_id","paypal_capture_id","created_at","verified_at"];
     const quote = (v: unknown) => '"' + String(v ?? "").replace(/"/g, '""') + '"';
@@ -87,8 +142,48 @@ export function WorkspaceModulePage({ module }: { module: ModuleKey }) {
       <section className="ops-panel"><div className="ops-panel-top"><div><span className="ops-panel-symbol mint">▣</span><div><strong>Fulfilment review queue</strong><p>Verified payments that may be ready for manual fulfilment</p></div></div><span className="ops-live-badge">PAYMENT-VERIFIED ONLY</span></div><div className="ops-table-wrap"><table className="ops-table"><thead><tr><th>ORDER</th><th>CUSTOMER</th><th>ITEM</th><th>PAYMENT</th><th>VERIFIED</th><th>SHIPPING</th></tr></thead><tbody>{paid.map(o => <tr key={o.order_number}><td><strong className="ops-id">{o.order_number}</strong></td><td>{o.customer_name || "Name not provided"}</td><td>{o.product_name} × {o.quantity}</td><td><span className="ops-status good"><i />Verified paid</span></td><td>{dateLabel(o.verified_at)}</td><td><span className="ops-status neutral">Not dispatched here</span></td></tr>)}{!paid.length && <tr><td colSpan={6}>{loading ? "Loading fulfilment records…" : "No verified-paid orders are ready for fulfilment review."}</td></tr>}</tbody></table></div></section>
     </>}
     {module === "analytics" && <>
-      <div className="ops-metric-grid"><article className="ops-metric"><span>Total orders</span><strong>{orders.length}</strong><small>All saved statuses</small><span className="ops-metric-icon purple">▤</span></article><article className="ops-metric"><span>Verified revenue</span><strong>{money(paid.reduce((s,o)=>s+(Number(o.total_amount)||0),0).toFixed(2), paid[0]?.currency || "USD")}</strong><small>Verified-paid orders only</small><span className="ops-metric-icon green">✓</span></article><article className="ops-metric"><span>Awaiting payment</span><strong>{pending.length}</strong><small>Not counted as revenue</small><span className="ops-metric-icon amber">◷</span></article><article className="ops-metric"><span>Exceptions</span><strong>{review.length}</strong><small>Failed or review status</small><span className="ops-metric-icon red">!</span></article></div>
-      <section className="ops-panel"><div className="ops-panel-top"><div><span className="ops-panel-symbol violet">▥</span><div><strong>Order performance</strong><p>Calculated from your account&apos;s saved records</p></div></div><span className="ops-live-badge">LIVE ACCOUNT DATA</span></div><div className="ops-evidence-check"><span>01</span><div><strong>Verified payment rate</strong><p>{orders.length ? ((paid.length / orders.length) * 100).toFixed(1) + "% of saved orders are verified paid." : "No saved orders available to calculate a rate."}</p></div></div><div className="ops-evidence-check"><span>02</span><div><strong>Average verified order value</strong><p>{paid.length ? money((paid.reduce((s,o)=>s+(Number(o.total_amount)||0),0)/paid.length).toFixed(2), paid[0].currency || "USD") : "Not available until a payment is verified."}</p></div></div><div className="ops-evidence-check"><span>03</span><div><strong>Recorded order value</strong><p>{money(total.toFixed(2), orders[0]?.currency || "USD")} across all saved orders; this is not revenue because pending and review orders may be unpaid.</p></div></div></section>
+      <div className="ops-metric-grid">
+        <article className="ops-metric"><span>Total orders</span><strong>{loading ? "—" : orders.length}</strong><small>All saved account statuses</small><span className="ops-metric-icon purple">▤</span></article>
+        <article className="ops-metric"><span>Verified revenue</span><strong>{loading ? "—" : money(primaryCurrencyPaid.reduce((s,o)=>s+(Number(o.total_amount)||0),0).toFixed(2), primaryRevenueCurrency)}</strong><small>Verified-paid orders only</small><span className="ops-metric-icon green">✓</span></article>
+        <article className="ops-metric"><span>Awaiting payment</span><strong>{loading ? "—" : pending.length}</strong><small>Excluded from revenue</small><span className="ops-metric-icon amber">◷</span></article>
+        <article className="ops-metric"><span>Exceptions</span><strong>{loading ? "—" : review.length}</strong><small>Failed or flagged orders</small><span className="ops-metric-icon red">!</span></article>
+      </div>
+      {revenueCurrencies.length > 1 && <div className="ops-info-banner ops-warning-banner"><span className="ops-info-icon">!</span><div><strong>Multiple currencies detected</strong><p>Revenue charts and averages use {primaryRevenueCurrency} only. Other verified totals are shown separately: {revenueByCurrency.map(item => money(item.amount.toFixed(2), item.currency)).join(" · ")}. No exchange-rate conversion or cross-currency addition is applied.</p></div></div>}
+      <div className="ops-chart-grid">
+        <section className="ops-panel ops-chart-panel ops-chart-wide">
+          <div className="ops-panel-top"><div><span className="ops-panel-symbol violet">⌁</span><div><strong>Verified revenue trend</strong><p>Monthly totals from server-verified payments · last 6 months</p></div></div><span className="ops-live-badge">ACCOUNT DATA</span></div>
+          {primaryCurrencyPaid.length ? <div className="ops-chart-area">
+            <div className="ops-chart-summary"><strong>{money(primaryCurrencyPaid.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0).toFixed(2), primaryRevenueCurrency)}</strong><span>Lifetime verified revenue in loaded records</span></div>
+            <svg className="ops-line-chart" viewBox="0 0 620 210" role="img" aria-label="Verified revenue by month for the last six months">
+              {[34, 80, 126, 174].map(y => <line key={y} x1="28" y1={y} x2="604" y2={y} className="ops-chart-gridline" />)}
+              <polyline points={revenuePoints} className="ops-chart-line" />
+              {monthlyAnalytics.map((month, index) => <g key={month.key}><circle cx={32 + index * 116} cy={174 - (month.revenue / maxRevenue) * 140} r="4.5" className="ops-chart-point" /><text x={32 + index * 116} y="201" textAnchor="middle" className="ops-chart-axis-label">{month.label}</text></g>)}
+            </svg>
+            <div className="ops-chart-footnote">Revenue is grouped by verification date where available. Months without a verified capture are shown as zero.</div>
+          </div> : <div className="ops-chart-empty">{loading ? "Loading verified payment history…" : "No verified payments in {primaryRevenueCurrency} yet. Complete a Sandbox checkout to populate the revenue trend."}</div>}
+        </section>
+        <section className="ops-panel ops-chart-panel">
+          <div className="ops-panel-top"><div><span className="ops-panel-symbol mint">◔</span><div><strong>Payment status mix</strong><p>Share of saved orders by current status</p></div></div></div>
+          {orders.length ? <div className="ops-donut-layout">
+            <div className="ops-donut" role="img" aria-label={statusSlices.map(slice => slice.label + ": " + slice.count).join(", ")} style={{ background: "conic-gradient(" + statusGradient + ")" }}><div className="ops-donut-hole"><strong>{orders.length}</strong><span>orders</span></div></div>
+            <div className="ops-chart-legend">{statusSlices.map(slice => <div className="ops-legend-row" key={slice.label}><i style={{ background: slice.color }} /><span>{slice.label}</span><strong>{slice.count}</strong><small>{((slice.count / statusTotal) * 100).toFixed(0)}%</small></div>)}</div>
+          </div> : <div className="ops-chart-empty">{loading ? "Loading order statuses…" : "No saved orders to display in the status chart."}</div>}
+        </section>
+        <section className="ops-panel ops-chart-panel">
+          <div className="ops-panel-top"><div><span className="ops-panel-symbol violet">▥</span><div><strong>Product performance</strong><p>Verified-paid orders by product</p></div></div></div>
+          {productMix.length ? <div className="ops-product-bars">{productMix.map(product => <div className="ops-product-row" key={product.name}><div className="ops-product-label"><span>{product.name}</span><strong>{product.count}</strong></div><div className="ops-product-track"><span style={{ width: ((product.count / maxProductCount) * 100) + "%" }} /></div></div>)}</div> : <div className="ops-chart-empty">{loading ? "Loading product performance…" : "No verified product orders yet. Product performance appears after a payment is verified."}</div>}
+        </section>
+        <section className="ops-panel ops-chart-panel">
+          <div className="ops-panel-top"><div><span className="ops-panel-symbol amber">▥</span><div><strong>Order volume</strong><p>Saved orders by month · last 6 months</p></div></div></div>
+          {orders.some(order => order.created_at) ? <div className="ops-volume-bars">{monthlyAnalytics.map(month => <div className="ops-volume-column" key={month.key}><strong>{month.orders}</strong><span style={{ height: (Math.max(1, ...monthlyAnalytics.map(item => item.orders)) ? (month.orders / Math.max(1, ...monthlyAnalytics.map(item => item.orders))) * 132 : 0) + "px" }} /><small>{month.label}</small></div>)}</div> : <div className="ops-chart-empty">{loading ? "Loading order history…" : "Order dates are not available for a monthly volume chart."}</div>}
+        </section>
+      </div>
+      {orderCurrencies.length > 1 && <div className="ops-info-banner ops-warning-banner"><span className="ops-info-icon">!</span><div><strong>Order values span multiple currencies</strong><p>Recorded order value below includes {recordedCurrency} records only. Other currencies are kept separate in the order register; no conversion is applied.</p></div></div>}
+      <section className="ops-panel"><div className="ops-panel-top"><div><span className="ops-panel-symbol violet">▥</span><div><strong>Performance indicators</strong><p>Calculated only from records returned for your signed-in account</p></div></div><span className="ops-live-badge">NO ESTIMATES</span></div>
+        <div className="ops-evidence-check"><span>01</span><div><strong>Verified payment rate</strong><p>{orders.length ? ((paid.length / orders.length) * 100).toFixed(1) + "% of saved orders are verified paid." : "No saved orders available to calculate a rate."}</p></div></div>
+        <div className="ops-evidence-check"><span>02</span><div><strong>Average verified order value</strong><p>{primaryCurrencyPaid.length ? money((primaryCurrencyPaid.reduce((s,o)=>s+(Number(o.total_amount)||0),0)/primaryCurrencyPaid.length).toFixed(2), primaryRevenueCurrency) : "Not available until a payment is verified in " + primaryRevenueCurrency + "."}</p></div></div>
+        <div className="ops-evidence-check"><span>03</span><div><strong>Recorded order value</strong><p>{money(total.toFixed(2), recordedCurrency)} across all saved orders; this is not revenue because pending and review orders may be unpaid.</p></div></div>
+      </section>
     </>}
     {module === "reports" && <>
       <div className="ops-section-title"><div><h2>Order data export</h2><p>Download the saved order register as a CSV file.</p></div><button className="ops-primary-button" onClick={exportCsv} disabled={!signedIn || loading || !orders.length}>Export CSV <span>↓</span></button></div>

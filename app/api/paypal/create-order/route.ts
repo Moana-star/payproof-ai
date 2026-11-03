@@ -55,7 +55,10 @@ export async function POST(request: NextRequest) {
   // selected and calculated here, on the server, never trusted from the client.
   const referenceId = `PP-${randomUUID()}`;
   const amount = money(totalCents);
-  const customerName = typeof body.customerName === "string" ? body.customerName.trim().slice(0, 100) : "";
+  const customerName = typeof body.customerName === "string" ? body.customerName.trim() : "";
+  if (customerName.length < 2 || customerName.length > 100) {
+    return NextResponse.json({ error: "Enter a customer name between 2 and 100 characters before starting checkout." }, { status: 400 });
+  }
   const orderRecord = {
     order_number: referenceId,
     customer_name: customerName || null,
