@@ -387,7 +387,7 @@ export default function Home() {
                   <div className="dashboard-transaction-amount"><strong>{order.amount}</strong><span className={order.status === "Paid" ? "transaction-paid" : order.status === "Review needed" ? "transaction-review" : "transaction-pending"}>{order.status}</span></div>
                 </div>
               ))}
-              {orders.filter((order) => `${order.id} ${order.customer} ${order.item} ${order.amount} ${order.status}`.toLowerCase().includes(dashboardSearch.trim().toLowerCase())).length === 0 && <p className="dashboard-empty">No matching transactions.</p>}
+              {orders.filter((order) => `${order.id} ${order.customer} ${order.item} ${order.amount} ${order.status}`.toLowerCase().includes(dashboardSearch.trim().toLowerCase())).length === 0 && <p className="dashboard-empty">{dashboardSearch.trim() ? "No matching transactions." : "No saved transactions yet. Create a Sandbox checkout to see your real order activity here."}</p>}
               <p className="dashboard-sample-note">{ordersSource === "saved" ? "Account orders · Paid status requires server verification" : "No live account activity yet"}</p>
             </article>
           </section>
