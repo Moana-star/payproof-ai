@@ -103,7 +103,7 @@ export default function Home() {
             amount,
             status,
             time: status === "Paid" ? (timestamp ? `Server verified · ${new Date(timestamp).toLocaleString()}` : "Server-verified Sandbox capture") : status === "Awaiting payment" ? "Awaiting PayPal capture" : "Review required · Do not fulfil",
-            initials: (order.customer_name?.trim().split(/\\s+/).map((part) => part[0]).join("").slice(0,2).toUpperCase() || "CU")
+            initials: (order.customer_name?.trim().split(/\s+/).map((part) => part[0]).join("").slice(0,2).toUpperCase() || "CU")
           };
         });
         setOrders(saved);
