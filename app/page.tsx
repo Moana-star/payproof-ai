@@ -32,6 +32,7 @@ const statusClass: Record<OrderStatus, string> = {
 
 export default function Home() {
   const [authUserName, setAuthUserName] = useState("");
+  const [authAvatarUrl, setAuthAvatarUrl] = useState("");
   const [authChecked, setAuthChecked] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [authWorkspaceName, setAuthWorkspaceName] = useState("Demo workspace");
@@ -137,6 +138,7 @@ export default function Home() {
       setIsSignedIn(true);
       const metadata = session.user.user_metadata || {};
       setAuthUserName(typeof metadata.display_name === "string" && metadata.display_name.trim() ? metadata.display_name.trim() : (session.user.email?.split("@")[0] || "Account"));
+      setAuthAvatarUrl(typeof metadata.avatar_url === "string" ? metadata.avatar_url : "");
       setAuthWorkspaceName(typeof metadata.workspace_name === "string" && metadata.workspace_name.trim() ? metadata.workspace_name.trim() : "My workspace");
       await loadOrders(session.access_token);
     };
@@ -351,7 +353,7 @@ export default function Home() {
             <p>AI helps explain. Verified payment data decides.</p>
           </div>
           <div className="profile-row">
-            <div className="avatar profile-avatar">{authUserName ? authUserName.slice(0, 1).toUpperCase() : "P"}</div>
+            <div className="avatar profile-avatar">{authAvatarUrl ? <img src={authAvatarUrl} alt="" /> : (authUserName ? authUserName.slice(0, 1).toUpperCase() : "P")}</div>
             <div><strong>{authUserName ? authWorkspaceName : "Demo workspace"}</strong><span>{authUserName || "Public Sandbox preview"}</span></div>
             <span className="profile-dots">···</span>
           </div>
@@ -361,7 +363,7 @@ export default function Home() {
       <section className="main-area">
         <header className="topbar">
           <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" value={dashboardSearch} onChange={(event) => setDashboardSearch(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
-          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link>{authUserName ? <><Link className="demo-payment-guide-link" href="/profile">My profile ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
+          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link>{authUserName ? <><Link className="demo-payment-guide-link" href="/profile">{authUserName.trim().split(/\\s+/)[0] || "Profile"} ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
 
         <div className="content" id="overview">
