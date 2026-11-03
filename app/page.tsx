@@ -33,7 +33,6 @@ const statusClass: Record<OrderStatus, string> = {
 export default function Home() {
   const [authUserName, setAuthUserName] = useState("");
   const [authAvatarUrl, setAuthAvatarUrl] = useState("");
-  const [authAvatarUrl, setAuthAvatarUrl] = useState("");
   const [authChecked, setAuthChecked] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [authWorkspaceName, setAuthWorkspaceName] = useState("Demo workspace");
@@ -355,8 +354,8 @@ export default function Home() {
             <p>AI helps explain. Verified payment data decides.</p>
           </div>
           <div className="profile-row">
-            <div className="avatar profile-avatar">{authAvatarUrl ? <img src={authAvatarUrl} alt="" /> : (authUserName ? authUserName.slice(0, 1).toUpperCase() : "P")}</div>
-            <div><strong>{authUserName ? authWorkspaceName : "Demo workspace"}</strong><span>{authUserName || "Public Sandbox preview"}</span></div>
+            <div className="avatar profile-avatar">{authAvatarUrl ? <img src={authAvatarUrl} alt="" /> : (authUserName ? authUserName.trim().split(/\\s+/)[0].slice(0, 1).toUpperCase() : "P")}</div>
+            <div><strong>{authUserName ? authUserName.trim().split(/\\s+/)[0] : "Demo workspace"}</strong><span>{authUserName || "Public Sandbox preview"}</span></div>
             <span className="profile-dots">···</span>
           </div>
         </div>
