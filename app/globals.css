@@ -500,3 +500,10 @@ body{font-size:15px}
 .workspace-module-card small{font-size:8px;line-height:1.4;color:#9a9eaa;font-weight:700}
 #transactions,#reconciliation,#customers,#shipping,#analytics,#reports,#invoices{scroll-margin-top:24px}
 @media(max-width:760px){.workspace-module-grid{grid-template-columns:1fr}}
+
+
+/* Create-order form: customer entry and optional AI sales-order text. */
+.order-form-reference .order-flow-form input{height:53px;min-height:53px;width:100%;border:1px solid #d9dbe1;border-radius:9px;background:#fff;padding:0 14px;font:14px 'DM Sans',sans-serif;color:#303544;outline:none}
+.order-form-reference .order-flow-form input:focus,.order-form-reference .order-flow-form textarea:focus{border-color:#579e94;box-shadow:0 0 0 3px rgba(87,158,148,.12)}
+.order-form-reference .order-flow-form input::placeholder,.order-form-reference .order-flow-form textarea::placeholder{color:#a0a4af}
+.order-form-reference .order-optional-label{font-size:11px;font-weight:500;color:#969aa6}
