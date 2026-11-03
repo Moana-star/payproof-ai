@@ -19,11 +19,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Only exact verified reference, amount and currency matches can be approved. Exceptions cannot be forced through." }, { status: 409 });
     if (["posted", "approved", "rejected"].includes(row.match_status)) return NextResponse.json({ error: "This row has already been reviewed or posted." }, { status: 409 });
     const now = new Date().toISOString(); const status = body.decision === "approve" ? "approved" : "rejected";
-    await reconciliationDb(`bank_statement_rows?id=eq.${encodeURIComponent(row.id)}&owner_id=eq.${owner}&match_status=eq.${row.match_status}`, {
+    const updated = await reconciliationDb<Array<{ id: string }>>(`bank_statement_rows?id=eq.${encodeURIComponent(row.id)}&owner_id=eq.${owner}&match_status=eq.${row.match_status}`, {
       method: "PATCH", headers: { Prefer: "return=representation" },
       body: JSON.stringify(body.decision === "approve" ? { match_status: status, approved_by: actor, approved_at: now, updated_at: now }
         : { match_status: status, rejected_by: actor, rejected_at: now, match_reason: note ? `Reviewer rejected: ${note}` : "Reviewer rejected this statement row.", updated_at: now })
     });
+    if (!updated.length) return NextResponse.json({ error: "This statement row changed during review. Reload the queue and try again." }, { status: 409 });
     await auditReconciliation({ owner_id: user.id, statement_row_id: row.id, order_id: row.matched_order_id, action: body.decision === "approve" ? "match_approved" : "match_rejected", actor, details: { transaction_id: row.transaction_id, note } });
     return NextResponse.json({ ok: true, status, message: body.decision === "approve" ? "Match approved. It is not posted until you explicitly post it." : "Statement row rejected and recorded in the persistent audit trail." });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Review decision failed." }, { status: 500 }); }
