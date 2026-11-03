@@ -448,13 +448,13 @@ export default function Home() {
           </div>
 
           <section className="workspace-modules" aria-label="Additional workspace modules">
-            <div className="workspace-modules-heading"><div><p className="eyebrow">WORKSPACE MODULES</p><h2>More ways to manage your business</h2><p>These sections are navigation-ready previews. They are not yet connected to live merchant records.</p></div></div>
+            <div className="workspace-modules-heading"><div><p className="eyebrow">WORKSPACE MODULES</p><h2>More ways to manage your business</h2><p>Open a dedicated workspace for customer records, fulfilment, analytics, reports or invoice references.</p></div></div>
             <div className="workspace-module-grid">
-              <article className="workspace-module-card" id="customers"><span>♙</span><div><h3>Customers</h3><p>Customer profiles, contact details and order history.</p><small>Module preview · Customer records not connected</small></div></article>
-              <article className="workspace-module-card" id="shipping"><span>▣</span><div><h3>Shipping</h3><p>Fulfilment status, delivery details and shipment tracking.</p><small>Module preview · Carrier integration not connected</small></div></article>
-              <article className="workspace-module-card" id="analytics"><span>▥</span><div><h3>Analytics</h3><p>Payment trends, order performance and exception patterns.</p><small>Module preview · No live analytics calculated</small></div></article>
-              <article className="workspace-module-card" id="reports"><span>▤</span><div><h3>Reports</h3><p>Prepare operational summaries and exportable reports.</p><small>Module preview · Report generation not connected</small></div></article>
-              <article className="workspace-module-card" id="invoices"><span>▧</span><div><h3>Invoices</h3><p>Invoice records, due dates and payment references.</p><small>Module preview · Invoice issuing not connected</small></div></article>
+              <Link className="workspace-module-card" href="/customers"><span>♙</span><div><h3>Customers</h3><p>Customer profiles, contact details and order history.</p><small>Open customer directory <b>→</b></small></div></Link>
+              <Link className="workspace-module-card" href="/shipping"><span>▣</span><div><h3>Shipping</h3><p>Fulfilment review for server-verified paid orders.</p><small>Open shipping workspace <b>→</b></small></div></Link>
+              <Link className="workspace-module-card" href="/analytics"><span>▥</span><div><h3>Analytics</h3><p>Payment trends and order performance from saved records.</p><small>Open analytics dashboard <b>→</b></small></div></Link>
+              <Link className="workspace-module-card" href="/reports"><span>▤</span><div><h3>Reports</h3><p>Review order summaries and export account records.</p><small>Open reports workspace <b>→</b></small></div></Link>
+              <Link className="workspace-module-card" href="/invoices"><span>▧</span><div><h3>Invoices</h3><p>Order references and payment details for billing.</p><small>Open invoice register <b>→</b></small></div></Link>
             </div>
           </section>
 
