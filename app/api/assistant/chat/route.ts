@@ -33,10 +33,13 @@ export async function POST(request: NextRequest) {
   }
 
   const images = Array.isArray(body.images) ? body.images : [];
-  if (images.length > 4 || images.some((image) => !image || typeof image !== "object" ||
-    typeof (image as { dataUrl?: unknown }).dataUrl !== "string" ||
-    !/^data:image\\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test((image as { dataUrl: string }).dataUrl) ||
-    (image as { dataUrl: string }).dataUrl.length > 11_200_000)) {
+  const allowedImagePrefixes = ["data:image/png;base64,", "data:image/jpeg;base64,", "data:image/jpg;base64,", "data:image/webp;base64,", "data:image/gif;base64,"];
+  if (images.length > 4 || images.some((image) => {
+    if (!image || typeof image !== "object" || typeof (image as { dataUrl?: unknown }).dataUrl !== "string") return true;
+    const dataUrl = (image as { dataUrl: string }).dataUrl;
+    const prefix = allowedImagePrefixes.find((item) => dataUrl.startsWith(item));
+    return !prefix || !/^[A-Za-z0-9+/=]+$/.test(dataUrl.slice(prefix.length)) || dataUrl.length > 11_200_000;
+  })) {
     return NextResponse.json({ error: "Attach up to four supported images, each no larger than 8 MB." }, { status: 400 });
   }
 
