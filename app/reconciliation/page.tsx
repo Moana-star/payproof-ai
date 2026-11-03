@@ -6,13 +6,13 @@ export default function ReconciliationPage() {
     <WorkspaceLayout
       title="Reconciliation"
       eyebrow="PAYMENT MATCHING & REVIEW"
-      description="Import a sample or bank statement CSV, compare references against verified PayPal Sandbox captures, review exceptions, and audit human decisions."
+      description="Import a genuine bank or PayPal transaction export, match it against server-verified PayPal captures, review every decision, and post approved entries to your internal ledger."
     >
       <div className="ops-info-banner">
         <span className="ops-info-icon">i</span>
         <div>
-          <strong>Sandbox and reviewer access</strong>
-          <p>The public sample workspace supports a complete synthetic review flow, including CSV import, matching, approval or rejection, and local demo-ledger posting. These actions stay in the browser session. Live reconciliation uses a separate private reviewer token; never share it publicly.</p>
+          <strong>Sandbox evidence · Real statement required</strong>
+          <p>The public sample workspace is synthetic and is only for demonstrating the review controls. Your private workspace uses your signed-in account and does not need a reviewer token. To perform a genuine reconciliation, export the corresponding transaction from PayPal or your bank and import that original CSV here. PayProof AI will not invent a bank transaction or treat a PayPal capture as proof that a bank statement has settled.</p>
         </div>
       </div>
       <ReconciliationConsole />
