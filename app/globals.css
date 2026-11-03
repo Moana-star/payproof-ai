@@ -507,3 +507,10 @@ body{font-size:15px}
 .order-form-reference .order-flow-form input:focus,.order-form-reference .order-flow-form textarea:focus{border-color:#579e94;box-shadow:0 0 0 3px rgba(87,158,148,.12)}
 .order-form-reference .order-flow-form input::placeholder,.order-form-reference .order-flow-form textarea::placeholder{color:#a0a4af}
 .order-form-reference .order-optional-label{font-size:11px;font-weight:500;color:#969aa6}
+
+/* Workspace module cards are real navigation links. */
+a.workspace-module-card{color:inherit;text-decoration:none;cursor:pointer;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+a.workspace-module-card:hover{border-color:#c9c1ff;box-shadow:0 8px 22px rgba(58,49,125,.08);transform:translateY(-2px)}
+a.workspace-module-card:focus-visible{outline:3px solid rgba(109,92,231,.28);outline-offset:3px}
+a.workspace-module-card small{color:#6757d5}
+a.workspace-module-card small b{padding-left:5px;font-size:12px}
