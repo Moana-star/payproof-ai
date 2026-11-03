@@ -75,7 +75,7 @@ function checkOrder(order: PayPalOrder) {
   };
 }
 
-async function resultResponse(order: PayPalOrder, ownerId: string) {
+async function resultResponse(order: PayPalOrder, ownerId: string, customerName?: string | null) {
   const checked = checkOrder(order);
   if (!checked.verified || !checked.details || !checked.capture?.id || !order.id) {
     return NextResponse.json({
@@ -93,6 +93,7 @@ async function resultResponse(order: PayPalOrder, ownerId: string) {
     try {
       const result = await saveVerifiedOrder({
         order_number: checked.details.referenceId,
+        customer_name: customerName || null,
         product_id: checked.details.productId,
         product_name: checked.details.product,
         quantity: checked.details.quantity,
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
 
     // A repeated browser return is safe: verify an existing capture instead of
     // attempting to capture the same PayPal order again.
-    if (existing.status === "COMPLETED") return resultResponse(existing, user.id);
+    if (existing.status === "COMPLETED") return resultResponse(existing, user.id, ownedOrder.customer_name);
 
     if (existing.status !== "APPROVED") {
       return NextResponse.json({
@@ -203,7 +204,7 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({})
       }
     );
-    return resultResponse(captured, user.id);
+    return resultResponse(captured, user.id, ownedOrder.customer_name);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to verify the PayPal payment.";
     const status = message.includes("credentials are not configured") ? 503 : 502;

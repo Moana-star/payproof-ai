@@ -25,7 +25,7 @@ function money(cents: number) {
 export async function POST(request: NextRequest) {
   const user = await getAuthenticatedUser(request);
   if (!user) return NextResponse.json({ error: "Sign in to create and save orders in your own workspace." }, { status: 401 });
-  let body: { product?: unknown; quantity?: unknown };
+  let body: { product?: unknown; quantity?: unknown; customerName?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -55,8 +55,10 @@ export async function POST(request: NextRequest) {
   // selected and calculated here, on the server, never trusted from the client.
   const referenceId = `PP-${randomUUID()}`;
   const amount = money(totalCents);
+  const customerName = typeof body.customerName === "string" ? body.customerName.trim().slice(0, 100) : "";
   const orderRecord = {
     order_number: referenceId,
+    customer_name: customerName || null,
     product_id: product.id,
     product_name: productName,
     quantity,
@@ -72,13 +74,9 @@ export async function POST(request: NextRequest) {
     // Persist the server-priced draft before redirecting to PayPal. If storage
     // is configured but unavailable, fail closed rather than silently losing it.
     const pending = await createPendingOrder(orderRecord, user.id);
-    const appBaseUrl = (
-      process.env.APP_URL ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-      "http://localhost:3000"
-    ).replace(/\/$/, "");
+    // Keep the return on the same host where the signed-in checkout began.
+    // This preserves the browser session and returns to the correct workspace.
+    const appBaseUrl = request.nextUrl.origin.replace(/\/$/, "");
     const accessToken = await getPayPalAccessToken();
     const order = await paypalRequest<CreatedOrder>("/v2/checkout/orders", accessToken, {
       method: "POST",

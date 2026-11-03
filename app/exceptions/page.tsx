@@ -18,7 +18,7 @@ const exceptionTypes = [
 export default function ExceptionsPage() {
   return (
     <WorkspaceLayout title="Exception review" eyebrow="PAYMENT EXCEPTIONS" description="Make incomplete or inconsistent payment evidence visible, with a safe next step for every case. The cases shown here are illustrative scenarios, not live alerts.">
-      <div className="ops-bottom-cta"><div><span className="ops-cta-icon">⇄</span><div><strong>Review reconciliation records</strong><p>Open the protected reconciliation queue to match evidence, review exceptions, approve eligible entries, and inspect audit events.</p></div></div><Link className="ops-primary-button" href="/#reconciliation">Open reconciliation <span>↗</span></Link></div>
+      <div className="ops-bottom-cta"><div><span className="ops-cta-icon">⇄</span><div><strong>Review reconciliation records</strong><p>Open the protected reconciliation queue to match evidence, review exceptions, approve eligible entries, and inspect audit events.</p></div></div><Link className="ops-primary-button" href="/reconciliation">Open reconciliation <span>↗</span></Link></div>
       <div className="ops-info-banner ops-warning-banner"><span className="ops-info-icon">!</span><div><strong>Review does not mean fraud</strong><p>Pending, missing, duplicate, or mismatched information should trigger investigation—not an automatic fraud label or an irreversible decision.</p></div></div>
       <div className="ops-section-title"><div><h2>Exception categories</h2><p>Use clear, explainable reasons instead of a generic failed-match status.</p></div><span className="ops-sample-tag">RULES TO VERIFY</span></div>
       <section className="ops-panel" style={{ padding: 22, marginBottom: 24 }}>
