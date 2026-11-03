@@ -117,6 +117,40 @@ export function ReconciliationConsole() {
     finally { setBusy(""); }
   }
 
+  async function downloadPaypalEvidence() {
+    setBusy("download"); setError("");
+    try {
+      if (readOnlyDemo) throw new Error("Switch to your signed-in workspace to download your account's verified payment evidence.");
+      const supabase = getSupabaseBrowserClient();
+      const sessionResult = supabase ? await supabase.auth.getSession() : null;
+      const accessToken = sessionResult?.data.session?.access_token;
+      if (!accessToken) throw new Error("Please sign in before downloading payment evidence.");
+      const response = await fetch("/api/reconciliation/paypal-evidence", {
+        method: "GET",
+        headers: { Authorization: "Bearer " + accessToken },
+        cache: "no-store"
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.error || "Could not generate the payment evidence CSV.");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "payproof-paypal-payment-evidence.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setNotice("Your account's server-verified PayPal payment evidence CSV has been downloaded. It is provider-side evidence, not a bank settlement statement.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Payment evidence download failed.");
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function match() {
     setBusy("match"); setError("");
     try {
@@ -220,7 +254,7 @@ export function ReconciliationConsole() {
       <p className="recon-auth-note">Signed-in account: reviewer identity is recorded automatically from your authenticated session.</p>
       <div className="recon-token-actions">
         <button className="secondary-button" onClick={() => { setToken("AUTHENTICATED-WORKSPACE"); setData({ rows: [], audit: [], ledger: [] }); setError(""); setNotice("Ready to load your private workspace."); }} disabled={!!busy}>Use my workspace</button>
-        <button className="secondary-button" onClick={load} disabled={!!busy}>{busy === "load" ? "Loading…" : readOnlyDemo ? "Load sample workspace" : "Load my workspace"}</button>
+        <button className="secondary-button" onClick={load} disabled={!!busy}>{busy === "load" ? "Loading…" : readOnlyDemo ? "Load sample workspace" : "Load my workspace"}</button>\n        {!readOnlyDemo && <button className="secondary-button" onClick={downloadPaypalEvidence} disabled={!!busy}>{busy === "download" ? "Preparing CSV…" : "Download my PayPal evidence CSV ↓"}</button>}
         <button className="primary-button" onClick={async () => { setToken(DEMO_READ_ONLY_TOKEN); setBusy("sample"); setError(""); try { const response = await fetch("/api/reconciliation", { headers: { "x-reconciliation-token": DEMO_READ_ONLY_TOKEN } }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not load sample review."); setData({ rows: result.rows || [], audit: result.audit || [], ledger: result.ledger || [] }); setNotice("Sample review loaded. Synthetic actions remain separate from your real workspace."); } catch (e) { setError(e instanceof Error ? e.message : "Could not load sample review."); } finally { setBusy(""); } }} disabled={!!busy}>{busy === "sample" ? "Loading sample…" : "Try sample review"} <span>↗</span></button>
       </div>
       {readOnlyDemo && <p className="recon-readonly-note">Sample workspace · Synthetic data only · No live payment records or external accounts are changed.</p>}
