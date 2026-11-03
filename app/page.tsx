@@ -48,6 +48,7 @@ export default function Home() {
   const [flowDraft, setFlowDraft] = useState<{ item: string; quantity: string; note: string } | null>(null);
   const [flowValidation, setFlowValidation] = useState<{ valid: boolean; message: string } | null>(null);
   const [dashboardSearch, setDashboardSearch] = useState("");
+  const [dashboardMenuOpen, setDashboardMenuOpen] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -331,43 +332,57 @@ export default function Home() {
 
   return (
     <main className="app-shell">
-      <aside className="sidebar">
-        <a className="brand" href="#" aria-label="PayProof AI home">
-          <span className="brand-mark">P<span>✓</span></span>
-          <span className="brand-name">payproof<span>ai</span></span>
-        </a>
-        <div className="workspace-label">WORKSPACE</div>
-        <nav className="side-nav" aria-label="Main navigation">
-          <a className="nav-item active" href="#overview"><span className="nav-icon">▦</span> Dashboard</a>
-          <a className="nav-item" href="/payments"><span className="nav-icon">◈</span> Payments</a>
-          <a className="nav-item" href="#customers"><span className="nav-icon">♙</span> Customers</a>
-          <a className="nav-item" href="#shipping"><span className="nav-icon">▣</span> Shipping</a>
-          <a className="nav-item" href="#analytics"><span className="nav-icon">▥</span> Analytics</a>
-          <a className="nav-item" href="#reports"><span className="nav-icon">▤</span> Reports</a>
-          <a className="nav-item" href="#invoices"><span className="nav-icon">▧</span> Invoices</a>
-          <a className="nav-item" href="#transactions"><span className="nav-icon">↗</span> Transactions</a>
-          <a className="nav-item" href="#reconciliation"><span className="nav-icon">⇄</span> Reconciliation</a>
-          <a className="nav-item" href="/exceptions"><span className="nav-icon">!</span> Exceptions</a>
-          <div className="nav-group-label">PREFERENCES</div>
-          <a className="nav-item" href="/demo-guide"><span className="nav-icon">?</span> Help &amp; support</a>
-          <a className="nav-item" href="/profile"><span className="nav-icon">⚙</span> Settings</a>
-        </nav>
-        <div className="sidebar-bottom">
-          <div className="trust-card">
-            <span className="trust-icon">✓</span>
-            <strong>Evidence first</strong>
-            <p>AI helps explain. Verified payment data decides.</p>
-          </div>
-          <div className="profile-row">
-            <div className="avatar profile-avatar" aria-hidden="true">{authUserName ? authUserName.trim().split(/\s+/)[0].slice(0, 1).toUpperCase() : "P"}</div>
-            <div><strong>{authUserName ? authUserName.trim().split(/\s+/)[0] : "Demo workspace"}</strong><span>{authUserName || "Public Sandbox preview"}</span></div>
-            <span className="profile-dots">···</span>
-          </div>
-        </div>
-      </aside>
 
+
+      <style jsx global>{`
+        .sidebar { display: none !important; }
+        .topbar { position: relative; display: flex; align-items: center; gap: 14px; }
+        .dashboard-menu-wrap { position: relative; flex: 0 0 auto; z-index: 90; }
+        .dashboard-menu-trigger { width: 44px; height: 44px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; border: 1px solid #dfe4ed; border-radius: 12px; background: #fff; cursor: pointer; }
+        .dashboard-menu-trigger span { width: 19px; height: 2px; border-radius: 3px; background: #17233b; }
+        .dashboard-menu-trigger:hover { background: #f7f9fd; border-color: #a9b5ca; }
+        .dashboard-menu-trigger:focus-visible, .dashboard-menu-item:focus-visible { outline: 3px solid #8ba8ff; outline-offset: 3px; }
+        .dashboard-menu-panel { position: absolute; top: calc(100% + 10px); left: 0; width: min(320px, calc(100vw - 28px)); max-height: min(76vh, 620px); overflow-y: auto; padding: 12px; border: 1px solid #e3e8f0; border-radius: 16px; background: #fff; box-shadow: 0 18px 50px rgba(20, 35, 65, .18); }
+        .dashboard-menu-heading { display: grid; gap: 3px; padding: 8px 10px 12px; border-bottom: 1px solid #edf0f5; margin-bottom: 7px; }
+        .dashboard-menu-heading strong { color: #17233b; font-size: 14px; }
+        .dashboard-menu-heading span { color: #78849a; font-size: 11px; }
+        .dashboard-menu-panel nav { display: grid; gap: 3px; }
+        .dashboard-menu-item { display: flex; align-items: center; gap: 11px; min-height: 42px; padding: 9px 11px; border-radius: 10px; color: #48556d; text-decoration: none; font-size: 13px; font-weight: 600; }
+        .dashboard-menu-item > span { width: 22px; text-align: center; color: #63769b; font-size: 17px; }
+        .dashboard-menu-item:hover, .dashboard-menu-item.active { color: #263f82; background: #f0f4ff; }
+        .dashboard-menu-foot { display: flex; gap: 10px; align-items: flex-start; margin-top: 9px; padding: 12px 10px 5px; border-top: 1px solid #edf0f5; color: #1e8b69; }
+        .dashboard-menu-foot div { display: grid; gap: 3px; }
+        .dashboard-menu-foot strong { color: #26344c; font-size: 12px; }
+        .dashboard-menu-foot small { color: #78849a; font-size: 10px; line-height: 1.45; }
+        @media (max-width: 820px) { .topbar { flex-wrap: wrap; } .dashboard-menu-panel { position: fixed; top: 76px; left: 14px; } }
+      `}</style>
       <section className="main-area">
         <header className="topbar">
+          <div className="dashboard-menu-wrap">
+            <button type="button" className="dashboard-menu-trigger" aria-label={dashboardMenuOpen ? "Close main menu" : "Open main menu"} aria-expanded={dashboardMenuOpen} aria-controls="dashboard-main-menu" onClick={() => setDashboardMenuOpen((open) => !open)}>
+              <span /><span /><span />
+            </button>
+            {dashboardMenuOpen && <div className="dashboard-menu-panel" id="dashboard-main-menu">
+              <div className="dashboard-menu-heading"><strong>PayProof AI</strong><span>Workspace navigation</span></div>
+              <nav aria-label="Main navigation">
+                <a className="dashboard-menu-item active" href="#overview" onClick={() => setDashboardMenuOpen(false)}><span>▦</span>Dashboard</a>
+                <a className="dashboard-menu-item" href="/payments" onClick={() => setDashboardMenuOpen(false)}><span>◈</span>Payment evidence</a>
+                <a className="dashboard-menu-item" href="#reconciliation" onClick={() => setDashboardMenuOpen(false)}><span>⇄</span>Reconciliation</a>
+                <a className="dashboard-menu-item" href="/assistant" onClick={() => setDashboardMenuOpen(false)}><span>✳</span>AI assistant</a>
+                <a className="dashboard-menu-item" href="/exceptions" onClick={() => setDashboardMenuOpen(false)}><span>!</span>Exception review</a>
+                <a className="dashboard-menu-item" href="/audit" onClick={() => setDashboardMenuOpen(false)}><span>↗</span>Audit trail</a>
+                <a className="dashboard-menu-item" href="/customers" onClick={() => setDashboardMenuOpen(false)}><span>♙</span>Customers</a>
+                <a className="dashboard-menu-item" href="/shipping" onClick={() => setDashboardMenuOpen(false)}><span>▣</span>Shipping</a>
+                <a className="dashboard-menu-item" href="/analytics" onClick={() => setDashboardMenuOpen(false)}><span>▥</span>Analytics</a>
+                <a className="dashboard-menu-item" href="/reports" onClick={() => setDashboardMenuOpen(false)}><span>▤</span>Reports</a>
+                <a className="dashboard-menu-item" href="/invoices" onClick={() => setDashboardMenuOpen(false)}><span>▧</span>Invoices</a>
+                <a className="dashboard-menu-item" href="#transactions" onClick={() => setDashboardMenuOpen(false)}><span>↗</span>Transactions</a>
+                <a className="dashboard-menu-item" href="/demo-guide" onClick={() => setDashboardMenuOpen(false)}><span>?</span>Help &amp; support</a>
+                <a className="dashboard-menu-item" href="/profile" onClick={() => setDashboardMenuOpen(false)}><span>⚙</span>Settings</a>
+              </nav>
+              <div className="dashboard-menu-foot"><span>✓</span><div><strong>Evidence first</strong><small>AI helps explain. Verified payment data decides.</small></div></div>
+            </div>}
+          </div>
           <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" value={dashboardSearch} onChange={(event) => setDashboardSearch(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
           <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link>{authUserName ? <><Link className="demo-payment-guide-link" href="/profile">{authUserName.trim().split(/\s+/)[0] || "Profile"} ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
