@@ -35,9 +35,9 @@ function parseCsv(text: string) {
   const headers = records.shift()!.map(normalize);
   const find = (...names: string[]) => names.map((name) => headers.indexOf(name)).find((index) => index >= 0) ?? -1;
   const transactionIndex = find("transaction_id", "transactionid", "bank_transaction_id", "entry_id", "transaction_number", "id");
-  const amountIndex = find("amount", "credit", "credit_amount", "paid_in", "paid_in_amount", "deposit_amount");
+  const amountIndex = find("amount", "gross", "credit", "credit_amount", "paid_in", "paid_in_amount", "deposit_amount");
   const currencyIndex = find("currency", "currency_code", "ccy");
-  const referenceIndex = find("reference", "transaction_reference", "payment_reference", "merchant_reference", "external_reference");
+  const referenceIndex = find("reference", "transaction_reference", "payment_reference", "merchant_reference", "external_reference", "invoice_id", "invoice_number", "custom_number", "paypal_reference");
   const descriptionIndex = find("description", "details", "narration", "memo");
   const dateIndex = find("posted_at", "transaction_date", "date", "booking_date", "value_date");
   const missing = [
@@ -67,7 +67,7 @@ function parseCsv(text: string) {
       transaction_id: transactionId,
       amount: amount.toFixed(2),
       currency,
-      reference: reference.slice(0, 240) || null,
+      reference: (reference || transactionId).slice(0, 240) || null,
       description: get(descriptionIndex).slice(0, 500) || null,
       posted_at: postedAt?.toISOString() || null
     };
