@@ -45,6 +45,13 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
         .ops-sidebar { display: none !important; }
         .ops-topbar { position: relative; display: flex; align-items: center; gap: 16px; }
         .ops-menu-wrap { position: relative; flex: 0 0 auto; z-index: 80; }
+        .ops-desktop-nav { display: none; }
+        @media (min-width: 641px) {
+          .ops-menu-wrap { display: none !important; }
+          .ops-desktop-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 28px; border-bottom: 1px solid #e9edf4; background: #fff; }
+          .ops-desktop-nav a { padding: 9px 11px; border-radius: 8px; color: #526078; text-decoration: none; font-size: 12px; font-weight: 650; white-space: nowrap; }
+          .ops-desktop-nav a:hover, .ops-desktop-nav a.is-active { background: #f0f4ff; color: #263f82; }
+        }
         .ops-header-icons { display: inline-flex; align-items: center; gap: 8px; }
         .ops-header-icon { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #dfe4ed; border-radius: 12px; background: #fff; color: #34415a; text-decoration: none; }
         .ops-header-icon:hover { background: #f4f7fc; border-color: #a9b5ca; }
@@ -90,6 +97,9 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
           <div className="ops-breadcrumb"><Link href="/">Workspace</Link><span>/</span>{title}</div>
           <div className="ops-top-actions"><span className="ops-sandbox-pill"><i /> Sandbox mode</span><Link className="ops-checkout-link" href="/">Test PayPal checkout <span>↗</span></Link><div className="ops-header-icons"><Link className="ops-header-icon" href="/exceptions" aria-label="Notifications and exceptions" title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg></Link><Link className="ops-header-icon" href="/profile" aria-label="Open profile" title="Profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></svg></Link></div></div>
         </header>
+        <nav className="ops-desktop-nav" aria-label="Desktop workspace navigation">
+          {navigation.map((item) => <Link key={item.href} href={item.href} className={item.href === (activeRoute[title] || "/") ? "is-active" : ""}>{item.icon} <span>{item.label}</span></Link>)}
+        </nav>
         <div className="ops-content">
           <div className="ops-page-heading">
             <div><p className="ops-eyebrow">{eyebrow}</p><h1>{title}</h1><p>{description}</p></div>
