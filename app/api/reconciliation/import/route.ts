@@ -5,39 +5,72 @@ import { auditReconciliation, reconciliationActor, reconciliationDb, reconciliat
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-function parseCsvLine(line: string): string[] {
-  const fields: string[] = []; let value = ""; let quoted = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"' && quoted && line[i + 1] === '"') { value += '"'; i++; }
+function parseCsvRecords(text: string): string[][] {
+  const records: string[][] = [];
+  let record: string[] = [];
+  let field = "";
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"' && quoted && text[i + 1] === '"') { field += '"'; i++; }
     else if (ch === '"') quoted = !quoted;
-    else if (ch === "," && !quoted) { fields.push(value.trim()); value = ""; }
-    else value += ch;
+    else if (ch === "," && !quoted) { record.push(field.trim()); field = ""; }
+    else if ((ch === "\n" || ch === "\r") && !quoted) {
+      if (ch === "\r" && text[i + 1] === "\n") i++;
+      record.push(field.trim()); field = "";
+      if (record.some((value) => value.length)) records.push(record);
+      record = [];
+    } else field += ch;
   }
   if (quoted) throw new Error("CSV contains an unclosed quoted field.");
-  fields.push(value.trim()); return fields;
+  if (field.length || record.length) { record.push(field.trim()); records.push(record); }
+  return records;
 }
+
 function parseCsv(text: string) {
-  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());
-  if (lines.length < 2) throw new Error("Upload a CSV with a header and at least one transaction row.");
-  if (lines.length > 5001) throw new Error("A single import is limited to 5,000 rows.");
-  const headers = parseCsvLine(lines[0]).map((h) => h.toLowerCase().replace(/[\s-]+/g, "_"));
-  const required = ["transaction_id", "amount", "currency", "reference"];
-  const missing = required.filter((h) => !headers.includes(h));
-  if (missing.length) throw new Error(`Missing required CSV columns: ${missing.join(", ")}.`);
-  const index = (key: string) => headers.indexOf(key); const seen = new Set<string>();
-  return lines.slice(1).map((line, rowIndex) => {
-    const cells = parseCsvLine(line); const get = (key: string) => index(key) >= 0 ? (cells[index(key)] || "") : "";
-    const transactionId = get("transaction_id").trim(); const amountText = get("amount").replace(/[$,\s]/g, "");
-    const amount = Number(amountText); const currency = get("currency").trim().toUpperCase(); const reference = get("reference").trim();
-    if (!transactionId || transactionId.length > 180) throw new Error(`Row ${rowIndex + 2}: transaction_id is required (maximum 180 characters).`);
-    if (seen.has(transactionId)) throw new Error(`Row ${rowIndex + 2}: duplicate transaction_id in this file.`); seen.add(transactionId);
-    if (!Number.isFinite(amount) || amount <= 0 || !/^\d+(\.\d{1,2})?$/.test(amountText)) throw new Error(`Row ${rowIndex + 2}: amount must be positive with up to two decimals; debits are not imported.`);
-    if (!/^[A-Z]{3}$/.test(currency)) throw new Error(`Row ${rowIndex + 2}: currency must be a three-letter code.`);
-    const postedText = get("posted_at"); const postedAt = postedText ? new Date(postedText) : null;
-    if (postedText && Number.isNaN(postedAt?.getTime())) throw new Error(`Row ${rowIndex + 2}: posted_at is not a valid date.`);
-    return { transaction_id: transactionId, amount: amount.toFixed(2), currency, reference: reference.slice(0, 240) || null,
-      description: get("description").slice(0, 500) || null, posted_at: postedAt?.toISOString() || null };
+  const records = parseCsvRecords(text.replace(/^\uFEFF/, ""));
+  if (records.length < 2) throw new Error("Upload a CSV with a header and at least one transaction row.");
+  if (records.length > 5001) throw new Error("A single import is limited to 5,000 rows.");
+  const normalize = (value: string) => value.toLowerCase().trim().replace(/[\s-]+/g, "_");
+  const headers = records.shift()!.map(normalize);
+  const find = (...names: string[]) => names.map((name) => headers.indexOf(name)).find((index) => index >= 0) ?? -1;
+  const transactionIndex = find("transaction_id", "transactionid", "bank_transaction_id", "entry_id", "transaction_number", "id");
+  const amountIndex = find("amount", "credit", "credit_amount", "paid_in", "paid_in_amount", "deposit_amount");
+  const currencyIndex = find("currency", "currency_code", "ccy");
+  const referenceIndex = find("reference", "transaction_reference", "payment_reference", "merchant_reference", "external_reference");
+  const descriptionIndex = find("description", "details", "narration", "memo");
+  const dateIndex = find("posted_at", "transaction_date", "date", "booking_date", "value_date");
+  const missing = [
+    transactionIndex < 0 ? "transaction ID" : "",
+    amountIndex < 0 ? "amount/credit" : "",
+    currencyIndex < 0 ? "currency" : "",
+    referenceIndex < 0 ? "reference" : ""
+  ].filter(Boolean);
+  if (missing.length) throw new Error(`Could not identify required CSV columns: ${missing.join(", ")}. Include transaction ID, amount/credit, currency and payment reference.`);
+  const seen = new Set<string>();
+  return records.map((cells, rowIndex) => {
+    const get = (index: number) => index >= 0 ? (cells[index] || "") : "";
+    const transactionId = get(transactionIndex).trim();
+    const amountText = get(amountIndex).replace(/[$,\s]/g, "");
+    const amount = Number(amountText);
+    const currency = get(currencyIndex).trim().toUpperCase();
+    const reference = get(referenceIndex).trim();
+    if (!transactionId || transactionId.length > 180) throw new Error(`Row ${rowIndex + 2}: transaction ID is required (maximum 180 characters).`);
+    if (seen.has(transactionId)) throw new Error(`Row ${rowIndex + 2}: duplicate transaction ID in this file.`);
+    seen.add(transactionId);
+    if (!Number.isFinite(amount) || amount <= 0 || !/^\d+(\.\d{1,2})?$/.test(amountText)) throw new Error(`Row ${rowIndex + 2}: amount/credit must be positive with up to two decimals; debits are not imported.`);
+    if (!/^[A-Z]{3}$/.test(currency)) throw new Error(`Row ${rowIndex + 2}: currency must be a three-letter code such as USD.`);
+    const postedText = get(dateIndex);
+    const postedAt = postedText ? new Date(postedText) : null;
+    if (postedText && Number.isNaN(postedAt?.getTime())) throw new Error(`Row ${rowIndex + 2}: transaction date is not valid.`);
+    return {
+      transaction_id: transactionId,
+      amount: amount.toFixed(2),
+      currency,
+      reference: reference.slice(0, 240) || null,
+      description: get(descriptionIndex).slice(0, 500) || null,
+      posted_at: postedAt?.toISOString() || null
+    };
   });
 }
 
