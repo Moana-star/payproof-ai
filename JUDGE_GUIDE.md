@@ -1,81 +1,111 @@
-# PayProof AI — Judge Testing Guide
+# PayProof AI — Judge Guide
 
-**Live application (sign-in enabled):** https://payproof-5jgb7rn9d-naom6083-2980.vercel.app/
+This guide is the recommended route for evaluating the project. It distinguishes the stable deployed application from work that is still in a pull request.
 
-Welcome. This guide helps you evaluate the public hackathon prototype safely and reproduce its main workflows.
+## Start here
 
-## 1. What to evaluate
+| Resource | Link | What it represents |
+|---|---|---|
+| Stable application | https://payproof-ai-beta.vercel.app/ | Currently deployed core PayProof AI workflow |
+| Reconciliation feature preview | https://payproof-papycsaha-naom6083-2980.vercel.app/ | Latest preview for PR #8; includes authenticated persistent reconciliation work |
+| Source repository | https://github.com/Moana-star/payproof-ai | Source, docs, CI and history |
+| Feature PR | https://github.com/Moana-star/payproof-ai/pull/8 | Reviewable implementation and change history |
 
-PayProof AI helps small online sellers turn customer messages into reviewable order drafts, start PayPal Sandbox checkout, inspect server-verified payment results, and understand payment exceptions with bounded AI assistance.
+**Important:** The reconciliation preview is not the stable production deployment. Use the feature PR and preview to inspect the newer account-scoped workflow. Do not infer that a preview-only feature is already merged or released.
 
-The core trust boundary is simple: **AI explains; verified payment data decides.** A model response, screenshot, customer message, or browser redirect cannot establish that a payment was received.
+## What problem is being addressed?
 
-## 2. Open the public demo
+Small sellers may receive orders through chat but track payment status in a separate provider dashboard. This creates manual work and a risk of treating a customer's claim, a screenshot or a browser redirect as proof of payment.
 
-1. Visit https://payproof-5jgb7rn9d-naom6083-2980.vercel.app/.
-2. The public preview opens directly; it does not require an application sign-in for the visible demo workspace.
-3. The workspace is a demonstration interface. Its preloaded order counts and dashboard rows are sample/illustrative records, not a private account's live order history.
-4. Keep the Sandbox mode indicator visible during testing.
+PayProof AI connects order intake, checkout, provider verification and evidence review around one trust boundary:
 
-Do not interpret the demo workspace name or sample records as account isolation or authenticated merchant data.
+> AI may organise and explain information. Only deterministic server-side checks against the payment provider can establish the application's payment status.
 
-## 3. Try AI-assisted order intake
+## Suggested evaluation path
 
-1. Scroll to **AI order intake**.
-2. Enter: "Please order two coffee gift sets."
-3. Select **Prepare order draft**.
-4. Inspect the proposed product, quantity, missing information, and confidence notes.
-5. Review and validate the draft before starting checkout.
+### 1. Understand the dashboard
 
-**Expected behaviour:** AI proposes structured details. It does not create a paid order, set a trusted price, or verify payment. The server-side catalogue controls product prices and totals.
+Open the stable application and inspect the overview. Notice the distinction between sample records, pending items and verified payment evidence. Do not treat illustrative dashboard records as real customer transactions.
 
-## 4. Run a PayPal Sandbox checkout
+### 2. Try AI-assisted order intake
 
-1. Use the **Test PayPal checkout** action in the top bar (or the checkout action exposed after reviewing a supported draft).
-2. The application creates a PayPal Sandbox order using the server-side catalogue price and redirects to PayPal.
-3. Sign in on PayPal's Sandbox approval page with a dedicated **Sandbox Personal/Buyer** test account.
-4. Approve the test payment and return to PayProof AI.
-5. Inspect the server response/result for the order reference, PayPal order ID, capture ID, amount, currency, and verification status.
-6. Check the persistence result separately. A verified capture and a successfully saved order are two different outcomes.
+- Open the order-intake workflow.
+- Paste a simple test message, for example: `Hi, I would like 2 Coffee gift sets, please.`
+- Review the proposed product and quantity.
+- Confirm or correct the draft before checkout.
 
-PayPal Sandbox does not move real money. Never use personal PayPal credentials or real card details. Do not publish Sandbox buyer credentials or developer REST app credentials in this repository, screenshots, or the public Devpost submission.
+Evaluate whether the application makes uncertainty visible. AI output should not set catalogue prices, calculate the trusted total or mark an order paid.
 
-**Important:** A successful redirect is not proof of payment. The server retrieves the PayPal order and checks the completed order/capture, catalogue-derived amount, currency, and internal reference before returning a verified result. If any check fails, the response remains under review.
+### 3. Inspect checkout and verification
 
-## 5. Explore AI evidence explanations
+- Use a dedicated PayPal Sandbox buyer account.
+- Complete a Sandbox checkout if credentials and test funds are available.
+- Inspect the server-reported result and saved order/payment evidence.
+- Distinguish provider verification from successful persistence: they are separate outcomes.
 
-1. Open **AI assistant** from the navigation.
-2. Select the clearly labelled synthetic **amount mismatch** scenario.
-3. Ask why the payment needs review.
-4. Confirm that the explanation identifies the expected amount ($42.00) and captured amount ($40.00), recommends human review, and does not claim the payment is fully matched.
+A browser redirect, screenshot or customer message is not payment proof. Do not use personal PayPal accounts or real-money credentials.
 
-The scenario is synthetic. It is designed to demonstrate the AI safety boundary, not to represent a real PayPal transaction.
+### 4. Inspect AI explanations
 
-## 6. Explore reconciliation and exceptions
+Ask the assistant to explain a known order or payment state. Compare the answer with the structured evidence shown in the application.
 
-Use the reconciliation, payment evidence, and exception-review pages to inspect the sample records. They are labelled as demo/illustrative data. Look for the distinction between:
-- A possible match and an approved match.
-- A completed capture and incomplete evidence.
-- A sample record and a verified transaction from the current Sandbox checkout.
+The assistant is advisory. It must not create a transaction identifier, override a failed verification, change a payment status or execute a financial action.
 
-Do not interpret illustrative audit events as a complete production audit log or sample statement rows as a live bank feed.
+### 5. Inspect persistent reconciliation (PR #8 preview)
 
-## 7. Security and prototype boundaries
+This workflow is in the feature branch and requires a signed-in account.
 
-- PayPal Sandbox only; no live-money processing.
-- Use synthetic test data only.
-- Never enter personal PayPal credentials or real card details.
-- Never request or expose PayPal client secrets, Supabase service-role keys, Groq API keys, or other server secrets.
-- The public demo workspace is not a production, owner-scoped merchant account system.
-- The reconciliation and exception examples are illustrative; do not treat them as live bank integrations or production ledger posting.
-- The prototype is not intended for production merchant operations.
+- Sign in to the PR preview.
+- Open Reconciliation and load the private workspace.
+- Import an original statement CSV when available, or use the clearly labelled sample only to understand the interface.
+- Run matching. A candidate requires exact reference, amount and currency alignment with an eligible server-verified PayPal capture.
+- Inspect the match reason and evidence.
+- Approve or reject as a human reviewer.
+- Post only an approved candidate to the internal ledger.
+- Inspect the audit trail.
 
-## 8. What to assess
+Matching must not auto-approve or post. Duplicate posting is guarded. The internal ledger is an application record, not a bank ledger.
 
-1. **Technological implementation:** PayPal Sandbox checkout, server-side verification, persistence outcome, and bounded AI language tasks.
-2. **Design:** clarity of order details, payment status, evidence, sample labels, and next steps.
-3. **Potential impact:** helping small sellers avoid acting on incomplete or mismatched payment evidence.
-4. **Innovation:** applying AI to language understanding while keeping payment authority deterministic.
-5. **Presentation:** whether the happy path, mismatch case, and trust boundary are easy to reproduce and understand.
+**Evidence boundary:** Importing PayProof's own PayPal evidence CSV and matching it against PayProof's saved captures demonstrates consistency between provider evidence and the application's records. It is not independent proof of bank settlement. A real bank export is needed to demonstrate matching against a bank statement.
 
-Thank you for evaluating PayProof AI.
+## What to evaluate
+
+| Evaluation area | What to inspect | Strong evidence |
+|---|---|---|
+| Technical implementation | Order extraction, catalogue validation, PayPal API flow, server verification, persistence | Reproducible successful and failed/pending paths |
+| Design and usability | Order review, payment states, evidence visibility, exceptions | A reviewer can understand what happened and what action is safe |
+| Potential impact | Manual handoffs and unverified payment claims | A concrete seller workflow, not unsupported savings claims |
+| Innovation | Bounded AI + deterministic verification + human review | AI is useful without being granted payment authority |
+| Presentation | Demo sequence and limitations | Clear narration, working links and accurate Sandbox labels |
+
+## What is implemented versus what still needs proof
+
+- The deployed core application demonstrates the order-intake and PayPal Sandbox workflow.
+- PR #8 contains the newer authenticated, user-scoped reconciliation and persistent internal ledger work.
+- A successful build or a visible UI is not, by itself, proof that every integration path has passed end-to-end testing.
+- Before treating any scenario as passed, verify it on the exact deployed commit and record the result.
+
+## Safety and privacy
+
+- Use Sandbox accounts and synthetic examples.
+- Do not enter real card details, real customer personal information or production payment credentials.
+- Never publish API keys, passwords, Supabase service-role keys, reviewer tokens or private environment values.
+- Do not interpret a PayPal capture as bank settlement.
+- Do not interpret an internal ledger post as a transfer of funds or an external accounting write.
+
+## Reproducibility checklist
+
+- [ ] Confirm the deployment URL and commit/preview being evaluated.
+- [ ] Check the sign-in flow before testing private features.
+- [ ] Complete a new Sandbox order, if Sandbox buyer access is available.
+- [ ] Verify the provider result and the saved record independently.
+- [ ] Try a pending, failed or mismatched scenario where available.
+- [ ] Confirm AI explanations do not change authoritative state.
+- [ ] For PR #8, confirm a match stays pending until human approval.
+- [ ] Confirm ledger posting is explicit and appears in the audit trail.
+- [ ] Keep synthetic samples clearly labelled.
+- [ ] Record any unavailable integration as not tested rather than passed.
+
+## Maintainer note
+
+This is a hackathon prototype, not a production payment processor, wallet, bank feed, certified accounting ledger or fraud-detection service. The project intentionally prefers a visible unresolved state over an unsupported success claim.

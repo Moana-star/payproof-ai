@@ -1,110 +1,83 @@
-# PayProof AI — Final Verification Checklist
+# PayProof AI — Verification Plan
 
-Use this checklist for the final release and judge rehearsal. Mark a test **PASS** only after observing it in the current deployed build. Record the date, environment, and evidence filename. A successful build is not proof that every user journey works.
+This document separates code-level checks from live integration tests. A passing build does not prove that PayPal, Supabase persistence, AI extraction or reconciliation has passed end-to-end testing.
 
-**Production demo:** https://payproof-ai-beta.vercel.app/  
-**Payment environment:** PayPal Sandbox only.
+## Local checks
 
-## Result key
+Run from the repository root:
 
-- [ ] PASS — observed and evidence captured
-- [ ] FAIL — observed defect; record details
-- [ ] NOT TESTED — not yet verified in this release
+```bash
+npm install
+npm run lint
+npm run build
+```
 
-## A. Access and navigation
+For the authenticated reconciliation feature branch, the branch's CI workflow also runs the smoke suite:
 
-| Check | Expected result | Result / evidence |
+```bash
+npm run test:smoke -- http://127.0.0.1:3000
+```
+
+The smoke suite checks public route availability, unauthenticated API boundaries and the synthetic-only public preview. It does not replace a real signed-in account test, AI-provider test or PayPal Sandbox transaction.
+
+## Core workflow scenarios
+
+| Scenario | Expected safe result | Evidence to capture |
 |---|---|---|
-| Open live application | HTTPS page loads without a blocking error | |
-| Sign-in flow, if required | Valid demo user can access the intended workspace | |
-| Protected access | Unauthenticated users cannot access protected user data or mutation actions | |
-| Navigation | Main pages and primary actions open the correct destinations | |
-| Responsive layout | Key workflows remain usable on desktop and mobile widths | |
+| Valid customer order message | AI proposes a reviewable draft | Input message and proposed fields |
+| Missing/ambiguous quantity or product | Missing information is visible; seller must review | Draft state and validation message |
+| Unsupported catalogue item | Checkout is blocked | Validation response |
+| Valid order | Application computes the trusted total | Catalogue item, quantity and total |
+| PayPal Sandbox approval | Server verifies final provider state and expected details | Provider status, order/capture reference, amount, currency and timestamp |
+| Buyer cancels checkout | Order is not marked paid | Cancel state |
+| Payment pending or incomplete | Remains pending/review required | Provider status and UI state |
+| Amount/currency/reference mismatch | Payment is not marked paid; review is required | Mismatch details |
+| Provider/API failure | Safe error or retry state; no false success | Response and server logs without secrets |
+| Repeated capture/confirmation request | No duplicate local paid record | Stable order/capture identifiers and database rows |
+| AI provider unavailable | Safe fallback; no fabricated payment result | Error state and preserved order data |
 
-## B. Order intake and pricing
+## Authenticated workspace scenarios (feature branch / PR #8)
 
-| Check | Expected result | Result / evidence |
-|---|---|---|
-| Simple order message | AI proposes the expected product and quantity | |
-| Ambiguous order message | Missing details are surfaced rather than guessed | |
-| Draft review | Seller can inspect and correct the proposal | |
-| Pricing | Trusted total comes from application-side catalogue logic | |
-| Model unavailable | Safe error/fallback; no false order or payment success | |
+- [ ] Create or sign in to a test account.
+- [ ] Confirm the signed-in user's workspace loads.
+- [ ] Import a statement CSV with valid transaction ID, positive amount, three-letter currency and reference.
+- [ ] Import the same file again and verify duplicate rows are not duplicated.
+- [ ] Run matching against the same user's eligible server-verified PayPal captures.
+- [ ] Confirm exact reference + amount + currency produces a pending-review candidate, not automatic approval.
+- [ ] Confirm amount, currency or reference mismatch remains an exception/unmatched row.
+- [ ] Confirm a different user's records are not visible or mutable from this account.
+- [ ] Approve a valid candidate as the signed-in reviewer.
+- [ ] Post only an approved candidate to the internal ledger.
+- [ ] Retry posting and verify duplicate ledger entries are prevented.
+- [ ] Inspect audit events for import, matching, review and posting.
+- [ ] Confirm a PayPal evidence CSV is labelled provider-side evidence, not bank settlement proof.
 
-## C. PayPal Sandbox checkout
+## Reconciliation evidence boundary
 
-| Check | Expected result | Result / evidence |
-|---|---|---|
-| Create checkout | Server creates a Sandbox order for the reviewed order | |
-| Buyer approval | Dedicated Sandbox buyer can approve checkout | |
-| Return flow | Buyer returns to the correct application destination | |
-| Capture verification | Server confirms provider status and expected order linkage | |
-| Amount/currency | Verified amount and currency match expected values | |
-| Pending or cancelled | Order is not marked paid | |
-| Duplicate/retry | Repeated action does not create an unsafe duplicate or false success | |
-| Provider error | Clear recoverable error; no false paid state | |
+A PayProof-generated PayPal evidence CSV matched against PayProof's own verified captures is a consistency check against the application's provider records. It is not independent bank reconciliation.
 
-## D. Persistence and payment evidence
+To demonstrate matching against an independent bank statement, use a genuine bank-exported CSV containing corresponding transaction references, amounts and currencies. Do not upload sensitive or personal banking data to a public demo.
 
-| Check | Expected result | Result / evidence |
-|---|---|---|
-| Verified payment persistence | Expected order and capture/event records exist in Supabase | |
-| Persistence failure | UI distinguishes verified payment from failed database persistence | |
-| Evidence view | References, status, amount, currency, and verification details are consistent | |
-| Refresh/revisit | Persisted result remains consistent after reload, where persistence is configured | |
+## Test result recording
 
-## E. AI explanation safety
+For every scenario record:
 
-| Check | Expected result | Result / evidence |
-|---|---|---|
-| Amount mismatch | Explains discrepancy and recommends review | |
-| Missing capture | Does not claim payment succeeded | |
-| Completed verified payment | Explanation reflects the verified state supplied to it | |
-| Untrusted customer claim | Claim alone does not become proof | |
-| Model error | Safe fallback; payment status remains unchanged | |
-| Financial action boundary | AI cannot fulfil, refund, pay out, or change authoritative status | |
+- Date and time (with timezone)
+- Commit SHA and deployment URL
+- Environment (local, preview, Sandbox)
+- Test account type (never record passwords or tokens)
+- Steps performed
+- Expected result
+- Actual result
+- Pass / fail / blocked / not tested
+- Redacted evidence or logs
 
-## F. Reconciliation and exception review
+Do not mark a test passed based only on a code review, successful deployment, screenshot, or the presence of a UI control.
 
-| Check | Expected result | Result / evidence |
-|---|---|---|
-| Exact reference/amount/currency | Candidate match is identified accurately | |
-| Amount mismatch | Exception is visible and not silently matched | |
-| Unmatched record | Remains unmatched and reviewable | |
-| Duplicate import | Duplicate is detected or safely handled | |
-| Human approval | Posting requires the intended reviewer action | |
-| Reviewer protection | Protected operations reject missing/invalid authorisation | |
-| Audit view | Clearly distinguishes actual recorded events from illustrative examples | |
+## Known limitations
 
-## G. Security and release hygiene
-
-| Check | Expected result | Result / evidence |
-|---|---|---|
-| Public repository | No committed secrets or private credentials | |
-| Environment template | `.env.example` contains placeholders only | |
-| Server-side secrets | Provider secrets are not exposed to browser bundles | |
-| Synthetic data | Demo records are clearly labelled | |
-| Access isolation | One account cannot read another account's private data, if real user data is enabled | |
-| Build and lint | Current release passes `npm run lint` and `npm run build` | |
-| Deployment | Current production deployment corresponds to the intended commit | |
-
-## Evidence capture plan
-
-Save screenshots/video captures in a private local folder. Suggested filenames:
-
-1. `01-live-homepage.png`
-2. `02-order-intake-draft.png`
-3. `03-reviewed-order.png`
-4. `04-paypal-sandbox-approval.png`
-5. `05-server-verified-payment.png`
-6. `06-persistence-confirmation.png`
-7. `07-payment-evidence.png`
-8. `08-ai-mismatch-explanation.png`
-9. `09-reconciliation-review.png`
-10. `10-final-overview.png`
-
-Never capture or upload passwords, client secrets, access tokens, reviewer tokens, private customer details, or payment-card data. Use synthetic information only.
-
-## Release decision
-
-Before submission, resolve every failure that affects the core order-to-payment-verification path. If an item cannot be verified, leave it marked NOT TESTED and do not claim it as demonstrated. Keep the final video under three minutes and show only flows that work in the deployed release.
+- PayPal Sandbox is not live-money processing.
+- A provider capture does not prove bank settlement.
+- The internal ledger is not a bank ledger or external accounting integration.
+- AI outputs are advisory and may be unavailable or require correction.
+- Full production readiness requires additional security, privacy, reliability, webhook, monitoring and operational work.
