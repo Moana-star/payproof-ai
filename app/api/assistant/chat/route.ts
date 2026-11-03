@@ -12,7 +12,7 @@ const CASES: Record<string, { label: string; evidence: string }> = {
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 export async function POST(request: NextRequest) {
-  let body: { messages?: unknown; caseId?: unknown };
+  let body: { messages?: unknown; caseId?: unknown; images?: unknown };
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: "Send a valid chat request." }, { status: 400 });
   }
@@ -30,6 +30,14 @@ export async function POST(request: NextRequest) {
   }
   if (messages[messages.length - 1].role !== "user") {
     return NextResponse.json({ error: "The latest chat message must be from the user." }, { status: 400 });
+  }
+
+  const images = Array.isArray(body.images) ? body.images : [];
+  if (images.length > 4 || images.some((image) => !image || typeof image !== "object" ||
+    typeof (image as { dataUrl?: unknown }).dataUrl !== "string" ||
+    !/^data:image\\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test((image as { dataUrl: string }).dataUrl) ||
+    (image as { dataUrl: string }).dataUrl.length > 11_200_000)) {
+    return NextResponse.json({ error: "Attach up to four supported images, each no larger than 8 MB." }, { status: 400 });
   }
 
   const caseId = typeof body.caseId === "string" && Object.hasOwn(CASES, body.caseId) ? body.caseId : null;
@@ -56,6 +64,17 @@ export async function POST(request: NextRequest) {
   ].join("\n");
 
   try {
+    const gatewayMessages: Array<{ role: string; content: string | Array<Record<string, unknown>> }> = [{ role: "system", content: system }, ...messages];
+    if (images.length) {
+      const last = gatewayMessages[gatewayMessages.length - 1];
+      last.content = [
+        { type: "text", text: last.content as string },
+        ...images.map((image) => ({
+          type: "image_url",
+          image_url: { url: (image as { dataUrl: string }).dataUrl }
+        }))
+      ];
+    }
     const upstream = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
@@ -63,7 +82,7 @@ export async function POST(request: NextRequest) {
       signal: AbortSignal.timeout(60000),
       body: JSON.stringify({
         model, stream: true, temperature: 0.25, max_tokens: 1200,
-        messages: [{ role: "system", content: system }, ...messages]
+        messages: gatewayMessages
       })
     });
     if (!upstream.ok || !upstream.body) {
