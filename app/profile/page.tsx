@@ -97,7 +97,7 @@ export default function ProfilePage() {
     <section className="auth-card profile-card">
       <Link className="brand auth-brand" href="/"><span className="brand-mark">P<span>✓</span></span><span className="brand-name">payproof<span>ai</span></span></Link>
       <p className="eyebrow">ACCOUNT SETTINGS</p>
-      <h1>{name.trim().split(/\\s+/)[0] ? `${name.trim().split(/\\s+/)[0]}&apos;s profile` : "Your profile"}</h1>
+      <h1>{name.trim().split(/\s+/)[0] ? `${name.trim().split(/\s+/)[0]}’s profile` : "Your profile"}</h1>
       <p className="auth-intro">Update how your name and workspace appear in PayProof AI. Your account&apos;s orders stay separate from other users.</p>
       {loading ? <p>Loading your profile…</p> : <form className="auth-form" onSubmit={saveProfile}>
         <div className="profile-photo-control">
