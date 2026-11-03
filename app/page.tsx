@@ -198,8 +198,8 @@ export default function Home() {
   async function prepareCheckoutOrder() {
     if (flowBusy) return;
     setFlowError("");
-    if (!flowCustomer.trim()) {
-      setFlowError("Enter the customer name before continuing.");
+    if (flowCustomer.trim().length < 2) {
+      setFlowError("Enter a customer name with at least 2 characters before continuing.");
       return;
     }
     if (!flowMessage.trim()) {
@@ -257,8 +257,8 @@ export default function Home() {
 
   async function prepareDraft() {
     if (draftLoading) return;
-    if (!messageCustomerName.trim()) {
-      const error = "Enter the customer name before extracting order details.";
+    if (messageCustomerName.trim().length < 2) {
+      const error = "Enter a customer name with at least 2 characters before extracting order details.";
       setDraftError(error);
       setNotice(error);
       return;
@@ -313,7 +313,7 @@ export default function Home() {
     const customerName = draft.customerName.trim();
     const product = draft.item.trim();
     const quantity = draft.quantity.trim();
-    if (!customerName) issues.push("Enter the customer name.");
+    if (customerName.length < 2) issues.push("Enter a customer name with at least 2 characters.");
     if (!Object.prototype.hasOwnProperty.call(CATALOG_PRICES, product)) {
       issues.push("Choose one supported catalogue product exactly: Coffee gift set, Ceramic mug pair, or Handwoven market tote.");
     }
@@ -446,7 +446,7 @@ export default function Home() {
           <section className="orders-card">
             <div className="table-toolbar"><div className="table-title">{ordersSource === "saved" ? "Saved orders" : "Your orders"} <span className="table-count">{orders.length}</span></div><div className="table-filters"><span className="filter-label">Status</span><button className="filter-button" onClick={() => setOrders(orders.slice().reverse())}>Recent activity ↕</button></div></div>
             <div className="order-table-wrap"><table className="order-table"><thead><tr><th>ORDER</th><th>CUSTOMER / ITEM</th><th>AMOUNT</th><th>PAYMENT STATUS</th><th>LAST ACTIVITY</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><span className="order-id">{order.id}</span></td><td><div className="customer-cell"><div className="avatar">{order.initials}</div><div><strong>{order.customer}</strong><span>{order.item}</span></div></div></td><td className="amount">{order.amount}</td><td><span className={`status-badge ${statusClass[order.status]}`}><i />{order.status === "Paid" ? (ordersSource === "saved" ? "Verified paid" : "Sample · unverified") : order.status}</span></td><td className="activity-text">{order.time}</td></tr>)}{orders.length === 0 && <tr><td colSpan={5}>{"No orders yet. Create a Sandbox checkout; verified and pending orders will appear here from your account records."}</td></tr>}</tbody></table></div>
-            <div className="table-footer"><span>{ordersLoadNote || (ordersSource === "saved" ? "Persistent Sandbox order records" : "Illustrative records · Not live payment evidence")}</span><span>{orders.length ? `1–${orders.length} of ${orders.length}` : "0 orders"}</span></div>
+            <div className="table-footer"><span>{ordersLoadNote || (ordersSource === "saved" ? "Persistent Sandbox order records" : "Illustrative records · Not live payment evidence")}{orders.some((order) => order.customer === "Customer name not captured") ? " Older orders may not include a customer name if it was not supplied at checkout; names are never inferred." : ""}</span><span>{orders.length ? `1–${orders.length} of ${orders.length}` : "0 orders"}</span></div>
           </section>
 
           <div className="lower-grid">
@@ -457,13 +457,13 @@ export default function Home() {
                 <button type="button" className="sample-message-button" onClick={() => { setMessage("Hi, I'd like 2 Coffee gift sets, please. Can you prepare the order for me?"); setDraft(null); setDraftError(null); setValidationResult(null); setMessageCustomerName("Alex Morgan"); setNotice("Sample customer message and sample customer name loaded. Select Prepare order draft to test AI extraction."); }}>Load sample message</button>
               </div>
               <label className="field-label" htmlFor="intake-customer-name">CUSTOMER NAME</label>
-              <input id="intake-customer-name" className="draft-edit-input" type="text" value={messageCustomerName} maxLength={100} autoComplete="name" placeholder="Customer full name (required)" aria-required="true" onChange={(event) => { setMessageCustomerName(event.target.value); setDraft(null); setDraftError(null); setValidationResult(null); }} />
+              <input id="intake-customer-name" className="draft-edit-input" type="text" value={messageCustomerName} maxLength={100} autoComplete="name" placeholder="Customer full name (required)" minLength={2} aria-required="true" onChange={(event) => { setMessageCustomerName(event.target.value); setDraft(null); setDraftError(null); setValidationResult(null); }} />
               <textarea id="customer-message" value={message} onChange={(event) => { setMessage(event.target.value); if (draftError) setDraftError(null); }} placeholder={'Try the sample message, or paste a customer message here. Example: Hi, I would like 2 coffee gift sets, please.'} rows={4} />
               <div className="field-hint">Enter the customer name, then paste a message from WhatsApp, email, or another channel. AI identifies the product and quantity for your review. Nothing is saved automatically.</div>
               <button type="button" className="secondary-button full-button" onClick={prepareDraft} disabled={draftLoading} aria-busy={draftLoading}>{draftLoading ? "Preparing draft…" : "Prepare order draft"} <span>{draftLoading ? "…" : "→"}</span></button>
               {draftError && <p className="draft-error" role="alert">{draftError}</p>}
               <p className="draft-action-hint" aria-live="polite">{draftLoading ? "Please wait while the message is analysed." : draftError ? "No sales order was created. You can try again." : draft ? "Draft ready. Check every detail against the original customer message." : "Enter the customer name and message, then select Prepare order draft."}</p>
-              {draft && <div className="draft-result"><div className="draft-title">Extracted sales order <span>REVIEW REQUIRED · NOT SAVED</span></div><p className="draft-review-hint">Confirm the customer name and edit the suggested fields, then compare them with the original customer message above.</p><label className="draft-field-label" htmlFor="draft-customer-name">CUSTOMER NAME</label><input id="draft-customer-name" className="draft-edit-input" type="text" value={draft.customerName} maxLength={100} autoComplete="name" onChange={(event) => updateDraftField("customerName", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-product">PRODUCT NAME</label><input id="draft-product" className="draft-edit-input" type="text" value={draft.item} maxLength={120} autoComplete="off" onChange={(event) => updateDraftField("item", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-quantity">QUANTITY</label><input id="draft-quantity" className="draft-edit-input" type="number" min="1" max="100000" step="1" inputMode="numeric" value={draft.quantity === "Not specified" ? "" : draft.quantity} placeholder="Enter quantity" onChange={(event) => updateDraftField("quantity", event.target.value)} aria-describedby="draft-review-help" /><p id="draft-review-help" className="draft-review-hint">Validation checks formatting only; it cannot confirm product availability, price, customer intent, or payment.</p>{draft.note && <p className="draft-note">{draft.note}</p>}<button type="button" className="primary-button full-button" onClick={validateDraftDetails}>Validate draft details</button>{validationResult && <div className={`draft-validation ${validationResult.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{validationResult.valid ? "✓ Details checked" : "Review required"}</strong><p>{validationResult.message}</p></div>}{validationResult?.valid && <div className="draft-checkout"><div className="draft-total"><span>Estimated total · {draft.item}</span><strong>${(CATALOG_PRICES[draft.item] * Number(draft.quantity)).toFixed(2)} USD</strong></div><p>Sandbox checkout only. The server independently validates the product and calculates the final amount. This does not save an order record.</p><button type="button" className="primary-button full-button" onClick={() => startSandboxCheckout(draft.item, Number(draft.quantity), draft.customerName.trim())} disabled={checkoutLoading}>{checkoutLoading ? "Connecting to PayPal…" : "Continue to PayPal Sandbox"} <span>↗</span></button></div>}</div>}
+              {draft && <div className="draft-result"><div className="draft-title">Extracted sales order <span>REVIEW REQUIRED · NOT SAVED</span></div><p className="draft-review-hint">Confirm the customer name and edit the suggested fields, then compare them with the original customer message above.</p><label className="draft-field-label" htmlFor="draft-customer-name">CUSTOMER NAME</label><input id="draft-customer-name" className="draft-edit-input" type="text" value={draft.customerName} maxLength={100} minLength={2} autoComplete="name" onChange={(event) => updateDraftField("customerName", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-product">PRODUCT NAME</label><input id="draft-product" className="draft-edit-input" type="text" value={draft.item} maxLength={120} autoComplete="off" onChange={(event) => updateDraftField("item", event.target.value)} aria-describedby="draft-review-help" /><label className="draft-field-label" htmlFor="draft-quantity">QUANTITY</label><input id="draft-quantity" className="draft-edit-input" type="number" min="1" max="100000" step="1" inputMode="numeric" value={draft.quantity === "Not specified" ? "" : draft.quantity} placeholder="Enter quantity" onChange={(event) => updateDraftField("quantity", event.target.value)} aria-describedby="draft-review-help" /><p id="draft-review-help" className="draft-review-hint">Validation checks formatting only; it cannot confirm product availability, price, customer intent, or payment.</p>{draft.note && <p className="draft-note">{draft.note}</p>}<button type="button" className="primary-button full-button" onClick={validateDraftDetails}>Validate draft details</button>{validationResult && <div className={`draft-validation ${validationResult.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{validationResult.valid ? "✓ Details checked" : "Review required"}</strong><p>{validationResult.message}</p></div>}{validationResult?.valid && <div className="draft-checkout"><div className="draft-total"><span>Estimated total · {draft.item}</span><strong>${(CATALOG_PRICES[draft.item] * Number(draft.quantity)).toFixed(2)} USD</strong></div><p>Sandbox checkout only. The server independently validates the product and calculates the final amount. This does not save an order record.</p><button type="button" className="primary-button full-button" onClick={() => startSandboxCheckout(draft.item, Number(draft.quantity), draft.customerName.trim())} disabled={checkoutLoading}>{checkoutLoading ? "Connecting to PayPal…" : "Continue to PayPal Sandbox"} <span>↗</span></button></div>}</div>}
             </section>
 
             <section className="attention-card" id="activity">
@@ -494,7 +494,7 @@ export default function Home() {
             <h1>Create New Order</h1>
             <div className="order-flow-form">
               <label htmlFor="flow-customer">Customer Name</label>
-              <input id="flow-customer" type="text" value={flowCustomer} onChange={(event) => { setFlowCustomer(event.target.value); setFlowError(""); }} placeholder="Enter customer name" autoComplete="name" maxLength={100} required />
+              <input id="flow-customer" type="text" value={flowCustomer} onChange={(event) => { setFlowCustomer(event.target.value); setFlowError(""); }} placeholder="Enter customer name" autoComplete="name" minLength={2} maxLength={100} required />
               <label htmlFor="flow-message">Customer Order Message <span className="order-optional-label">(required)</span></label>
               <textarea id="flow-message" value={flowMessage} onChange={(event) => { setFlowMessage(event.target.value); setFlowError(""); }} placeholder="Example: 2 Coffee gift sets" rows={4} />
               <p className="order-flow-hint">Paste the customer's message. AI will suggest a product and quantity for your review. Confirm the customer name and extracted details before continuing to PayPal. Nothing is saved until you start checkout.</p>
