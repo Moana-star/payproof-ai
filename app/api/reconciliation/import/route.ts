@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   let body: { csv?: unknown; filename?: unknown; actor?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Send valid JSON containing CSV text." }, { status: 400 }); }
   if (typeof body.csv !== "string" || body.csv.length > 2_000_000) return NextResponse.json({ error: "CSV text is required and must be smaller than 2 MB." }, { status: 400 });
-  const actor = reconciliationActor(body.actor, user.email || "authenticated reviewer");
+  const actor = reconciliationActor(user.email || user.id);
   const filename = typeof body.filename === "string" ? body.filename.replace(/[^a-zA-Z0-9._ -]/g, "").slice(0, 120) : "statement.csv";
   try {
     const rows = parseCsv(body.csv); const statementId = createHash("sha256").update(user.id).update(body.csv).digest("hex").slice(0, 32);
