@@ -55,65 +55,111 @@ export function ReconciliationConsole() {
   }
 
   async function importCsv() {
-    if (readOnlyDemo) { setError("The sample token is read-only. Use private reviewer access to import or change records."); return; }
     if (!file) { setError("Choose a CSV statement file first."); return; }
     setBusy("import"); setError("");
     try {
       const csv = await file.text();
-      const result = await api("/api/reconciliation/import", { csv, filename: file.name, actor });
-      const message = `${result.message} Imported ${result.rowsImported} new rows; skipped ${result.duplicatesSkipped} duplicate transaction IDs.`;
-      setFile(null);
-      await load();
-      setNotice(message);
+      if (readOnlyDemo) {
+        const lines = csv.trim().split(/\r?\n/);
+        const headers = lines[0].split(",").map((v) => v.trim());
+        const imported: Row[] = lines.slice(1).filter(Boolean).map((line, index) => {
+          const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+          const record = Object.fromEntries(headers.map((header, i) => [header, values[i] || ""]));
+          return { id: `demo-import-${Date.now()}-${index}`, statement_id: "demo-local-statement", transaction_id: record.transaction_id || `DEMO-IMPORTED-${index + 1}`, amount: record.amount || "0", currency: (record.currency || "USD").toUpperCase(), reference: record.reference || null, description: record.description || null, posted_at: record.posted_at || null, source_file: file.name, match_status: "unmatched", matched_order_id: null, match_reason: "Imported into this browser's synthetic demo session. Run safe matching to evaluate the sample fixture.", approved_by: null, approved_at: null, rejected_by: null, rejected_at: null, ledger_posted_at: null, created_at: new Date().toISOString() };
+        });
+        const now = new Date().toISOString();
+        setData((current) => ({ ...current, rows: [...imported, ...current.rows], audit: [{ id: `demo-audit-${Date.now()}`, action: "demo_csv_imported", actor, details: { filename: file.name, rows: imported.length, local_only: true }, created_at: now, statement_row_id: null }, ...current.audit] }));
+        setNotice(`Imported ${imported.length} CSV row(s) into the local demo session. No server records or real payment data were changed.`);
+        setFile(null);
+      } else {
+        const result = await api("/api/reconciliation/import", { csv, filename: file.name, actor });
+        setFile(null); await load();
+        setNotice(`${result.message} Imported ${result.rowsImported} new rows; skipped ${result.duplicatesSkipped} duplicate transaction IDs.`);
+      }
     } catch (e) { setError(e instanceof Error ? e.message : "CSV import failed."); }
     finally { setBusy(""); }
   }
 
   async function match() {
-    if (readOnlyDemo) { setError("The sample token is read-only. Use private reviewer access to run matching."); return; }
     setBusy("match"); setError("");
     try {
-      const result = await api("/api/reconciliation/match", { actor });
-      const message = `Matching complete: ${result.exactMatch} exact candidate(s), ${result.amountOrReferenceException} exception(s), ${result.unmatched} unmatched. Nothing was auto-posted.`;
-      await load();
-      setNotice(message);
+      if (readOnlyDemo) {
+        const now = new Date().toISOString();
+        let exactMatch = 0, exceptions = 0, unmatched = 0;
+        setData((current) => {
+          const rows = current.rows.map((row) => {
+            if (["posted", "approved", "rejected"].includes(row.match_status)) return row;
+            const fixtureMatch = (row.reference || "").trim().toUpperCase() === "DEMO-CAPTURE-001" && Number(row.amount).toFixed(2) === "24.50" && row.currency === "USD";
+            if (fixtureMatch) { exactMatch++; return { ...row, match_status: "matched_pending_review" as const, matched_order_id: "demo-verified-capture-001", match_reason: "Synthetic fixture match: reference, amount and currency match a simulated completed PayPal Sandbox capture. This is demonstration evidence, not a real payment." }; }
+            if ((row.reference || "").toUpperCase().includes("MISMATCH")) { exceptions++; return { ...row, match_status: "exception" as const, matched_order_id: null, match_reason: "Synthetic exception: this sample is deliberately configured as a mismatch. Resolve the source data; it cannot be approved." }; }
+            unmatched++; return { ...row, match_status: "unmatched" as const, matched_order_id: null, match_reason: "No matching synthetic verified capture fixture was found." };
+          });
+          return { ...current, rows, audit: [{ id: `demo-audit-${Date.now()}`, action: "demo_matching_completed", actor, details: { exactMatch, exceptions, unmatched, local_only: true }, created_at: now, statement_row_id: null }, ...current.audit] };
+        });
+        setNotice("Demo matching completed against a clearly labelled synthetic PayPal capture fixture. Potential matches still require human approval; nothing was posted.");
+      } else {
+        const result = await api("/api/reconciliation/match", { actor });
+        await load();
+        setNotice(`Matching complete: ${result.exactMatch} exact candidate(s), ${result.amountOrReferenceException} exception(s), ${result.unmatched} unmatched. Nothing was auto-posted.`);
+      }
     } catch (e) { setError(e instanceof Error ? e.message : "Matching failed."); }
     finally { setBusy(""); }
   }
 
   async function decide(row: Row, decision: "approve" | "reject") {
-    if (readOnlyDemo) { setError("The sample token is read-only. Private reviewer access is required for decisions."); return; }
     setBusy(row.id); setError("");
     try {
       const note = decision === "reject" ? window.prompt("Why are you rejecting this statement row? (Optional)") || "" : "";
-      const result = await api("/api/reconciliation/review", { rowId: row.id, decision, actor, note });
-      await load();
-      setNotice(result.message);
+      if (readOnlyDemo) {
+        const now = new Date().toISOString();
+        setData((current) => ({ ...current,
+          rows: current.rows.map((item) => item.id === row.id ? { ...item, match_status: decision === "approve" ? "approved" : "rejected", approved_by: decision === "approve" ? actor : null, approved_at: decision === "approve" ? now : null, rejected_by: decision === "reject" ? actor : null, rejected_at: decision === "reject" ? now : null, match_reason: decision === "approve" ? "Human reviewer approved the synthetic fixture match. Ready for internal demo-ledger posting." : `Rejected by ${actor}. ${note}` } : item),
+          audit: [{ id: `demo-audit-${Date.now()}`, action: decision === "approve" ? "demo_match_approved" : "demo_match_rejected", actor, details: { transaction_id: row.transaction_id, note, local_only: true }, created_at: now, statement_row_id: row.id }, ...current.audit]
+        }));
+        setNotice(decision === "approve" ? "Synthetic match approved. You can now post it to the local demo ledger." : "Synthetic match rejected and recorded in the local demo audit trail.");
+      } else {
+        const result = await api("/api/reconciliation/review", { rowId: row.id, decision, actor, note });
+        await load(); setNotice(result.message);
+      }
     } catch (e) { setError(e instanceof Error ? e.message : "Review decision failed."); }
     finally { setBusy(""); }
   }
 
   async function approveAndPost(row: Row) {
-    if (readOnlyDemo) { setError("The sample token is read-only. Private reviewer access is required to post ledger entries."); return; }
-    if (!window.confirm(`Approve this exact reference, amount and currency match, then post ${row.amount} ${row.currency} to the PayProof AI internal demo ledger? The approval will be audited before posting. No external bank/accounting system is changed.`)) return;
+    if (!window.confirm(`Approve this synthetic exact-match fixture, then post ${row.amount} ${row.currency} to the local demo ledger? This action does not change real payment records.`)) return;
     setBusy(row.id); setError("");
     try {
-      const approval = await api("/api/reconciliation/review", { rowId: row.id, decision: "approve", actor, note: "Human reviewer approved exact evidence match before internal ledger posting." });
-      const posting = await api("/api/reconciliation/post", { rowId: row.id, actor });
-      await load();
-      setNotice(`${approval.message} ${posting.message}`);
-    } catch (e) { setError(e instanceof Error ? e.message : "Approval or ledger posting failed. Refresh the queue to confirm the recorded state."); }
+      if (readOnlyDemo) {
+        const now = new Date().toISOString();
+        const ledger: Ledger = { id: `demo-ledger-${Date.now()}`, transaction_id: row.transaction_id, amount: row.amount, currency: row.currency, memo: `Synthetic PayPal capture fixture for ${row.reference}`, posted_by: actor, posted_at: now, statement_row_id: row.id };
+        setData((current) => ({ ...current,
+          rows: current.rows.map((item) => item.id === row.id ? { ...item, match_status: "posted", approved_by: actor, approved_at: now, ledger_posted_at: now, match_reason: "Synthetic fixture was approved by a human reviewer and posted to the local demo ledger. No real payment was changed." } : item),
+          ledger: [ledger, ...current.ledger],
+          audit: [{ id: `demo-audit-post-${Date.now()}`, action: "demo_internal_ledger_posted", actor, details: { transaction_id: row.transaction_id, amount: row.amount, currency: row.currency, local_only: true }, created_at: now, statement_row_id: row.id }, { id: `demo-audit-approve-${Date.now()}`, action: "demo_match_approved", actor, details: { transaction_id: row.transaction_id, local_only: true }, created_at: now, statement_row_id: row.id }, ...current.audit]
+        }));
+        setNotice("Synthetic match approved and posted to the local demo ledger. Both actions are visible in the audit trail; no external system was changed.");
+      } else {
+        const approval = await api("/api/reconciliation/review", { rowId: row.id, decision: "approve", actor, note: "Human reviewer approved exact evidence match before internal ledger posting." });
+        const posting = await api("/api/reconciliation/post", { rowId: row.id, actor });
+        await load(); setNotice(`${approval.message} ${posting.message}`);
+      }
+    } catch (e) { setError(e instanceof Error ? e.message : "Approval or ledger posting failed."); }
     finally { setBusy(""); }
   }
 
   async function post(row: Row) {
-    if (readOnlyDemo) { setError("The sample token is read-only. Private reviewer access is required to post ledger entries."); return; }
-    if (!window.confirm(`Post ${row.amount} ${row.currency} to the PayProof AI internal demo ledger? This does not post to a bank or external accounting system.`)) return;
+    if (!window.confirm(`Post ${row.amount} ${row.currency} to the PayProof AI internal demo ledger? No external bank or accounting system is changed.`)) return;
     setBusy(row.id); setError("");
     try {
-      const result = await api("/api/reconciliation/post", { rowId: row.id, actor });
-      await load();
-      setNotice(result.message);
+      if (readOnlyDemo) {
+        const now = new Date().toISOString();
+        const ledger: Ledger = { id: `demo-ledger-${Date.now()}`, transaction_id: row.transaction_id, amount: row.amount, currency: row.currency, memo: `Synthetic approved fixture for ${row.reference}`, posted_by: actor, posted_at: now, statement_row_id: row.id };
+        setData((current) => ({ ...current, rows: current.rows.map((item) => item.id === row.id ? { ...item, match_status: "posted", ledger_posted_at: now, match_reason: "Synthetic approved fixture posted to the local demo ledger." } : item), ledger: [ledger, ...current.ledger], audit: [{ id: `demo-audit-${Date.now()}`, action: "demo_internal_ledger_posted", actor, details: { transaction_id: row.transaction_id, local_only: true }, created_at: now, statement_row_id: row.id }, ...current.audit] }));
+        setNotice("Synthetic approved row posted to the local demo ledger and recorded in the audit trail.");
+      } else {
+        const result = await api("/api/reconciliation/post", { rowId: row.id, actor });
+        await load(); setNotice(result.message);
+      }
     } catch (e) { setError(e instanceof Error ? e.message : "Ledger posting failed."); }
     finally { setBusy(""); }
   }
@@ -136,14 +182,14 @@ export function ReconciliationConsole() {
       <div className="recon-access-copy"><strong>Protected reconciliation access</strong><p>The reviewer token is used only in requests from this browser session and is not saved by this page. Live rows are not public.</p></div>
       <label>Reviewer name<input value={actor} onChange={(e) => setActor(e.target.value)} maxLength={80} placeholder="Your name or reviewer role" /></label>
       <label>Preview reviewer token<input type={readOnlyDemo ? "text" : "password"} autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Enter sample or private reviewer token" /></label>
-      <div className="recon-token-actions"><button className="secondary-button" onClick={() => { setToken(DEMO_READ_ONLY_TOKEN); setData({ rows: [], audit: [], ledger: [] }); setError(""); setNotice("Sample token filled in. Select Load workspace to view synthetic read-only data."); }} disabled={!!busy}>Use sample token</button><button className="secondary-button" onClick={load} disabled={!!busy}>{busy === "load" ? "Loading…" : readOnlyDemo ? "Load sample workspace" : "Load live reconciliation"}</button><button className="primary-button" onClick={async () => { setToken(DEMO_READ_ONLY_TOKEN); setBusy("sample"); setError(""); setNotice("Loading synthetic reviewer case…"); try { const response = await fetch("/api/reconciliation", { headers: { "x-reconciliation-token": DEMO_READ_ONLY_TOKEN } }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not load the sample review."); setData({ rows: result.rows || [], audit: result.audit || [], ledger: result.ledger || [] }); setNotice("Sample review loaded. Inspect the synthetic mismatch and unmatched rows below; no live records were accessed and no changes can be made."); } catch (e) { setError(e instanceof Error ? e.message : "Could not load the sample review."); } finally { setBusy(""); } }} disabled={!!busy}>{busy === "sample" ? "Loading sample…" : "Try sample review"} <span>↗</span></button></div>
-      {readOnlyDemo && <p className="recon-readonly-note">Working public sample token: <code>{DEMO_READ_ONLY_TOKEN}</code> · Read-only synthetic data · Cannot import, approve, match or post. Replace it only if you have private reviewer credentials.</p>}
+      <div className="recon-token-actions"><button className="secondary-button" onClick={() => { setToken(DEMO_READ_ONLY_TOKEN); setData({ rows: [], audit: [], ledger: [] }); setError(""); setNotice("Sample token filled in. Select Load workspace to view synthetic read-only data."); }} disabled={!!busy}>Use sample token</button><button className="secondary-button" onClick={load} disabled={!!busy}>{busy === "load" ? "Loading…" : readOnlyDemo ? "Load sample workspace" : "Load live reconciliation"}</button><button className="primary-button" onClick={async () => { setToken(DEMO_READ_ONLY_TOKEN); setBusy("sample"); setError(""); setNotice("Loading synthetic reviewer case…"); try { const response = await fetch("/api/reconciliation", { headers: { "x-reconciliation-token": DEMO_READ_ONLY_TOKEN } }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not load the sample review."); setData({ rows: result.rows || [], audit: result.audit || [], ledger: result.ledger || [] }); setNotice("Sample review loaded. Run matching to evaluate the synthetic fixture; all demo actions remain local and do not affect live records."); } catch (e) { setError(e instanceof Error ? e.message : "Could not load the sample review."); } finally { setBusy(""); } }} disabled={!!busy}>{busy === "sample" ? "Loading sample…" : "Try sample review"} <span>↗</span></button></div>
+      {readOnlyDemo && <p className="recon-readonly-note">Public demo token: <code>{DEMO_READ_ONLY_TOKEN}</code> · Demo actions run only on synthetic data in this browser session. No live payment records or external accounts are changed.</p>}
     </div>
     <div className="recon-console-notice" role="status">{notice}</div>
     {error && <div className="recon-console-error" role="alert">{error}</div>}
     <div className="recon-import">
       <div><h3>1. Import bank statement CSV</h3><p>Upload a CSV export from your bank or payment provider. No bank account connection is implied.</p></div>
-      <div className="recon-import-controls"><input type="file" accept=".csv,text/csv" onChange={(e) => setFile(e.target.files?.[0] || null)} aria-label="Choose bank statement CSV" /><button className="primary-button" onClick={importCsv} disabled={!file || !!busy || readOnlyDemo}>{busy === "import" ? "Importing…" : "Import statement"}</button></div>
+      <div className="recon-import-controls"><input type="file" accept=".csv,text/csv" onChange={(e) => setFile(e.target.files?.[0] || null)} aria-label="Choose bank statement CSV" /><button className="primary-button" onClick={importCsv} disabled={!file || !!busy}>{busy === "import" ? "Importing…" : readOnlyDemo ? "Import sample CSV" : "Import statement"}</button></div>
       <details><summary>Required CSV format</summary><code>transaction_id,amount,currency,reference,description,posted_at</code><p>Example: BANK-1001,24.50,USD,PayPal-capture-or-order-ID,Coffee gift set,2026-10-28T10:00:00Z</p><small>Positive incoming amounts only. Transaction IDs are deduplicated. Keep the source file for your records.</small></details>
     </div>
     <section className="recon-judge-kit" aria-labelledby="judge-kit-title">
@@ -151,10 +197,10 @@ export function ReconciliationConsole() {
       <a className="primary-button recon-download-sample" href="/payproof-demo-statement.csv" download>Download sample CSV <span>↓</span></a>
       <div className="recon-judge-steps">
         <div><strong>1. Download</strong><p>The CSV contains synthetic examples only. It is not a bank export and includes no customer data.</p></div>
-        <div><strong>2. Load evidence</strong><p>Use the prefilled public sample token to load synthetic read-only cases. Private reviewer credentials are required only for live imports, decisions and ledger posting; never publish those credentials.</p></div>
+        <div><strong>2. Load evidence</strong><p>Load the public synthetic workspace. The demo supports local CSV import, matching, approval/rejection and ledger posting without changing live records.</p></div>
         <div><strong>3. Import &amp; review</strong><p>Upload the CSV and run matching. Sample references are illustrative; to demonstrate an exact match, replace a row’s reference and amount with those from a real, verified Sandbox capture.</p></div>
       </div>
-      <p className="recon-judge-safety">Sandbox only · No real money · No live bank connection · Posting affects only the internal demo ledger.</p><p className="recon-judge-safety">Quick start: the public sample token is prefilled. Select <strong>Load sample workspace</strong> or <strong>Try sample review</strong> to load illustrative mismatch and unmatched cases. The sample is read-only; private reviewer access is required for import, decisions, and ledger posting.</p>
+      <p className="recon-judge-safety">Sandbox only · No real money · No live bank connection · Posting affects only the internal demo ledger.</p><p className="recon-judge-safety">Quick start: load the sample workspace, run safe matching, approve the synthetic exact-match candidate, then post it to the local demo ledger. Demo actions affect only this browser session.</p>
     </section>
     <div className="recon-live-stats">
       <div><span>Potential matches</span><strong>{counts.candidates}</strong><small>Awaiting human approval</small></div>
@@ -164,7 +210,7 @@ export function ReconciliationConsole() {
     </div>
     <div className="recon-queue-head">
       <div><h3>2. Match and review queue</h3><p>Only completed, persisted Sandbox PayPal captures with a verification timestamp are eligible evidence. Reference may be the internal PP order reference or PayPal order/capture ID.</p></div>
-      <button className="primary-button" onClick={match} disabled={!!busy || !token.trim() || readOnlyDemo}>{busy === "match" ? "Matching…" : "Run safe matching"}</button>
+      <button className="primary-button" onClick={match} disabled={!!busy || !token.trim()}>{busy === "match" ? "Matching…" : "Run safe matching"}</button>
     </div>
     <div className="reconciliation-table-heading">
       <div className="reconciliation-filters"><input aria-label="Search live reconciliation records" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search transaction or reference…" /><select aria-label="Filter live reconciliation status" value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">All statuses</option><option value="unmatched">Unmatched</option><option value="matched_pending_review">Needs approval</option><option value="exception">Exception</option><option value="approved">Approved</option><option value="posted">Posted</option><option value="rejected">Rejected</option></select></div>
@@ -178,7 +224,7 @@ export function ReconciliationConsole() {
         <td><span className={`recon-status ${row.match_status === "posted" ? "recon-status-good" : row.match_status === "matched_pending_review" || row.match_status === "approved" ? "recon-status-warn" : "recon-status-risk"}`}>{statusLabels[row.match_status]}</span></td>
         <td className="recon-reason-cell">{row.match_status === "posted" ? "Exact reference, amount and currency were verified against a server-verified completed PayPal capture. A human reviewer approved this row and it was posted to the PayProof AI internal demo ledger." : row.match_reason || "Run matching to evaluate this record."}</td>
         <td><div className="recon-row-actions">
-          {row.match_status === "matched_pending_review" && <><button onClick={() => approveAndPost(row)} disabled={!!busy || readOnlyDemo} className="recon-post-button">{busy === row.id ? "Working…" : "Approve & post"}</button><button onClick={() => decide(row, "approve")} disabled={!!busy || readOnlyDemo} className="recon-approve-button">Approve only</button><button onClick={() => decide(row, "reject")} disabled={!!busy || readOnlyDemo} className="recon-reject-button">Reject</button></>}
+          {row.match_status === "matched_pending_review" && <><button onClick={() => approveAndPost(row)} disabled={!!busy} className="recon-post-button">{busy === row.id ? "Working…" : "Approve & post"}</button><button onClick={() => decide(row, "approve")} disabled={!!busy || readOnlyDemo} className="recon-approve-button">Approve only</button><button onClick={() => decide(row, "reject")} disabled={!!busy || readOnlyDemo} className="recon-reject-button">Reject</button></>}
           {row.match_status === "approved" && <button onClick={() => post(row)} disabled={!!busy} className="recon-post-button">{busy === row.id ? "Posting…" : "Post to demo ledger"}</button>}
           {row.match_status === "exception" && <span className="recon-manual-only">Resolve at source</span>}
           {row.match_status === "posted" && <span className="recon-posted-label">✓ Audited</span>}
