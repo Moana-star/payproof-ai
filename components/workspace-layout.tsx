@@ -7,8 +7,26 @@ const navigation = [
   { href: "/reconciliation", icon: "⇄", label: "Reconciliation" },
   { href: "/assistant", icon: "✳", label: "AI assistant" },
   { href: "/exceptions", icon: "!", label: "Exception review" },
-  { href: "/audit", icon: "↗", label: "Audit trail" }
+  { href: "/audit", icon: "↗", label: "Audit trail" },
+  { href: "/customers", icon: "♙", label: "Customers" },
+  { href: "/shipping", icon: "▣", label: "Shipping" },
+  { href: "/analytics", icon: "▥", label: "Analytics" },
+  { href: "/reports", icon: "▤", label: "Reports" },
+  { href: "/invoices", icon: "▧", label: "Invoices" }
 ];
+
+const activeRoute: Record<string, string> = {
+  "Payment evidence": "/payments",
+  "Reconciliation": "/reconciliation",
+  "AI payment assistant": "/assistant",
+  "Exception review": "/exceptions",
+  "Audit trail": "/audit",
+  "Customers": "/customers",
+  "Shipping": "/shipping",
+  "Analytics": "/analytics",
+  "Reports": "/reports",
+  "Invoices": "/invoices"
+};
 
 export function WorkspaceLayout({ title, eyebrow, description, children }: {
   title: string;
@@ -26,7 +44,7 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
         <p className="ops-nav-label">WORKSPACE</p>
         <nav className="ops-nav" aria-label="Workspace navigation">
           {navigation.map((item) => (
-            <Link key={item.href} className={item.href === (title === "Payment evidence" ? "/payments" : title === "Reconciliation" ? "/reconciliation" : title === "AI payment assistant" ? "/assistant" : title === "Exception review" ? "/exceptions" : title === "Audit trail" ? "/audit" : "/") ? "ops-nav-item is-active" : "ops-nav-item"} href={item.href}>
+            <Link key={item.href} className={item.href === (activeRoute[title] || "/") ? "ops-nav-item is-active" : "ops-nav-item"} href={item.href}>
               <span className="ops-nav-icon" aria-hidden="true">{item.icon}</span>{item.label}
             </Link>
           ))}
