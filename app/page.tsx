@@ -496,7 +496,7 @@ export default function Home() {
                 <button type="button" className="primary-button full-button" onClick={() => {
                   if (!flowDraft) return;
                   const productIsSupported = Object.prototype.hasOwnProperty.call(CATALOG_PRICES, flowDraft.item.trim());
-                  const quantityIsValid = /^[1-9]\\d*$/.test(flowDraft.quantity.trim()) && Number.isSafeInteger(Number(flowDraft.quantity)) && Number(flowDraft.quantity) <= 100;
+                  const quantityIsValid = /^[1-9]\d*$/.test(flowDraft.quantity.trim()) && Number.isSafeInteger(Number(flowDraft.quantity)) && Number(flowDraft.quantity) <= 100;
                   if (!productIsSupported || !quantityIsValid) {
                     setFlowValidation({ valid: false, message: !productIsSupported ? "Choose a supported catalogue product: Coffee gift set, Ceramic mug pair, or Handwoven market tote." : "Enter a whole-number quantity from 1 to 100." });
                     return;
