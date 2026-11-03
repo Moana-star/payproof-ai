@@ -86,11 +86,12 @@ export default function AssistantPage() {
     if (recording) { recognition.current?.stop(); setRecording(false); return; }
     if (!Speech) { setError("Voice input is not supported in this browser. Try a recent version of Chrome or Edge."); return; }
     const instance = new Speech();
+    const initialText = input.trim();
     instance.lang = "en-US"; instance.interimResults = true; instance.continuous = true;
     instance.onresult = (event) => {
       let transcript = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) transcript += event.results[i][0].transcript;
-      setInput((current) => { const prefix = current.startsWith(initialText) ? initialText : current; return (prefix ? prefix + " " : "") + transcript; });
+      for (let i = 0; i < event.results.length; i++) transcript += event.results[i][0].transcript;
+      setInput((initialText ? initialText + " " : "") + transcript.trim());
     };
     instance.onerror = () => { setRecording(false); setError("Microphone access failed. Check your browser's microphone permission."); };
     instance.onend = () => { setRecording(false); recognition.current = null; };
