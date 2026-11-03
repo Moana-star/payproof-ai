@@ -103,7 +103,7 @@ export default function AssistantPage() {
   async function send(value?: string) {
     const text = (value ?? input).trim();
     if ((!text && attachments.length === 0) || loading || !activeId) return;
-    const user: Message = { role: "user", content: (text || "Please review the attached file(s).") + (attachments.length ? "\\n[Attachments: " + attachments.map((file) => file.name).join(", ") + "]" : "") };
+    const user: Message = { role: "user", content: (text || "Please review the attached file(s).") + (attachments.length ? "\n[Attachments: " + attachments.map((file) => file.name).join(", ") + "]" : "") };
     const currentFiles = attachments;
     const imageFiles = currentFiles.filter((file) => file.type.startsWith("image/"));
     const textFiles = currentFiles.filter((file) => file.type.startsWith("text/") || file.type === "application/json" || [".txt", ".md", ".csv", ".json", ".log"].some((ext) => file.name.toLowerCase().endsWith(ext)));
@@ -127,12 +127,12 @@ export default function AssistantPage() {
       }));
       const textContents = await Promise.all(textFiles.map(async (file) => {
         const contents = await file.text();
-        return "\\n\\n[Attached file: " + file.name + "]\\n" + contents.slice(0, 4500);
+        return "\n\n[Attached file: " + file.name + "]\n" + contents.slice(0, 4500);
       }));
       const otherFiles = currentFiles.filter((file) => !file.type.startsWith("image/") && !textFiles.includes(file));
-      const attachmentNote = otherFiles.map((file) => "[Attached file: " + file.name + " (" + (file.type || "unknown type") + ")]").join("\\n");
+      const attachmentNote = otherFiles.map((file) => "[Attached file: " + file.name + " (" + (file.type || "unknown type") + ")]").join("\n");
       const messageContent = (text || "Please review the attached file(s).") + textContents.join("") +
-        (attachmentNote ? "\\n" + attachmentNote + "\\nThis file type is attached by name only; its contents are not readable here." : "");
+        (attachmentNote ? "\n" + attachmentNote + "\nThis file type is attached by name only; its contents are not readable here." : "");
       if (messageContent.length > 5900) throw new Error("The message and attached text are too long. Please shorten them.");
       const response = await fetch("/api/assistant/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
