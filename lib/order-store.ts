@@ -135,7 +135,7 @@ export async function saveVerifiedOrder(order: StoredOrder, captureId: string, o
 
 
 export type PaymentRegisterOrder = Pick<StoredOrder,
-  "order_number" | "product_name" | "quantity" | "total_amount" | "currency" |
+  "order_number" | "customer_name" | "product_name" | "quantity" | "total_amount" | "currency" |
   "payment_environment" | "payment_status" | "paypal_order_id" |
   "paypal_capture_id" | "paypal_reference_id" | "verified_at"
 > & { created_at?: string | null };
@@ -148,15 +148,15 @@ export async function listRecentOrders(limit = 100, ownerId?: string): Promise<P
   }
   const safeLimit = Math.max(1, Math.min(Math.floor(limit), 200));
   return supabaseRequest<PaymentRegisterOrder[]>(
-    `orders?select=order_number,product_name,quantity,total_amount,currency,payment_environment,payment_status,paypal_order_id,paypal_capture_id,paypal_reference_id,verified_at,created_at&owner_id=eq.${encodeURIComponent(ownerId)}&order=created_at.desc&limit=${safeLimit}`,
+    `orders?select=order_number,customer_name,product_name,quantity,total_amount,currency,payment_environment,payment_status,paypal_order_id,paypal_capture_id,paypal_reference_id,verified_at,created_at&owner_id=eq.${encodeURIComponent(ownerId)}&order=created_at.desc&limit=${safeLimit}`,
     { method: "GET" }
   );
 }
 
-export async function getOwnedOrderByPayPalId(paypalOrderId: string, ownerId: string): Promise<{ order_number: string; owner_id: string } | null> {
+export async function getOwnedOrderByPayPalId(paypalOrderId: string, ownerId: string): Promise<{ order_number: string; owner_id: string; customer_name?: string | null } | null> {
   if (!isOrderStoreConfigured()) return null;
   const rows = await supabaseRequest<Array<{ order_number: string; owner_id: string }>>(
-    `orders?select=order_number,owner_id&paypal_order_id=eq.${encodeURIComponent(paypalOrderId)}&owner_id=eq.${encodeURIComponent(ownerId)}&limit=1`,
+    `orders?select=order_number,owner_id,customer_name&paypal_order_id=eq.${encodeURIComponent(paypalOrderId)}&owner_id=eq.${encodeURIComponent(ownerId)}&limit=1`,
     { method: "GET" }
   );
   return rows[0] || null;
