@@ -46,7 +46,7 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
         .ops-topbar { position: relative; display: flex; align-items: center; gap: 16px; }
         .ops-menu-wrap { position: relative; flex: 0 0 auto; z-index: 80; }
         .ops-desktop-nav { display: none; }
-        @media (min-width: 641px) {
+        @media (min-width: 821px) {
           .ops-menu-wrap { display: none !important; }
           .ops-desktop-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 28px; border-bottom: 1px solid #e9edf4; background: #fff; }
           .ops-desktop-nav a { padding: 9px 11px; border-radius: 8px; color: #526078; text-decoration: none; font-size: 12px; font-weight: 650; white-space: nowrap; }
