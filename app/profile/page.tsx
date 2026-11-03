@@ -11,6 +11,9 @@ export default function ProfilePage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [workspace, setWorkspace] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -28,6 +31,7 @@ export default function ProfilePage() {
       setEmail(user.email || "");
       setName(typeof user.user_metadata.display_name === "string" ? user.user_metadata.display_name : "");
       setWorkspace(typeof user.user_metadata.workspace_name === "string" ? user.user_metadata.workspace_name : "My workspace");
+      setAvatarUrl(typeof user.user_metadata.avatar_url === "string" ? user.user_metadata.avatar_url : "");
       const { data: profile } = await supabase.from("profiles").select("display_name,workspace_name").eq("id", user.id).maybeSingle();
       if (!active) return;
       if (profile) {
@@ -39,6 +43,21 @@ export default function ProfilePage() {
     return () => { active = false; };
   }, [router]);
 
+  useEffect(() => {
+    if (!photo) { setPhotoPreview(""); return; }
+    const preview = URL.createObjectURL(photo);
+    setPhotoPreview(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [photo]);
+
+  function selectPhoto(file?: File) {
+    setError(""); setMessage("");
+    if (!file) { setPhoto(null); return; }
+    if (!file.type.startsWith("image/")) { setError("Choose an image file."); return; }
+    if (file.size > 5 * 1024 * 1024) { setError("Choose an image smaller than 5 MB."); return; }
+    setPhoto(file);
+  }
+
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true); setError(""); setMessage("");
@@ -48,8 +67,19 @@ export default function ProfilePage() {
       const cleanName = name.trim();
       const cleanWorkspace = workspace.trim() || "My workspace";
       if (cleanName.length < 2) throw new Error("Your name must be at least 2 characters.");
-      const { error: updateError } = await supabase.auth.updateUser({ data: { display_name: cleanName, workspace_name: cleanWorkspace } });
+      let nextAvatarUrl = avatarUrl;
+      if (photo) {
+        const extension = photo.name.split(".").pop()?.toLowerCase() || "jpg";
+        const path = userId + "/profile-" + Date.now() + "." + extension;
+        const { error: uploadError } = await supabase.storage.from("avatars").upload(path, photo, { upsert: true, contentType: photo.type });
+        if (uploadError) throw new Error("Photo upload failed. Ensure the public avatars storage bucket is configured: " + uploadError.message);
+        const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(path);
+        nextAvatarUrl = publicData.publicUrl;
+      }
+      const { error: updateError } = await supabase.auth.updateUser({ data: { display_name: cleanName, workspace_name: cleanWorkspace, avatar_url: nextAvatarUrl } });
       if (updateError) throw updateError;
+      setAvatarUrl(nextAvatarUrl);
+      setPhoto(null);
       const { error: profileError } = await supabase.from("profiles").upsert({ id: userId, display_name: cleanName, workspace_name: cleanWorkspace, updated_at: new Date().toISOString() });
       if (profileError) throw profileError;
       setMessage("Profile saved. Your dashboard will use this name and workspace.");
@@ -70,6 +100,10 @@ export default function ProfilePage() {
       <h1>Your profile</h1>
       <p className="auth-intro">Update how your name and workspace appear in PayProof AI. Your account&apos;s orders stay separate from other users.</p>
       {loading ? <p>Loading your profile…</p> : <form className="auth-form" onSubmit={saveProfile}>
+        <div className="profile-photo-control">
+          <div className="profile-photo-preview">{photoPreview || avatarUrl ? <img src={photoPreview || avatarUrl} alt="Profile photo preview" /> : <span>{name.trim().charAt(0).toUpperCase() || "?"}</span>}</div>
+          <div><label htmlFor="profile-photo">Profile photo</label><input id="profile-photo" type="file" accept="image/*" onChange={event => selectPhoto(event.target.files?.[0])} /><small>Choose an image up to 5 MB.</small></div>
+        </div>
         <label htmlFor="profile-email">Account email</label>
         <input id="profile-email" type="email" value={email} disabled />
         <label htmlFor="profile-name">Your name</label>
