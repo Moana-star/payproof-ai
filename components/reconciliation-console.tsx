@@ -163,12 +163,12 @@ export function ReconciliationConsole() {
   }
 
   async function approveAndPost(row: Row) {
-    if (!window.confirm(`Approve this synthetic exact-match fixture, then post ${row.amount} ${row.currency} to the local demo ledger? This action does not change real payment records.`)) return;
+    if (!window.confirm(readOnlyDemo ? "Approve this synthetic fixture and post it to the local demo ledger?" : "Approve this verified match and permanently post it to your PayProof AI workspace ledger?")) return;
     setBusy(row.id); setError("");
     try {
       if (readOnlyDemo) {
         const now = new Date().toISOString();
-        const ledger: Ledger = { id: `demo-ledger-${Date.now()}`, transaction_id: row.transaction_id, amount: row.amount, currency: row.currency, memo: `Synthetic PayPal capture fixture for ${row.reference}`, posted_by: actor, posted_at: now, statement_row_id: row.id };
+        const ledger: Ledger = { id: `demo-ledger-${Date.now()}`, transaction_id: row.transaction_id, amount: row.amount, currency: row.currency, memo: `PayPal capture evidence for ${row.reference}`, posted_by: actor, posted_at: now, statement_row_id: row.id };
         setData((current) => ({ ...current,
           rows: current.rows.map((item) => item.id === row.id ? { ...item, match_status: "posted", approved_by: actor, approved_at: now, ledger_posted_at: now, match_reason: "Synthetic fixture was approved by a human reviewer and posted to the local demo ledger. No real payment was changed." } : item),
           ledger: [ledger, ...current.ledger],
@@ -185,12 +185,12 @@ export function ReconciliationConsole() {
   }
 
   async function post(row: Row) {
-    if (!window.confirm(`Post ${row.amount} ${row.currency} to the PayProof AI internal demo ledger? No external bank or accounting system is changed.`)) return;
+    if (!window.confirm(readOnlyDemo ? "Post this synthetic row to the local demo ledger?" : "Permanently post this approved transaction to your PayProof AI workspace ledger? This does not transfer money.")) return;
     setBusy(row.id); setError("");
     try {
       if (readOnlyDemo) {
         const now = new Date().toISOString();
-        const ledger: Ledger = { id: `demo-ledger-${Date.now()}`, transaction_id: row.transaction_id, amount: row.amount, currency: row.currency, memo: `Synthetic approved fixture for ${row.reference}`, posted_by: actor, posted_at: now, statement_row_id: row.id };
+        const ledger: Ledger = { id: `demo-ledger-${Date.now()}`, transaction_id: row.transaction_id, amount: row.amount, currency: row.currency, memo: `Approved payment evidence for ${row.reference}`, posted_by: actor, posted_at: now, statement_row_id: row.id };
         setData((current) => ({ ...current, rows: current.rows.map((item) => item.id === row.id ? { ...item, match_status: "posted", ledger_posted_at: now, match_reason: "Synthetic approved fixture posted to the local demo ledger." } : item), ledger: [ledger, ...current.ledger], audit: [{ id: `demo-audit-${Date.now()}`, action: "demo_internal_ledger_posted", actor, details: { transaction_id: row.transaction_id, local_only: true }, created_at: now, statement_row_id: row.id }, ...current.audit] }));
         setNotice("Synthetic approved row posted to the local demo ledger and recorded in the audit trail.");
       } else {
