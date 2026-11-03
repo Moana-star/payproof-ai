@@ -21,14 +21,14 @@ const statusLabels: Record<Row["match_status"], string> = {
 };
 
 export function ReconciliationConsole() {
-  const [token, setToken] = useState("");
+  const [token, setToken] = useState(DEMO_READ_ONLY_TOKEN);
   const [actor, setActor] = useState("Workspace reviewer");
   const [file, setFile] = useState<File | null>(null);
   const [data, setData] = useState<WorkspaceData>({ rows: [], audit: [], ledger: [] });
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [busy, setBusy] = useState("");
-  const [notice, setNotice] = useState("Enter the preview-only reviewer token to load protected reconciliation data.");
+  const [notice, setNotice] = useState("Public sample token is ready. Select Load sample workspace to view synthetic read-only reconciliation cases.");
   const [error, setError] = useState("");
   const readOnlyDemo = token === DEMO_READ_ONLY_TOKEN;
 
@@ -135,9 +135,9 @@ export function ReconciliationConsole() {
     <div className="recon-access">
       <div className="recon-access-copy"><strong>Protected reconciliation access</strong><p>The reviewer token is used only in requests from this browser session and is not saved by this page. Live rows are not public.</p></div>
       <label>Reviewer name<input value={actor} onChange={(e) => setActor(e.target.value)} maxLength={80} placeholder="Your name or reviewer role" /></label>
-      <label>Preview reviewer token<input type="password" autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Enter sample or private reviewer token" /></label>
+      <label>Preview reviewer token<input type={readOnlyDemo ? "text" : "password"} autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Enter sample or private reviewer token" /></label>
       <div className="recon-token-actions"><button className="secondary-button" onClick={() => { setToken(DEMO_READ_ONLY_TOKEN); setData({ rows: [], audit: [], ledger: [] }); setError(""); setNotice("Sample token filled in. Select Load workspace to view synthetic read-only data."); }} disabled={!!busy}>Use sample token</button><button className="secondary-button" onClick={load} disabled={!!busy}>{busy === "load" ? "Loading…" : readOnlyDemo ? "Load sample workspace" : "Load live reconciliation"}</button><button className="primary-button" onClick={async () => { setToken(DEMO_READ_ONLY_TOKEN); setBusy("sample"); setError(""); setNotice("Loading synthetic reviewer case…"); try { const response = await fetch("/api/reconciliation", { headers: { "x-reconciliation-token": DEMO_READ_ONLY_TOKEN } }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not load the sample review."); setData({ rows: result.rows || [], audit: result.audit || [], ledger: result.ledger || [] }); setNotice("Sample review loaded. Inspect the synthetic mismatch and unmatched rows below; no live records were accessed and no changes can be made."); } catch (e) { setError(e instanceof Error ? e.message : "Could not load the sample review."); } finally { setBusy(""); } }} disabled={!!busy}>{busy === "sample" ? "Loading sample…" : "Try sample review"} <span>↗</span></button></div>
-      {readOnlyDemo && <p className="recon-readonly-note">Public sample token · Read-only synthetic data · Cannot import, approve, match or post.</p>}
+      {readOnlyDemo && <p className="recon-readonly-note">Working public sample token: <code>{DEMO_READ_ONLY_TOKEN}</code> · Read-only synthetic data · Cannot import, approve, match or post. Replace it only if you have private reviewer credentials.</p>}
     </div>
     <div className="recon-console-notice" role="status">{notice}</div>
     {error && <div className="recon-console-error" role="alert">{error}</div>}
@@ -151,10 +151,10 @@ export function ReconciliationConsole() {
       <a className="primary-button recon-download-sample" href="/payproof-demo-statement.csv" download>Download sample CSV <span>↓</span></a>
       <div className="recon-judge-steps">
         <div><strong>1. Download</strong><p>The CSV contains synthetic examples only. It is not a bank export and includes no customer data.</p></div>
-        <div><strong>2. Load evidence</strong><p>Use the private preview reviewer token supplied by the project owner to access protected reconciliation records. The website intentionally does not publish the token.</p></div>
+        <div><strong>2. Load evidence</strong><p>Use the prefilled public sample token to load synthetic read-only cases. Private reviewer credentials are required only for live imports, decisions and ledger posting; never publish those credentials.</p></div>
         <div><strong>3. Import &amp; review</strong><p>Upload the CSV and run matching. Sample references are illustrative; to demonstrate an exact match, replace a row’s reference and amount with those from a real, verified Sandbox capture.</p></div>
       </div>
-      <p className="recon-judge-safety">Sandbox only · No real money · No live bank connection · Posting affects only the internal demo ledger.</p><p className="recon-judge-safety">Quick start: choose <strong>Try sample review</strong> above to load illustrative mismatch and unmatched cases in one step. The public sample is read-only; private reviewer access is required for import, decisions, and ledger posting.</p>
+      <p className="recon-judge-safety">Sandbox only · No real money · No live bank connection · Posting affects only the internal demo ledger.</p><p className="recon-judge-safety">Quick start: the public sample token is prefilled. Select <strong>Load sample workspace</strong> or <strong>Try sample review</strong> to load illustrative mismatch and unmatched cases. The sample is read-only; private reviewer access is required for import, decisions, and ledger posting.</p>
     </section>
     <div className="recon-live-stats">
       <div><span>Potential matches</span><strong>{counts.candidates}</strong><small>Awaiting human approval</small></div>
