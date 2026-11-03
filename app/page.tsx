@@ -195,6 +195,10 @@ export default function Home() {
   async function prepareCheckoutOrder() {
     if (flowBusy) return;
     setFlowError("");
+    if (!flowCustomer.trim()) {
+      setFlowError("Enter the customer name before continuing.");
+      return;
+    }
     if (!flowMessage.trim()) {
       setFlowProduct("Coffee gift set");
       setFlowQuantity("1");
@@ -468,15 +472,10 @@ export default function Home() {
             <h1>Create New Order</h1>
             <div className="order-flow-form">
               <label htmlFor="flow-customer">Customer Name</label>
-              <select id="flow-customer" value={flowCustomer} onChange={(event) => setFlowCustomer(event.target.value)}>
-                <option value="">Select a customer</option>
-                <option value="Fancy Restaurant">Fancy Restaurant</option>
-                <option value="Walk-in customer">Walk-in customer</option>
-                <option value="Returning customer">Returning customer</option>
-              </select>
-              <label htmlFor="flow-message">Enter Order Text (optional)</label>
-              <textarea id="flow-message" value={flowMessage} onChange={(event) => { setFlowMessage(event.target.value); setFlowError(""); }} placeholder="Example: Coffee gift set x 2" rows={4} />
-              <p className="order-flow-hint">Order text will be used to prepare the sales order with AI. Review the extracted product and quantity before payment.</p>
+              <input id="flow-customer" type="text" value={flowCustomer} onChange={(event) => { setFlowCustomer(event.target.value); setFlowError(""); }} placeholder="Enter customer name" autoComplete="name" maxLength={100} required />
+              <label htmlFor="flow-message">Enter Order Text <span className="order-optional-label">(optional)</span></label>
+              <textarea id="flow-message" value={flowMessage} onChange={(event) => { setFlowMessage(event.target.value); setFlowError(""); }} placeholder="Example: 2 Coffee gift sets" rows={4} />
+              <p className="order-flow-hint">Your order text will be used to automatically generate the sales order. AI will identify the product and quantity for you to review before continuing to PayPal.</p>
               {flowError && <p className="order-flow-error" role="alert">{flowError}</p>}
             </div>
             <div className="order-flow-actions order-form-actions"><button className="primary-button" onClick={prepareCheckoutOrder} disabled={flowBusy}>{flowBusy ? "Preparing…" : "Next"}</button><button className="secondary-button" onClick={resetOrderFlow}>Cancel</button></div>
