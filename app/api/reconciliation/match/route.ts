@@ -8,7 +8,6 @@ type VerifiedOrder = { id: string; order_number: string; total_amount: string; c
 export async function POST(request: NextRequest) {
   const user = await reconciliationUser(request);
   if (!user) return NextResponse.json({ error: "Sign in to match transactions in your workspace." }, { status: 401 });
-  let body: { actor?: unknown } = {}; try { body = await request.json(); } catch {}
   const actor = reconciliationActor(user.email || user.id); const owner = encodeURIComponent(user.id);
   try {
     const [rows, orders] = await Promise.all([
