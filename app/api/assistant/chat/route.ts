@@ -45,10 +45,15 @@ export async function POST(request: NextRequest) {
 
   const caseId = typeof body.caseId === "string" && Object.hasOwn(CASES, body.caseId) ? body.caseId : null;
   const selected = caseId ? CASES[caseId] : null;
-  const apiKey = process.env.AI_GATEWAY_API_KEY;
-  const model = process.env.AI_GATEWAY_MODEL || "openai/gpt-4.1-mini";
+  // Groq is already configured for PayProof AI. Avoid the Vercel AI Gateway
+  // billing-card gate so chat can use the existing server-side provider key.
+  const apiKey = process.env.GROQ_API_KEY;
+  const hasImages = images.length > 0;
+  const model = hasImages
+    ? (process.env.GROQ_VISION_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct")
+    : (process.env.GROQ_MODEL || "openai/gpt-oss-20b");
   if (!apiKey) {
-    return NextResponse.json({ error: "The AI service is not configured. Add AI_GATEWAY_API_KEY to the server environment." }, { status: 503 });
+    return NextResponse.json({ error: "The assistant is not configured yet. Add GROQ_API_KEY to the Vercel server environment." }, { status: 503 });
   }
 
   const system = [
@@ -78,20 +83,25 @@ export async function POST(request: NextRequest) {
         }))
       ];
     }
-    const upstream = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+    const upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
       cache: "no-store",
       signal: AbortSignal.timeout(60000),
       body: JSON.stringify({
-        model, stream: true, temperature: 0.25, max_tokens: 1200,
+        model, stream: true, temperature: 0.25, max_completion_tokens: 1200, ...(hasImages ? {} : { reasoning_effort: "low" }),
         messages: gatewayMessages
       })
     });
     if (!upstream.ok || !upstream.body) {
       const details = (await upstream.text()).slice(0, 500);
-      console.error("[assistant/chat] AI Gateway HTTP " + upstream.status + ": " + details);
-      return NextResponse.json({ error: upstream.status === 429 ? "The AI service is busy. Please try again shortly." : "The AI service could not complete this response. Please try again." }, { status: 502 });
+      console.error("[assistant/chat] Groq HTTP " + upstream.status + ": " + details);
+      const message = upstream.status === 429
+        ? "The AI provider is busy or its free-tier limit was reached. Please wait and try again."
+        : upstream.status === 401 || upstream.status === 403
+          ? "The AI provider rejected its server key. Check the GROQ_API_KEY setting in Vercel."
+          : "The AI provider could not complete this response. Please try again.";
+      return NextResponse.json({ error: message }, { status: 502 });
     }
     return new Response(upstream.body, {
       status: 200,
