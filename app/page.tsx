@@ -338,6 +338,13 @@ export default function Home() {
         .sidebar { display: none !important; }
         .topbar { position: relative; display: flex; align-items: center; gap: 14px; }
         .dashboard-menu-wrap { position: relative; flex: 0 0 auto; z-index: 90; }
+        .desktop-main-nav { display: none; }
+        @media (min-width: 821px) {
+          .dashboard-menu-wrap { display: none !important; }
+          .desktop-main-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 28px; border-bottom: 1px solid #e9edf4; background: #fff; }
+          .desktop-main-nav a { padding: 9px 11px; border-radius: 8px; color: #526078; text-decoration: none; font-size: 12px; font-weight: 650; white-space: nowrap; }
+          .desktop-main-nav a:hover { background: #f0f4ff; color: #263f82; }
+        }
         .header-icon-actions { display: inline-flex; align-items: center; gap: 8px; }
         .header-icon-button { position: relative; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #dfe4ed; border-radius: 12px; background: #fff; color: #34415a; text-decoration: none; flex: 0 0 auto; }
         .header-icon-button:hover { background: #f4f7fc; border-color: #a9b5ca; }
@@ -423,6 +430,9 @@ export default function Home() {
           <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" value={dashboardSearch} onChange={(event) => setDashboardSearch(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
           <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link><div className="header-icon-actions"><Link className="header-icon-button notification-button" href="/exceptions" aria-label={`Notifications: ${orders.filter((order) => order.status !== "Paid").length} items needing attention`} title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{orders.filter((order) => order.status !== "Paid").length > 0 && <span className="notification-count">{orders.filter((order) => order.status !== "Paid").length > 9 ? "9+" : orders.filter((order) => order.status !== "Paid").length}</span>}</Link><Link className="header-icon-button profile-icon-button" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open profile" : "Sign in"} title={isSignedIn ? "Profile" : "Sign in"}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></svg></Link></div>{authUserName ? <><Link className="demo-payment-guide-link account-name-link" href="/profile">{authUserName.trim().split(/\s+/)[0] || "Profile"} ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
+        <nav className="desktop-main-nav" aria-label="Desktop navigation">
+          <a href="#overview">Overview</a><a href="/payments">Payment evidence</a><a href="#reconciliation">Reconciliation</a><a href="/assistant">AI assistant</a><a href="/exceptions">Exception review</a><a href="/audit">Audit trail</a><a href="/customers">Customers</a><a href="/shipping">Shipping</a><a href="/analytics">Analytics</a><a href="/reports">Reports</a><a href="/invoices">Invoices</a><a href="/profile">Settings</a>
+        </nav>
 
         <div className="content" id="overview">
           <div className="reference-overview-heading">
