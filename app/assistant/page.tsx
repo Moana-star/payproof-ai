@@ -23,6 +23,12 @@ export default function AssistantPage() {
   const [error, setError] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [desktopHistory, setDesktopHistory] = useState(true);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const filePicker = useRef<HTMLInputElement>(null);
+  const imagePicker = useRef<HTMLInputElement>(null);
+  const recognition = useRef<{ stop: () => void } | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLTextAreaElement>(null);
   const active = threads.find((thread) => thread.id === activeId);
@@ -54,12 +60,54 @@ export default function AssistantPage() {
     setActiveId(thread.id); setInput(""); setCaseId(""); setError(""); setHistoryOpen(false);
   }
 
+  function addFiles(fileList: FileList | null, imagesOnly = false) {
+    if (!fileList) return;
+    const chosen = Array.from(fileList);
+    const accepted = chosen.filter((file) => {
+      if (file.size > 8 * 1024 * 1024) { setError(file.name + " is larger than the 8 MB limit."); return false; }
+      if (imagesOnly && !file.type.startsWith("image/")) return false;
+      return true;
+    });
+    setAttachments((current) => [...current, ...accepted].slice(0, 5));
+    setToolsOpen(false);
+  }
+
+  function toggleVoice() {
+    type SpeechResult = { transcript: string };
+    type SpeechEvent = { resultIndex: number; results: ArrayLike<ArrayLike<SpeechResult>> };
+    type SpeechRecognitionLike = {
+      lang: string; interimResults: boolean; continuous: boolean;
+      onresult: ((event: SpeechEvent) => void) | null;
+      onerror: (() => void) | null; onend: (() => void) | null;
+      start: () => void; stop: () => void;
+    };
+    const speechWindow = window as Window & { SpeechRecognition?: new () => SpeechRecognitionLike; webkitSpeechRecognition?: new () => SpeechRecognitionLike };
+    const Speech = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
+    if (recording) { recognition.current?.stop(); setRecording(false); return; }
+    if (!Speech) { setError("Voice input is not supported in this browser. Try a recent version of Chrome or Edge."); return; }
+    const instance = new Speech();
+    instance.lang = "en-US"; instance.interimResults = true; instance.continuous = true;
+    instance.onresult = (event) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) transcript += event.results[i][0].transcript;
+      setInput((current) => (current ? current + " " : "") + transcript);
+    };
+    instance.onerror = () => { setRecording(false); setError("Microphone access failed. Check your browser's microphone permission."); };
+    instance.onend = () => { setRecording(false); recognition.current = null; };
+    recognition.current = instance;
+    try { instance.start(); setRecording(true); setError(""); }
+    catch { setRecording(false); setError("The microphone could not be started. Please try again."); }
+  }
+
   async function send(value?: string) {
     const text = (value ?? input).trim();
     if (!text || loading || !activeId) return;
     const user: Message = { role: "user", content: text };
     const history = [...messages, user];
-    setInput(""); setError(""); setLoading(true);
+    const currentFiles = attachments;
+    const imageFiles = currentFiles.filter((file) => file.type.startsWith("image/"));
+    const textFiles = currentFiles.filter((file) => /^(text\\/|application\\/json)/i.test(file.type) || /\\.(txt|md|csv|json|log)$/i.test(file.name));
+    setInput(""); setAttachments([]); setError(""); setLoading(true);
     updateThread((thread) => ({
       ...thread,
       title: thread.messages.length ? thread.title : (text.length > 38 ? text.slice(0, 38) + "…" : text),
@@ -156,7 +204,24 @@ export default function AssistantPage() {
               <textarea ref={composer} value={input} rows={1} maxLength={6000} placeholder="Message PayProof AI…" aria-label="Message PayProof AI"
                 onChange={(event) => { setInput(event.target.value); event.currentTarget.style.height = "auto"; event.currentTarget.style.height = Math.min(event.currentTarget.scrollHeight, 160) + "px"; }}
                 onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); send(); } }} />
-              <div><small>Enter to send · Shift + Enter for a new line</small><button type="submit" disabled={!input.trim() || loading}>{loading ? "…" : "↑"}</button></div>
+              <div className="pp-composer-controls">
+                <div className="pp-composer-left">
+                  <div className="pp-add-wrap">
+                    <button className="pp-composer-icon pp-plus" type="button" aria-label="Add attachment" aria-expanded={toolsOpen} onClick={() => setToolsOpen((open) => !open)}>＋</button>
+                    {toolsOpen && <div className="pp-attach-menu">
+                      <button type="button" onClick={() => filePicker.current?.click()}><span>↥</span><b>Attach file</b><small>Documents and text files</small></button>
+                      <button type="button" onClick={() => imagePicker.current?.click()}><span>▧</span><b>Photo library</b><small>Choose images to discuss</small></button>
+                    </div>}
+                  </div>
+                  <button className="pp-composer-icon pp-attach" type="button" aria-label="Attach a file" title="Attach file" onClick={() => filePicker.current?.click()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12.5 14.8 5.7a3.5 3.5 0 0 1 5 5L10 20.5a5 5 0 0 1-7.1-7.1l9.2-9.2" /></svg></button>
+                  <button className="pp-composer-icon pp-gallery" type="button" aria-label="Choose an image" title="Photo library" onClick={() => imagePicker.current?.click()}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg></button>
+                  <input ref={filePicker} type="file" hidden multiple onChange={(event) => { addFiles(event.target.files); event.currentTarget.value = ""; }} />
+                  <input ref={imagePicker} type="file" hidden multiple accept="image/*" onChange={(event) => { addFiles(event.target.files, true); event.currentTarget.value = ""; }} />
+                  <button className={"pp-composer-icon pp-mic" + (recording ? " recording" : "")} type="button" aria-label={recording ? "Stop voice input" : "Start voice input"} title={recording ? "Stop voice input" : "Voice input"} onClick={toggleVoice}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3m-4 0h8"/></svg></button>
+                </div>
+                <small className="pp-composer-hint">{recording ? "Listening… tap microphone to stop" : "Enter to send · Shift + Enter for a new line"}</small>
+                <button className="pp-send-button" type="submit" aria-label="Send message" disabled={(!input.trim() && attachments.length === 0) || loading}>{loading ? "…" : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>}</button>
+              </div>
             </form>
             <p className="pp-chat-disclaimer">AI can make mistakes. Verify payment status against provider records before taking action. Never share passwords or payment credentials.</p>
           </div>
@@ -180,10 +245,10 @@ export default function AssistantPage() {
         .pp-chat-messages{max-width:790px;margin:0 auto;padding:30px 28px 40px;display:grid;gap:27px}.pp-chat-message{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;align-items:start}.pp-message-avatar{width:29px;height:29px;display:grid;place-items:center;border-radius:9px;background:#f0edff;color:#6757d5;font-size:14px;font-weight:800}.pp-chat-message.user .pp-message-avatar{background:#eaf0f7;color:#596982;font-size:9px}
         .pp-message-content{min-width:0}.pp-message-content>b{display:block;margin:2px 0 8px;font-size:10px;color:#46536a}.pp-message-content>div{font-size:12px;line-height:1.8;color:#37445a;white-space:pre-wrap;overflow-wrap:anywhere}.pp-message-content>button{margin-top:8px;padding:0;border:0;background:transparent;color:#929bad;font-size:9px}.pp-chat-thinking{color:#8a94a6;font-size:10px}
         .pp-composer-wrap{flex-shrink:0;padding:12px 20px 14px;background:linear-gradient(180deg,#ffffffd9,#fff 20%)}.pp-chat-composer{max-width:790px;margin:0 auto;padding:10px 11px 8px;border:1px solid #dfe4ed;border-radius:14px;box-shadow:0 5px 18px #26324c0a}.pp-chat-composer:focus-within{border-color:#b7afea;box-shadow:0 0 0 3px #7769d310}
-        .pp-chat-composer textarea{display:block;width:100%;max-height:160px;min-height:30px;resize:none;border:0;outline:0;background:transparent;padding:3px 5px 8px;color:#344158;font-size:12px;line-height:1.6}.pp-chat-composer textarea::placeholder{color:#a0a9b8}.pp-chat-composer>div{display:flex;align-items:center;justify-content:space-between;padding-left:5px}.pp-chat-composer small{font-size:9px;color:#a0a9b8}.pp-chat-composer>div button{width:33px;height:31px;border:0;border-radius:9px;background:#6354d7;color:#fff;font-size:19px}.pp-chat-composer>div button:disabled{background:#e4e7ee;color:#9ba4b4;cursor:not-allowed}
+        .pp-chat-composer textarea{display:block;width:100%;max-height:160px;min-height:30px;resize:none;border:0;outline:0;background:transparent;padding:3px 5px 8px;color:#344158;font-size:12px;line-height:1.6}.pp-chat-composer textarea::placeholder{color:#a0a9b8}.pp-composer-controls{display:flex;align-items:center;gap:9px;padding:0 2px}.pp-composer-left{display:flex;align-items:center;gap:6px}.pp-composer-icon{width:31px;height:31px;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;color:#68758b}.pp-composer-icon:hover{background:#f0f1f7;color:#5548c6}.pp-composer-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.pp-plus{font-size:23px;border:1px solid #e4e8ef;background:#fff}.pp-mic.recording{background:#fff0f0;color:#d04452;animation:pp-mic-pulse 1.2s infinite}.pp-add-wrap{position:relative}.pp-attach-menu{position:absolute;bottom:40px;left:0;z-index:30;width:210px;padding:6px;background:#fff;border:1px solid #e5e8ef;border-radius:12px;box-shadow:0 12px 35px #1d2a4324}.pp-attach-menu button{width:100%;display:grid;grid-template-columns:27px 1fr;gap:2px 8px;padding:9px;border:0;border-radius:8px;background:#fff;text-align:left;color:#536078}.pp-attach-menu button:hover{background:#f6f6fb}.pp-attach-menu button>span{grid-row:span 2;align-self:center;font-size:17px;color:#6657d2}.pp-attach-menu b{font-size:10px}.pp-attach-menu small{font-size:9px;color:#8c96a7}.pp-composer-hint{margin-left:auto;font-size:9px;color:#a0a9b8;white-space:nowrap}.pp-send-button{width:34px;height:32px;flex-shrink:0;display:grid;place-items:center;border:0;border-radius:10px;background:#6354d7;color:#fff}.pp-send-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.pp-send-button:disabled{background:#e4e7ee;color:#9ba4b4;cursor:not-allowed}.pp-attachment-list{max-width:790px;margin:0 auto 8px;display:flex;flex-wrap:wrap;gap:6px}.pp-attachment-chip{display:flex;align-items:center;gap:6px;max-width:210px;padding:6px 8px;border:1px solid #e5e8ef;border-radius:9px;background:#fafbfe;color:#59657a;font-size:9px}.pp-attachment-chip>span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pp-attachment-chip button{border:0;background:transparent;color:#929bad;font-size:14px}.pp-chat-composer small{font-size:9px;color:#a0a9b8}@keyframes pp-mic-pulse{50%{box-shadow:0 0 0 4px #d0445220}}
         .pp-chat-disclaimer{max-width:790px;margin:8px auto 0;text-align:center;color:#a0a9b8;font-size:8px;line-height:1.5}.pp-chat-error{max-width:790px;margin:0 auto 8px;padding:9px 11px;border:1px solid #f1d0d0;border-radius:8px;background:#fff7f7;color:#a33b45;font-size:10px}.pp-chat-error button{float:right;border:0;background:transparent;color:#a33b45;font-size:9px}
         @media(max-width:900px){.pp-chat{grid-template-columns:215px minmax(0,1fr)}.pp-chat-head{padding:0 13px}.pp-chat-tools select{max-width:150px}}
-        @media(max-width:700px){.pp-chat{display:block;position:relative;height:calc(100dvh - 220px);min-height:560px}.pp-chat-history{display:none;position:absolute;z-index:20;inset:0 auto 0 0;width:min(290px,86%);height:100%;box-shadow:15px 0 45px #1b29402b}.pp-chat-history.mobile-visible{display:flex}.pp-hide-history{display:none}.pp-mobile-history,.pp-mobile-new{display:inline-flex;align-items:center;gap:5px}.pp-chat-head{height:54px;padding:0 10px}.pp-chat-brand{gap:6px}.pp-chat-tools{gap:5px}.pp-chat-tools label{font-size:0}.pp-chat-tools select{max-width:125px;font-size:9px}.pp-chat-welcome{padding:38px 14px 20px}.pp-chat-welcome h2{font-size:21px}.pp-chat-welcome>p{font-size:11px}.pp-suggestions{grid-template-columns:1fr;gap:7px;margin:20px 0}.pp-suggestions button{min-height:78px;padding:10px 12px;gap:4px}.pp-chat-messages{padding:20px 13px 30px;gap:22px}.pp-chat-message{grid-template-columns:25px minmax(0,1fr);gap:9px}.pp-message-avatar{width:25px;height:25px}.pp-message-content>div{font-size:11px}.pp-composer-wrap{padding:9px 9px 10px}.pp-chat-disclaimer{font-size:7px}}
+        @media(max-width:700px){.pp-chat{display:block;position:relative;height:calc(100dvh - 220px);min-height:560px}.pp-chat-history{display:none;position:absolute;z-index:20;inset:0 auto 0 0;width:min(290px,86%);height:100%;box-shadow:15px 0 45px #1b29402b}.pp-chat-history.mobile-visible{display:flex}.pp-hide-history{display:none}.pp-mobile-history,.pp-mobile-new{display:inline-flex;align-items:center;gap:5px}.pp-chat-head{height:54px;padding:0 10px}.pp-chat-brand{gap:6px}.pp-chat-tools{gap:5px}.pp-chat-tools label{font-size:0}.pp-chat-tools select{max-width:125px;font-size:9px}.pp-chat-welcome{padding:38px 14px 20px}.pp-chat-welcome h2{font-size:21px}.pp-chat-welcome>p{font-size:11px}.pp-suggestions{grid-template-columns:1fr;gap:7px;margin:20px 0}.pp-suggestions button{min-height:78px;padding:10px 12px;gap:4px}.pp-chat-messages{padding:20px 13px 30px;gap:22px}.pp-chat-message{grid-template-columns:25px minmax(0,1fr);gap:9px}.pp-message-avatar{width:25px;height:25px}.pp-message-content>div{font-size:11px}.pp-composer-wrap{padding:9px 9px 10px}.pp-composer-controls{gap:5px}.pp-composer-left{gap:2px}.pp-composer-icon{width:29px;height:29px}.pp-composer-hint{display:none}.pp-chat-disclaimer{font-size:7px}}
         @media(prefers-reduced-motion:reduce){.pp-suggestions button{transition:none}}
       `}</style>
     </WorkspaceLayout>
