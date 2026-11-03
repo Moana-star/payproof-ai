@@ -25,7 +25,7 @@ function money(cents: number) {
 export async function POST(request: NextRequest) {
   const user = await getAuthenticatedUser(request);
   if (!user) return NextResponse.json({ error: "Sign in to create and save orders in your own workspace." }, { status: 401 });
-  let body: { product?: unknown; quantity?: unknown };
+  let body: { product?: unknown; quantity?: unknown; customerName?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -55,8 +55,10 @@ export async function POST(request: NextRequest) {
   // selected and calculated here, on the server, never trusted from the client.
   const referenceId = `PP-${randomUUID()}`;
   const amount = money(totalCents);
+  const customerName = typeof body.customerName === "string" ? body.customerName.trim().slice(0, 100) : "";
   const orderRecord = {
     order_number: referenceId,
+    customer_name: customerName || null,
     product_id: product.id,
     product_name: productName,
     quantity,
