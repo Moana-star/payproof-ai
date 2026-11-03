@@ -211,7 +211,7 @@ export default function Home() {
         body: JSON.stringify({ message: flowMessage })
       });
       const data = await response.json() as {
-        draft?: { product: string | null; quantity: number | null; missingInformation: string[] };
+        draft?: { product: string | null; quantity: number | null; missingInformation: string[]; confidenceNotes?: string };
         error?: string;
       };
       if (!response.ok || !data.draft) throw new Error(data.error || "AI could not prepare this order. Please review the order text.");
@@ -229,8 +229,8 @@ export default function Home() {
         item: product,
         quantity: String(quantity),
         note: data.draft.missingInformation.length
-          ? `Needs confirmation: ${data.draft.missingInformation.join(" ")} · Confidence notes: ${data.draft.confidenceNotes}`
-          : `Confidence notes: ${data.draft.confidenceNotes}`
+          ? `Needs confirmation: ${data.draft.missingInformation.join(" ")} · Confidence notes: ${(data.draft.confidenceNotes || "Review the extracted details against the customer message.")}`
+          : `Confidence notes: ${(data.draft.confidenceNotes || "Review the extracted details against the customer message.")}`
       });
       setFlowValidation(null);
       setFlowError("");
