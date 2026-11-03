@@ -62,6 +62,13 @@ export function WorkspaceModulePage({ module }: { module: ModuleKey }) {
     return [...map.values()];
   }, [orders]);
   const paid = orders.filter(o => o.payment_status === "paid");
+  const revenueCurrencies = [...new Set(paid.map(order => order.currency || "USD"))];
+  const primaryRevenueCurrency = revenueCurrencies[0] || "USD";
+  const primaryCurrencyPaid = paid.filter(order => (order.currency || "USD") === primaryRevenueCurrency);
+  const revenueByCurrency = revenueCurrencies.map(currency => ({
+    currency,
+    amount: paid.filter(order => (order.currency || "USD") === currency).reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0)
+  }));
   const pending = orders.filter(o => o.payment_status === "awaiting_payment");
   const review = orders.filter(o => ["payment_review", "failed"].includes(o.payment_status));
   const total = orders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
@@ -72,7 +79,7 @@ export function WorkspaceModulePage({ module }: { module: ModuleKey }) {
       return { key: date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0"), label: date.toLocaleDateString("en-US", { month: "short" }), revenue: 0, orders: 0 };
     });
     const monthIndex = new Map(months.map((month, index) => [month.key, index]));
-    paid.forEach(order => {
+    primaryCurrencyPaid.forEach(order => {
       const timestamp = order.verified_at || order.created_at;
       if (!timestamp) return;
       const date = new Date(timestamp);
@@ -84,7 +91,7 @@ export function WorkspaceModulePage({ module }: { module: ModuleKey }) {
       months[index].orders += 1;
     });
     return months;
-  }, [orders]);
+  }, [orders, primaryRevenueCurrency]);
   const statusSlices = [
     { label: "Verified paid", count: paid.length, color: "#16a36a" },
     { label: "Awaiting payment", count: pending.length, color: "#e7a23b" },
@@ -110,7 +117,6 @@ export function WorkspaceModulePage({ module }: { module: ModuleKey }) {
     return [...grouped.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 5);
   }, [orders]);
   const maxProductCount = Math.max(1, ...productMix.map(product => product.count));
-  const revenueCurrencies = [...new Set(paid.map(order => order.currency || "USD"))];
   function exportCsv() {
     const columns = ["order_number","customer_name","product_name","quantity","total_amount","currency","payment_status","paypal_order_id","paypal_capture_id","created_at","verified_at"];
     const quote = (v: unknown) => '"' + String(v ?? "").replace(/"/g, '""') + '"';
@@ -135,23 +141,23 @@ export function WorkspaceModulePage({ module }: { module: ModuleKey }) {
     {module === "analytics" && <>
       <div className="ops-metric-grid">
         <article className="ops-metric"><span>Total orders</span><strong>{loading ? "—" : orders.length}</strong><small>All saved account statuses</small><span className="ops-metric-icon purple">▤</span></article>
-        <article className="ops-metric"><span>Verified revenue</span><strong>{loading ? "—" : money(paid.reduce((s,o)=>s+(Number(o.total_amount)||0),0).toFixed(2), revenueCurrencies.length === 1 ? revenueCurrencies[0] : "USD")}</strong><small>Verified-paid orders only</small><span className="ops-metric-icon green">✓</span></article>
+        <article className="ops-metric"><span>Verified revenue</span><strong>{loading ? "—" : money(primaryCurrencyPaid.reduce((s,o)=>s+(Number(o.total_amount)||0),0).toFixed(2), primaryRevenueCurrency)}</strong><small>Verified-paid orders only</small><span className="ops-metric-icon green">✓</span></article>
         <article className="ops-metric"><span>Awaiting payment</span><strong>{loading ? "—" : pending.length}</strong><small>Excluded from revenue</small><span className="ops-metric-icon amber">◷</span></article>
         <article className="ops-metric"><span>Exceptions</span><strong>{loading ? "—" : review.length}</strong><small>Failed or flagged orders</small><span className="ops-metric-icon red">!</span></article>
       </div>
-      {revenueCurrencies.length > 1 && <div className="ops-info-banner ops-warning-banner"><span className="ops-info-icon">!</span><div><strong>Multiple currencies detected</strong><p>Revenue totals are displayed using the first recorded currency. Use the order register to compare currencies separately; no exchange-rate conversion is applied.</p></div></div>}
+      {revenueCurrencies.length > 1 && <div className="ops-info-banner ops-warning-banner"><span className="ops-info-icon">!</span><div><strong>Multiple currencies detected</strong><p>Revenue charts and averages use {primaryRevenueCurrency} only. Other verified totals are shown separately: {revenueByCurrency.map(item => money(item.amount.toFixed(2), item.currency)).join(" · ")}. No exchange-rate conversion or cross-currency addition is applied.</p></div></div>}
       <div className="ops-chart-grid">
         <section className="ops-panel ops-chart-panel ops-chart-wide">
           <div className="ops-panel-top"><div><span className="ops-panel-symbol violet">⌁</span><div><strong>Verified revenue trend</strong><p>Monthly totals from server-verified payments · last 6 months</p></div></div><span className="ops-live-badge">ACCOUNT DATA</span></div>
-          {paid.length ? <div className="ops-chart-area">
-            <div className="ops-chart-summary"><strong>{money(paid.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0).toFixed(2), revenueCurrencies.length === 1 ? revenueCurrencies[0] : "USD")}</strong><span>Lifetime verified revenue in loaded records</span></div>
+          {primaryCurrencyPaid.length ? <div className="ops-chart-area">
+            <div className="ops-chart-summary"><strong>{money(primaryCurrencyPaid.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0).toFixed(2), primaryRevenueCurrency)}</strong><span>Lifetime verified revenue in loaded records</span></div>
             <svg className="ops-line-chart" viewBox="0 0 620 210" role="img" aria-label="Verified revenue by month for the last six months">
               {[34, 80, 126, 174].map(y => <line key={y} x1="28" y1={y} x2="604" y2={y} className="ops-chart-gridline" />)}
               <polyline points={revenuePoints} className="ops-chart-line" />
               {monthlyAnalytics.map((month, index) => <g key={month.key}><circle cx={32 + index * 116} cy={174 - (month.revenue / maxRevenue) * 140} r="4.5" className="ops-chart-point" /><text x={32 + index * 116} y="201" textAnchor="middle" className="ops-chart-axis-label">{month.label}</text></g>)}
             </svg>
             <div className="ops-chart-footnote">Revenue is grouped by verification date where available. Months without a verified capture are shown as zero.</div>
-          </div> : <div className="ops-chart-empty">{loading ? "Loading verified payment history…" : "No verified payments yet. Complete a Sandbox checkout to populate the revenue trend."}</div>}
+          </div> : <div className="ops-chart-empty">{loading ? "Loading verified payment history…" : "No verified payments in {primaryRevenueCurrency} yet. Complete a Sandbox checkout to populate the revenue trend."}</div>}
         </section>
         <section className="ops-panel ops-chart-panel">
           <div className="ops-panel-top"><div><span className="ops-panel-symbol mint">◔</span><div><strong>Payment status mix</strong><p>Share of saved orders by current status</p></div></div></div>
@@ -171,7 +177,7 @@ export function WorkspaceModulePage({ module }: { module: ModuleKey }) {
       </div>
       <section className="ops-panel"><div className="ops-panel-top"><div><span className="ops-panel-symbol violet">▥</span><div><strong>Performance indicators</strong><p>Calculated only from records returned for your signed-in account</p></div></div><span className="ops-live-badge">NO ESTIMATES</span></div>
         <div className="ops-evidence-check"><span>01</span><div><strong>Verified payment rate</strong><p>{orders.length ? ((paid.length / orders.length) * 100).toFixed(1) + "% of saved orders are verified paid." : "No saved orders available to calculate a rate."}</p></div></div>
-        <div className="ops-evidence-check"><span>02</span><div><strong>Average verified order value</strong><p>{paid.length ? money((paid.reduce((s,o)=>s+(Number(o.total_amount)||0),0)/paid.length).toFixed(2), paid[0].currency || "USD") : "Not available until a payment is verified."}</p></div></div>
+        <div className="ops-evidence-check"><span>02</span><div><strong>Average verified order value</strong><p>{primaryCurrencyPaid.length ? money((primaryCurrencyPaid.reduce((s,o)=>s+(Number(o.total_amount)||0),0)/primaryCurrencyPaid.length).toFixed(2), primaryRevenueCurrency) : "Not available until a payment is verified in " + primaryRevenueCurrency + "."}</p></div></div>
         <div className="ops-evidence-check"><span>03</span><div><strong>Recorded order value</strong><p>{money(total.toFixed(2), orders[0]?.currency || "USD")} across all saved orders; this is not revenue because pending and review orders may be unpaid.</p></div></div>
       </section>
     </>}
