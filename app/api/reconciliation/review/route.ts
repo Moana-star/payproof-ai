@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Send a valid review decision." }, { status: 400 }); }
   if (typeof body.rowId !== "string" || !/^[0-9a-f-]{36}$/i.test(body.rowId)) return NextResponse.json({ error: "A valid statement row ID is required." }, { status: 400 });
   if (body.decision !== "approve" && body.decision !== "reject") return NextResponse.json({ error: "Decision must be approve or reject." }, { status: 400 });
-  const actor = reconciliationActor(body.actor, user.email || "authenticated reviewer"); const owner = encodeURIComponent(user.id);
+  const actor = reconciliationActor(user.email || user.id); const owner = encodeURIComponent(user.id);
   const note = typeof body.note === "string" ? body.note.trim().slice(0, 500) : "";
   try {
     const rows = await reconciliationDb<Array<{ id: string; match_status: string; matched_order_id: string | null; transaction_id: string }>>(
