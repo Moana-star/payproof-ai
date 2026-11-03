@@ -100,7 +100,7 @@ export default function Home() {
           const timestamp = order.verified_at || order.created_at;
           return {
             id: order.order_number,
-            customer: order.customer_name?.trim() || "Customer details not recorded",
+            customer: order.customer_name?.trim() || "Customer name not captured",
             item: `${order.product_name} × ${order.quantity}`,
             amount,
             status,
@@ -203,9 +203,7 @@ export default function Home() {
       return;
     }
     if (!flowMessage.trim()) {
-      setFlowProduct("Coffee gift set");
-      setFlowQuantity("1");
-      await startSandboxCheckout("Coffee gift set", 1, flowCustomer.trim());
+      setFlowError("Add the customer's order message so the product and quantity can be reviewed before checkout.");
       return;
     }
     setFlowBusy(true);
@@ -389,7 +387,7 @@ export default function Home() {
             <article className="metric-card"><div className="metric-top"><span>Total orders</span><span className="metric-icon violet">▤</span></div><div className="metric-value">{orders.length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">{ordersSource === "saved" ? "Connected records" : "Sample workspace"}</span><span>All orders</span></div></article>
             <article className="metric-card"><div className="metric-top"><span>{ordersSource === "saved" ? "Verified paid" : "Sample paid"}</span><span className="metric-icon green">✓</span></div><div className="metric-value">{paidTotal.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-green">{ordersSource === "saved" ? "Server verified" : "Illustrative only"}</span><span>{ordersSource === "saved" ? "Saved Sandbox records" : "Not a live payment count"}</span></div></article>
             <article className="metric-card"><div className="metric-top"><span>Awaiting payment</span><span className="metric-icon amber">◷</span></div><div className="metric-value">{orders.filter(o => o.status === "Awaiting payment").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-neutral">No action yet</span><span>Checkout pending</span></div></article>
-            <article className="metric-card"><div className="metric-top"><span>Needs attention</span><span className="metric-icon red">!</span></div><div className="metric-value">{orders.filter(o => o.status === "Review needed").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-red">Review required</span><span>Exceptions only</span></div></article>
+            <article className="metric-card"><div className="metric-top"><span>Open exceptions</span><span className="metric-icon red">!</span></div><div className="metric-value">{orders.filter(o => o.status === "Review needed").length.toString().padStart(2, "0")}</div><div className="metric-foot"><span className="metric-red">Review required</span><span>Exceptions only</span></div></article>
           </div>
           <section className="dashboard-reference-panels">
             <article className="dashboard-config-card">
@@ -427,7 +425,7 @@ export default function Home() {
                 <p>Import a statement, match against verified PayPal captures, review exceptions, and approve ledger entries with an audit trail.</p>
               </div>
               <div className="reconciliation-actions">
-                <span className="reconciliation-demo-tag"><i /> Protected preview · Manual import</span>
+                <span className="reconciliation-demo-tag"><i /> Account-scoped · Sign-in required</span>
                 <a className="secondary-button" href="/exceptions">Exception review ↗</a>
               </div>
             </div>
@@ -438,9 +436,9 @@ export default function Home() {
               <div className="reconciliation-flow-line" />
               <div className="reconciliation-flow-step review-step"><span>3</span><div><strong>Human approval</strong><small>Exceptions stay blocked</small></div></div>
               <div className="reconciliation-flow-line" />
-              <div className="reconciliation-flow-step"><span>4</span><div><strong>Post &amp; audit</strong><small>Internal demo ledger</small></div></div>
+              <div className="reconciliation-flow-step"><span>4</span><div><strong>Post &amp; audit</strong><small>Persistent internal ledger</small></div></div>
             </div>
-            {!authChecked ? <p className="workspace-isolation-note">Checking workspace access…</p> : isSignedIn ? <div className="workspace-isolation-note"><strong>Reconciliation workspace</strong><p>Open the reconciliation workspace to review the protected statement-matching demo. Your saved orders and payment evidence remain private to your account; shared judge-preview records are kept separate.</p><Link className="primary-button" href="/reconciliation">Open reconciliation workspace ↗</Link><p className="recon-judge-safety">Private reviewer access is required for protected import, review decisions and internal-ledger posting. This preview does not connect to a bank or external accounting platform.</p></div> : <ReconciliationConsole />}
+            {!authChecked ? <p className="workspace-isolation-note">Checking workspace access…</p> : isSignedIn ? <div className="workspace-isolation-note"><strong>Reconciliation workspace</strong><p>Open your private reconciliation workspace to import original bank or provider statements, match them against your own server-verified PayPal captures, review candidates and post approved entries to your account's persistent internal ledger. The public synthetic judge sample remains separate.</p><Link className="primary-button" href="/reconciliation">Open reconciliation workspace ↗</Link><p className="recon-judge-safety">A PayPal capture confirms provider-side activity, not bank settlement. PayProof records approved entries in its own ledger; it does not connect to a bank or external accounting platform.</p></div> : <ReconciliationConsole />}
           </section>
 
           <div className="section-heading" id="transactions"><div><h2>Recent orders</h2><p>Track each order without guessing about payment status.</p></div><button className="text-button" onClick={() => setNotice(ordersSource === "saved" ? "Showing saved Sandbox orders. For capture details and verification timestamps, open Payment evidence." : "Showing illustrative sample orders. These are not saved payment records.")}>View all orders <span>→</span></button></div>
@@ -497,9 +495,9 @@ export default function Home() {
             <div className="order-flow-form">
               <label htmlFor="flow-customer">Customer Name</label>
               <input id="flow-customer" type="text" value={flowCustomer} onChange={(event) => { setFlowCustomer(event.target.value); setFlowError(""); }} placeholder="Enter customer name" autoComplete="name" maxLength={100} required />
-              <label htmlFor="flow-message">Enter Order Text <span className="order-optional-label">(optional)</span></label>
+              <label htmlFor="flow-message">Customer Order Message <span className="order-optional-label">(required)</span></label>
               <textarea id="flow-message" value={flowMessage} onChange={(event) => { setFlowMessage(event.target.value); setFlowError(""); }} placeholder="Example: 2 Coffee gift sets" rows={4} />
-              <p className="order-flow-hint">Your order text will be used to prepare a suggested sales order. Review and validate the extracted product and quantity before continuing to PayPal. Nothing is saved at this stage.</p>
+              <p className="order-flow-hint">Paste the customer's message. AI will suggest a product and quantity for your review. Confirm the customer name and extracted details before continuing to PayPal. Nothing is saved until you start checkout.</p>
               {flowError && <p className="order-flow-error" role="alert">{flowError}</p>}
               {flowDraft && <div className="draft-result flow-draft-result">
                 <div className="draft-title">Extracted sales order <span>REVIEW REQUIRED · NOT SAVED</span></div>
