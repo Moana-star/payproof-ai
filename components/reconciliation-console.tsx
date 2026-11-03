@@ -79,26 +79,24 @@ export function ReconciliationConsole() {
         const headers = (records.shift() || []).map((value) => value.trim().replace(/^\\uFEFF/, ""));
         const parsed = records.map((values) => Object.fromEntries(headers.map((header, i) => [header, values[i] || ""])));
         const now = new Date().toISOString();
-        setData((current) => {
-          const knownIds = new Set(current.rows.map((row) => row.transaction_id.trim().toLowerCase()));
-          const seen = new Set<string>();
-          const imported: Row[] = parsed.filter((item) => {
-            const id = (item.transaction_id || "").trim().toLowerCase();
-            if (!id || knownIds.has(id) || seen.has(id)) return false;
-            seen.add(id); return true;
-          }).map((item, index) => ({
-            id: `demo-import-${Date.now()}-${index}`, statement_id: "demo-local-statement",
-            transaction_id: item.transaction_id.trim(), amount: item.amount || "0",
-            currency: (item.currency || "USD").toUpperCase(), reference: item.reference || null,
-            description: item.description || null, posted_at: item.posted_at || null, source_file: file.name,
-            match_status: "unmatched", matched_order_id: null,
-            match_reason: "Imported into this browser's synthetic demo session. Run safe matching to evaluate the sample fixture.",
-            approved_by: null, approved_at: null, rejected_by: null, rejected_at: null, ledger_posted_at: null, created_at: now
-          }));
-          const skipped = parsed.length - imported.length;
-          setNotice(`Imported ${imported.length} new CSV row(s); skipped ${skipped} duplicate or invalid transaction ID(s). No server records or real payment data were changed.`);
-          return { ...current, rows: [...imported, ...current.rows], audit: [{ id: `demo-audit-${Date.now()}`, action: "demo_csv_imported", actor, details: { filename: file.name, rows: imported.length, duplicates_skipped: skipped, local_only: true }, created_at: now, statement_row_id: null }, ...current.audit] };
-        });
+        const knownIds = new Set(data.rows.map((row) => row.transaction_id.trim().toLowerCase()));
+        const seen = new Set<string>();
+        const imported: Row[] = parsed.filter((item) => {
+          const id = (item.transaction_id || "").trim().toLowerCase();
+          if (!id || knownIds.has(id) || seen.has(id)) return false;
+          seen.add(id); return true;
+        }).map((item, index) => ({
+          id: `demo-import-${Date.now()}-${index}`, statement_id: "demo-local-statement",
+          transaction_id: item.transaction_id.trim(), amount: item.amount || "0",
+          currency: (item.currency || "USD").toUpperCase(), reference: item.reference || null,
+          description: item.description || null, posted_at: item.posted_at || null, source_file: file.name,
+          match_status: "unmatched", matched_order_id: null,
+          match_reason: "Imported into this browser's synthetic demo session. Run safe matching to evaluate the sample fixture.",
+          approved_by: null, approved_at: null, rejected_by: null, rejected_at: null, ledger_posted_at: null, created_at: now
+        }));
+        const skipped = parsed.length - imported.length;
+        setData((current) => ({ ...current, rows: [...imported, ...current.rows], audit: [{ id: `demo-audit-${Date.now()}`, action: "demo_csv_imported", actor, details: { filename: file.name, rows: imported.length, duplicates_skipped: skipped, local_only: true }, created_at: now, statement_row_id: null }, ...current.audit] }));
+        setNotice(`Imported ${imported.length} new CSV row(s); skipped ${skipped} duplicate or invalid transaction ID(s). No server records or real payment data were changed.`);
         setFile(null);
       } else {
         const result = await api("/api/reconciliation/import", { csv, filename: file.name, actor });
