@@ -90,7 +90,7 @@ export default function AssistantPage() {
     instance.onresult = (event) => {
       let transcript = "";
       for (let i = event.resultIndex; i < event.results.length; i++) transcript += event.results[i][0].transcript;
-      setInput((current) => { const prefix = current === initialText ? initialText : current.slice(0, initialText.length); return (prefix ? prefix + " " : "") + transcript; });
+      setInput((current) => { const prefix = current.startsWith(initialText) ? initialText : current; return (prefix ? prefix + " " : "") + transcript; });
     };
     instance.onerror = () => { setRecording(false); setError("Microphone access failed. Check your browser's microphone permission."); };
     instance.onend = () => { setRecording(false); recognition.current = null; };
@@ -102,7 +102,7 @@ export default function AssistantPage() {
   async function send(value?: string) {
     const text = (value ?? input).trim();
     if ((!text && attachments.length === 0) || loading || !activeId) return;
-    const user: Message = { role: "user", content: text || "Please review the attached file(s)." };
+    const user: Message = { role: "user", content: (text || "Please review the attached file(s).") + (attachments.length ? "\\n[Attachments: " + attachments.map((file) => file.name).join(", ") + "]" : "") };
     const history = [...messages, user];
     const currentFiles = attachments;
     const imageFiles = currentFiles.filter((file) => file.type.startsWith("image/"));
