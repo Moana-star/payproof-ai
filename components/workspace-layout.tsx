@@ -48,31 +48,31 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
         .ops-desktop-nav { display: none; }
         @media (min-width: 821px) {
           .ops-menu-wrap { display: none !important; }
-          .ops-desktop-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 28px; border-bottom: 1px solid #e9edf4; background: #fff; }
+          .ops-desktop-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 28px; border-bottom: 1px solid #E0F8C7; background: #fff; }
           .ops-desktop-nav a { padding: 9px 11px; border-radius: 8px; color: #526078; text-decoration: none; font-size: 12px; font-weight: 650; white-space: nowrap; }
-          .ops-desktop-nav a:hover, .ops-desktop-nav a.is-active { background: #f0f4ff; color: #263f82; }
+          .ops-desktop-nav a:hover, .ops-desktop-nav a.is-active { background: #E0F8C7; color: #36415A; }
         }
         .ops-header-icons { display: inline-flex; align-items: center; gap: 8px; }
-        .ops-header-icon { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #dfe4ed; border-radius: 12px; background: #fff; color: #34415a; text-decoration: none; }
-        .ops-header-icon:hover { background: #f4f7fc; border-color: #a9b5ca; }
-        .ops-header-icon:focus-visible { outline: 3px solid #8ba8ff; outline-offset: 3px; }
+        .ops-header-icon { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #E0F8C7; border-radius: 12px; background: #fff; color: #36415A; text-decoration: none; }
+        .ops-header-icon:hover { background: #E0F8C7; border-color: #a9b5ca; }
+        .ops-header-icon:focus-visible { outline: 3px solid #36415A; outline-offset: 3px; }
         .ops-header-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-        .ops-menu-trigger { width: 44px; height: 44px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; border: 1px solid #dfe4ed; border-radius: 12px; background: #fff; cursor: pointer; }
-        .ops-menu-trigger span { width: 19px; height: 2px; border-radius: 3px; background: #17233b; }
-        .ops-menu-trigger:hover { border-color: #a9b5ca; background: #f8faff; }
-        .ops-menu-trigger:focus-visible, .ops-menu-item:focus-visible { outline: 3px solid #8ba8ff; outline-offset: 3px; }
-        .ops-menu-panel { position: absolute; top: calc(100% + 10px); left: 0; width: min(320px, calc(100vw - 28px)); max-height: min(76vh, 620px); overflow-y: auto; padding: 12px; border: 1px solid #e3e8f0; border-radius: 16px; background: #fff; box-shadow: 0 18px 50px rgba(20, 35, 65, .18); }
-        .ops-menu-heading { display: grid; gap: 3px; padding: 8px 10px 12px; border-bottom: 1px solid #edf0f5; margin-bottom: 7px; }
-        .ops-menu-heading strong { color: #17233b; font-size: 14px; }
+        .ops-menu-trigger { width: 44px; height: 44px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; border: 1px solid #E0F8C7; border-radius: 12px; background: #fff; cursor: pointer; }
+        .ops-menu-trigger span { width: 19px; height: 2px; border-radius: 3px; background: #36415A; }
+        .ops-menu-trigger:hover { border-color: #a9b5ca; background: #E0F8C7; }
+        .ops-menu-trigger:focus-visible, .ops-menu-item:focus-visible { outline: 3px solid #36415A; outline-offset: 3px; }
+        .ops-menu-panel { position: absolute; top: calc(100% + 10px); left: 0; width: min(320px, calc(100vw - 28px)); max-height: min(76vh, 620px); overflow-y: auto; padding: 12px; border: 1px solid #E0F8C7; border-radius: 16px; background: #fff; box-shadow: 0 18px 50px rgba(20, 35, 65, .18); }
+        .ops-menu-heading { display: grid; gap: 3px; padding: 8px 10px 12px; border-bottom: 1px solid #E0F8C7; margin-bottom: 7px; }
+        .ops-menu-heading strong { color: #36415A; font-size: 14px; }
         .ops-menu-heading span { color: #78849a; font-size: 11px; }
         .ops-menu-panel nav { display: grid; gap: 3px; }
         .ops-menu-item { display: flex; align-items: center; gap: 11px; min-height: 42px; padding: 9px 11px; border-radius: 10px; color: #48556d; text-decoration: none; font-size: 13px; font-weight: 600; }
         .ops-menu-item > span { width: 22px; text-align: center; color: #63769b; font-size: 17px; }
-        .ops-menu-item:hover, .ops-menu-item.is-active { color: #263f82; background: #f0f4ff; }
-        .ops-menu-item.is-active > span { color: #315bd1; }
-        .ops-menu-footer { display: flex; gap: 10px; align-items: flex-start; margin-top: 9px; padding: 12px 10px 5px; border-top: 1px solid #edf0f5; color: #1e8b69; }
+        .ops-menu-item:hover, .ops-menu-item.is-active { color: #36415A; background: #E0F8C7; }
+        .ops-menu-item.is-active > span { color: #36415A; }
+        .ops-menu-footer { display: flex; gap: 10px; align-items: flex-start; margin-top: 9px; padding: 12px 10px 5px; border-top: 1px solid #E0F8C7; color: #1e8b69; }
         .ops-menu-footer div { display: grid; gap: 3px; }
-        .ops-menu-footer strong { color: #26344c; font-size: 12px; }
+        .ops-menu-footer strong { color: #36415A; font-size: 12px; }
         .ops-menu-footer small { color: #78849a; font-size: 10px; line-height: 1.45; }
         @media (max-width: 640px) { .ops-topbar { flex-wrap: wrap; } .ops-menu-panel { position: fixed; top: 76px; left: 14px; } }
       `}</style>
