@@ -45,6 +45,8 @@ export default function Home() {
   const [flowQuantity, setFlowQuantity] = useState("1");
   const [flowBusy, setFlowBusy] = useState(false);
   const [flowError, setFlowError] = useState("");
+  const [flowDraft, setFlowDraft] = useState<{ item: string; quantity: string; note: string } | null>(null);
+  const [flowValidation, setFlowValidation] = useState<{ valid: boolean; message: string } | null>(null);
   const [dashboardSearch, setDashboardSearch] = useState("");
 
   useEffect(() => {
@@ -223,8 +225,15 @@ export default function Home() {
       }
       setFlowProduct(product);
       setFlowQuantity(String(quantity));
-      // Step 3 is the real PayPal-hosted Sandbox login/checkout page.
-      await startSandboxCheckout(product, quantity, flowCustomer.trim());
+      setFlowDraft({
+        item: product,
+        quantity: String(quantity),
+        note: data.draft.missingInformation.length
+          ? `Needs confirmation: ${data.draft.missingInformation.join(" ")} · Confidence notes: ${data.draft.confidenceNotes}`
+          : `Confidence notes: ${data.draft.confidenceNotes}`
+      });
+      setFlowValidation(null);
+      setFlowError("");
     } catch (error) {
       setFlowError(error instanceof Error ? error.message : "The order could not be prepared. Please try again.");
     } finally {
@@ -239,6 +248,8 @@ export default function Home() {
     setFlowCustomer("");
     setFlowProduct("Coffee gift set");
     setFlowQuantity("1");
+    setFlowDraft(null);
+    setFlowValidation(null);
   }
 
   async function prepareDraft() {
@@ -471,10 +482,36 @@ export default function Home() {
               <input id="flow-customer" type="text" value={flowCustomer} onChange={(event) => { setFlowCustomer(event.target.value); setFlowError(""); }} placeholder="Enter customer name" autoComplete="name" maxLength={100} required />
               <label htmlFor="flow-message">Enter Order Text <span className="order-optional-label">(optional)</span></label>
               <textarea id="flow-message" value={flowMessage} onChange={(event) => { setFlowMessage(event.target.value); setFlowError(""); }} placeholder="Example: 2 Coffee gift sets" rows={4} />
-              <p className="order-flow-hint">Your order text will be used to automatically generate the sales order. AI will identify the product and quantity for you to review before continuing to PayPal.</p>
+              <p className="order-flow-hint">Your order text will be used to prepare a suggested sales order. Review and validate the extracted product and quantity before continuing to PayPal. Nothing is saved at this stage.</p>
               {flowError && <p className="order-flow-error" role="alert">{flowError}</p>}
+              {flowDraft && <div className="draft-result flow-draft-result">
+                <div className="draft-title">Extracted sales order <span>REVIEW REQUIRED · NOT SAVED</span></div>
+                <p className="draft-review-hint">Edit the suggested fields, then compare them with the original customer message above.</p>
+                <label className="draft-field-label" htmlFor="flow-draft-product">PRODUCT NAME</label>
+                <input id="flow-draft-product" className="draft-edit-input" type="text" value={flowDraft.item} maxLength={120} autoComplete="off" onChange={(event) => { setFlowDraft((current) => current ? { ...current, item: event.target.value } : current); setFlowValidation(null); }} />
+                <label className="draft-field-label" htmlFor="flow-draft-quantity">QUANTITY</label>
+                <input id="flow-draft-quantity" className="draft-edit-input" type="number" min="1" max="100" step="1" inputMode="numeric" value={flowDraft.quantity} onChange={(event) => { setFlowDraft((current) => current ? { ...current, quantity: event.target.value } : current); setFlowValidation(null); }} />
+                <p className="draft-review-hint">Validation checks formatting only; it cannot confirm product availability, price, customer intent, or payment.</p>
+                {flowDraft.note && <p className="draft-note">{flowDraft.note}</p>}
+                <button type="button" className="primary-button full-button" onClick={() => {
+                  if (!flowDraft) return;
+                  const productIsSupported = Object.prototype.hasOwnProperty.call(CATALOG_PRICES, flowDraft.item.trim());
+                  const quantityIsValid = /^[1-9]\\d*$/.test(flowDraft.quantity.trim()) && Number.isSafeInteger(Number(flowDraft.quantity)) && Number(flowDraft.quantity) <= 100;
+                  if (!productIsSupported || !quantityIsValid) {
+                    setFlowValidation({ valid: false, message: !productIsSupported ? "Choose a supported catalogue product: Coffee gift set, Ceramic mug pair, or Handwoven market tote." : "Enter a whole-number quantity from 1 to 100." });
+                    return;
+                  }
+                  setFlowValidation({ valid: true, message: "The product is in the supported catalogue and the quantity is valid. Confirm both against the original customer message. The server will calculate the price; this draft is not saved and payment is not verified." });
+                }}>Validate draft details</button>
+                {flowValidation && <div className={`draft-validation ${flowValidation.valid ? "validation-success" : "validation-warning"}`} role="status" aria-live="polite"><strong>{flowValidation.valid ? "✓ Details checked" : "Review required"}</strong><p>{flowValidation.message}</p></div>}
+                {flowValidation?.valid && <div className="draft-checkout">
+                  <div className="draft-total"><span>Estimated total · {flowDraft.item}</span><strong>${(CATALOG_PRICES[flowDraft.item.trim()] * Number(flowDraft.quantity)).toFixed(2)} USD</strong></div>
+                  <p>Sandbox checkout only. The server independently validates the product and calculates the final amount. This does not save an order record.</p>
+                  <button type="button" className="primary-button full-button" onClick={() => startSandboxCheckout(flowDraft.item.trim(), Number(flowDraft.quantity), flowCustomer.trim())} disabled={checkoutLoading}>{checkoutLoading ? "Connecting to PayPal…" : "Continue to PayPal Sandbox"} <span>↗</span></button>
+                </div>}
+              </div>}
             </div>
-            <div className="order-flow-actions order-form-actions"><button className="primary-button" onClick={prepareCheckoutOrder} disabled={flowBusy}>{flowBusy ? "Preparing…" : "Next"}</button><button className="secondary-button" onClick={resetOrderFlow}>Cancel</button></div>
+            <div className="order-flow-actions order-form-actions">{!flowDraft && <button className="primary-button" onClick={prepareCheckoutOrder} disabled={flowBusy}>{flowBusy ? "Preparing…" : "Extract order details"}</button>}<button className="secondary-button" onClick={resetOrderFlow}>Cancel</button></div>
           </div>
         </section>
       )}
