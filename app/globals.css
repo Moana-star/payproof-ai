@@ -334,3 +334,183 @@ body{font-size:15px}
 @media(max-width:540px){.auth-card{padding:25px 21px;border-radius:17px}.auth-brand{margin-bottom:26px}.profile-secondary-actions{align-items:flex-start}}
 
 .workspace-isolation-note{padding:18px 20px;border:1px solid #e9dfe5;border-radius:13px;background:#fff9fc;color:#4d3d48;font-size:12px;line-height:1.7}.workspace-isolation-note strong{display:block;font-size:13px;margin-bottom:5px;color:#68445a}.workspace-isolation-note p{margin:0;color:#786d76;max-width:75ch}
+
+/* Three-step merchant order journey inspired by the supplied references. */
+.order-flow-screen{position:fixed;inset:0;z-index:1000;overflow-y:auto;background:#f6f7f9;color:#202336;padding:22px clamp(16px,4vw,56px) 28px;display:flex;flex-direction:column;align-items:center}
+.order-flow-top{width:min(100%,1100px);display:flex;align-items:center;justify-content:space-between;margin:0 auto 24px}
+.order-flow-top .brand{padding:0;gap:11px}.order-flow-top .brand-mark{width:38px;height:38px}.order-flow-top .brand-name{font-size:23px}
+.order-flow-mode{display:inline-flex;align-items:center;gap:8px;border:1px solid #e7e8ed;border-radius:8px;background:#fff;padding:9px 12px;color:#73788a;font-size:11px;font-weight:700}
+.order-flow-mode i{width:7px;height:7px;border-radius:50%;background:#d9a443}
+.order-flow-card{width:min(100%,650px);margin:auto;background:#fff;border:1px solid #e9eaf0;border-radius:18px;padding:clamp(22px,4vw,38px);box-shadow:0 18px 55px rgba(31,37,56,.07)}
+.order-flow-steps{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 auto 30px;max-width:420px}
+.order-flow-step{display:grid;justify-items:center;gap:7px;min-width:76px;color:#a0a4b1}
+.order-flow-step span{width:29px;height:29px;border-radius:50%;display:grid;place-items:center;background:#f0f1f4;border:1px solid #e6e7ec;font-size:11px;font-weight:800}
+.order-flow-step small{font-size:10px;font-weight:700;white-space:nowrap}
+.order-flow-step.complete span{background:#e8f7f1;border-color:#ccecdf;color:#258365}
+.order-flow-step.current span{background:#e9f5f3;border-color:#b9ddd7;color:#398f85;box-shadow:0 0 0 4px #e9f5f355}
+.order-flow-step.current small{color:#398f85}
+.order-flow-line{height:1px;flex:1;max-width:85px;background:#e6e8ed;margin-top:-17px}
+.order-flow-icon{height:56px;width:56px;border-radius:50%;display:grid;place-items:center;margin:0 auto 17px;background:#e6f7f3;color:#438f85;font-size:24px;font-weight:800}
+.order-flow-icon.paypal-icon{font:800 28px Georgia,serif;color:#1558a6;background:#edf4ff}
+.order-flow-card>.eyebrow{text-align:center;color:#398f85;margin-bottom:8px}
+.order-flow-card h1{font:800 clamp(23px,4vw,30px) Manrope,sans-serif;text-align:center;letter-spacing:-.8px;margin:0 0 9px}
+.order-flow-intro{max-width:480px;text-align:center;color:#858a99;font-size:12px;line-height:1.7;margin:0 auto 25px}
+.order-flow-form{display:grid;gap:9px}
+.order-flow-form label{font-size:12px;font-weight:750;color:#35394b;margin-top:6px}
+.order-flow-form label span{font-size:10px;font-weight:500;color:#9a9eaa;margin-left:5px}
+.order-flow-form input,.order-flow-form textarea,.order-flow-form select{width:100%;min-height:45px;border:1px solid #dedfe6;border-radius:9px;background:#fff;padding:11px 13px;color:#303447;font:13px 'DM Sans',sans-serif;outline:none}
+.order-flow-form textarea{resize:vertical;min-height:105px;line-height:1.6}
+.order-flow-form input:focus,.order-flow-form textarea:focus,.order-flow-form select:focus{border-color:#68a99f;box-shadow:0 0 0 3px #4b9a8c18}
+.order-flow-hint{font-size:10px;line-height:1.6;color:#9296a4;margin:0 0 4px}
+.order-flow-manual{display:grid;grid-template-columns:minmax(0,1fr) 125px;gap:12px;margin-top:5px}
+.order-flow-manual>div{display:grid;gap:8px}
+.order-flow-error{font-size:11px;line-height:1.6;color:#a93f4a;background:#fff1f2;border:1px solid #f3d6d9;border-radius:8px;padding:10px 12px;margin:5px 0 0}
+.order-flow-actions{display:flex;justify-content:space-between;gap:12px;margin-top:25px}
+.order-flow-actions button{min-width:135px;min-height:44px;font-size:12px}
+.order-flow-actions .primary-button{background:#438f85;box-shadow:none}.order-flow-actions .primary-button:hover{background:#347a72}
+.order-flow-summary{border:1px solid #eceef2;border-radius:11px;padding:5px 16px;margin:0 0 17px}
+.order-flow-summary>div{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:13px 0;border-bottom:1px solid #f0f1f4;font-size:11px}
+.order-flow-summary>div:last-child{border-bottom:0}
+.order-flow-summary span{color:#8d92a0}.order-flow-summary strong{color:#303447;text-align:right}
+.order-flow-summary .order-flow-total strong{font:800 21px Manrope,sans-serif;color:#202336}
+.order-flow-secure{display:flex;gap:11px;align-items:flex-start;padding:13px;border-radius:9px;background:#f0f8f5;border:1px solid #dcefe7;margin:0 0 5px}
+.order-flow-secure>span{height:21px;width:21px;flex:none;display:grid;place-items:center;border-radius:50%;background:#d9f1e6;color:#258365;font-weight:800}
+.order-flow-secure p{font-size:10px;line-height:1.6;color:#657b73;margin:0}.order-flow-secure strong{color:#315c4e}
+.order-flow-footnote{text-align:center;font-size:10px;color:#9a9eaa;margin:19px auto 0}
+@media(max-width:540px){.order-flow-screen{padding:15px 12px 22px}.order-flow-top{margin-bottom:14px}.order-flow-top .brand-name{font-size:20px}.order-flow-card{padding:20px 16px;border-radius:14px}.order-flow-steps{gap:5px;margin-bottom:23px}.order-flow-step{min-width:65px}.order-flow-step small{font-size:9px}.order-flow-line{max-width:42px}.order-flow-manual{grid-template-columns:minmax(0,1fr) 95px}.order-flow-actions button{min-width:0;flex:1}.order-flow-summary{padding:4px 12px}.order-flow-summary .order-flow-total strong{font-size:18px}}
+
+/* Three-step entry point on the merchant dashboard. */
+.merchant-journey{padding:20px 22px;margin:0 0 24px;background:#fff;border:1px solid #e7e9ef;border-radius:13px;box-shadow:0 5px 18px rgba(31,37,56,.035)}
+.merchant-journey-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:16px}
+.merchant-journey-heading .eyebrow{margin-bottom:6px;color:#438f85}
+.merchant-journey-heading h2{font:800 17px Manrope,sans-serif;letter-spacing:-.4px;margin:0 0 5px}
+.merchant-journey-heading p:last-child{font-size:11px;color:#858a99;margin:0}
+.merchant-journey-tag{font-size:9px;font-weight:800;letter-spacing:.6px;color:#347d74;background:#eaf6f3;border:1px solid #d8eee8;border-radius:6px;padding:8px 10px;white-space:nowrap}
+.merchant-journey-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.merchant-journey-card{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #eceef2;border-radius:10px;background:#fcfcfd;min-width:0}
+.merchant-journey-card.active{background:#f0f8f5;border-color:#cfe9df}
+.merchant-journey-number{height:30px;width:30px;flex:none;display:grid;place-items:center;border-radius:50%;background:#f0f1f4;color:#777d8a;font:800 10px Manrope,sans-serif}
+.merchant-journey-card.active .merchant-journey-number{background:#d9f0e6;color:#258365}
+.merchant-journey-card strong{display:block;font-size:11px;color:#303447;margin:2px 0 6px}
+.merchant-journey-card p{font-size:10px;line-height:1.55;color:#858a99;margin:0 0 9px}
+.merchant-journey-card small{font-size:8px;letter-spacing:.6px;font-weight:800;color:#398f85}
+.merchant-journey-card button{border:0;background:none;padding:0;color:#398f85;font-size:10px;font-weight:800;cursor:pointer}
+.merchant-journey-card button span{font-size:14px;margin-left:4px}
+@media(max-width:760px){.merchant-journey{padding:16px}.merchant-journey-heading{align-items:flex-start;flex-direction:column}.merchant-journey-grid{grid-template-columns:1fr}.merchant-journey-card{padding:12px}}
+
+/* Reference-matched three-screen checkout presentation. */
+.dashboard-search{display:flex;align-items:center;gap:12px;width:min(100%,650px);height:42px;color:#858a99}
+.dashboard-search>span:first-child{font-size:20px;color:#777d8b}
+.dashboard-search input{flex:1;min-width:80px;height:38px;border:1px solid #e1e3e9;border-radius:9px;background:#fff;padding:0 13px;color:#303447;font:12px 'DM Sans',sans-serif;outline:none}
+.dashboard-search input:focus{border-color:#8bbab1;box-shadow:0 0 0 3px #438f8518}
+.dashboard-date{white-space:nowrap;border:1px solid #e1e3e9;border-radius:9px;padding:11px 13px;background:#fff;font-size:10px;color:#626879}
+.order-form-reference{width:min(100%,660px);padding:30px 31px 24px;border-radius:10px;box-shadow:0 12px 40px rgba(31,37,56,.08)}
+.order-form-reference .order-flow-icon{width:60px;height:60px;margin:0 auto 20px;font-size:25px}
+.order-form-reference h1{font-size:23px;margin:0 0 27px}
+.order-form-reference .order-flow-form{gap:9px}
+.order-form-reference .order-flow-form label{font-size:15px;font-weight:700;color:#303443;margin-top:5px}
+.order-form-reference .order-flow-form select{height:52px;min-height:52px;font-size:14px;border-radius:9px}
+.order-form-reference .order-flow-form textarea{min-height:143px;font-size:14px;border:2px solid #62a89d;border-radius:9px;padding:13px 14px}
+.order-form-reference .order-flow-hint{font-size:12px;line-height:1.55;margin:2px 0 0;color:#969aa6}
+.order-form-actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:30px}
+.order-form-actions button{width:100%;min-height:48px;border-radius:8px;font-size:14px;font-weight:750}
+.order-form-actions .primary-button{background:#438f85;box-shadow:none}
+.order-form-actions .secondary-button{background:#f5fbfa;border:1px solid #6da99f;color:#438f85}
+.order-form-customer-note{margin:16px 0 0;text-align:center;font-size:10px;line-height:1.5;color:#999daa}
+@media(max-width:600px){.dashboard-search{gap:7px}.dashboard-date{font-size:9px;padding:10px 8px}.order-form-reference{padding:24px 18px}.order-form-reference .order-flow-form label{font-size:13px}.order-form-reference .order-flow-form textarea{min-height:125px}}
+
+/* Dashboard composition aligned to the supplied VoltPay reference, branded for PayProof AI. */
+.dashboard-reference-panels{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin:20px 0 26px}
+.dashboard-config-card,.dashboard-transactions-card{min-width:0;background:#fff;border:1px solid #e5e7ed;border-radius:12px;padding:19px 20px;box-shadow:0 4px 15px rgba(31,37,56,.025)}
+.dashboard-panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:15px}
+.dashboard-panel-heading h2{font:800 15px Manrope,sans-serif;letter-spacing:-.25px;margin:0 0 5px;color:#292e3e}
+.dashboard-panel-heading p{font-size:10px;color:#858a99;margin:0;line-height:1.5}
+.config-status,.transaction-count{flex:none;border-radius:6px;padding:6px 8px;font-size:8px;font-weight:800;letter-spacing:.5px;background:#eaf6f2;color:#388b7d}
+.transaction-count{font-size:10px;letter-spacing:0}
+.config-row{display:flex;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #eff0f3}
+.config-row:last-of-type{border-bottom:0}
+.config-symbol{width:30px;height:30px;display:grid;place-items:center;flex:none;border-radius:8px;background:#f0f2fa;color:#5e68a7;font-size:13px;font-weight:800}
+.config-row>div{display:grid;gap:4px;min-width:0;flex:1}
+.config-row strong{font-size:10px;color:#33384a}
+.config-row small{font-size:9px;color:#8c91a0;line-height:1.4}
+.config-indicator{font-size:8px;font-weight:750;color:#4c8a7d;text-align:right}
+.config-safe-note,.dashboard-sample-note{font-size:9px;color:#9297a4;line-height:1.5;margin:12px 0 0;padding-top:10px;border-top:1px solid #eff0f3}
+.dashboard-transaction-search-note{font-size:9px;color:#999daa;margin:-5px 0 5px}
+.dashboard-transaction-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #eff0f3}
+.dashboard-transaction-person{display:flex;align-items:center;gap:9px;min-width:0}
+.dashboard-transaction-avatar{width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:50%;background:#eef0f7;color:#606a92;font-size:9px;font-weight:800}
+.dashboard-transaction-person>div{display:grid;gap:3px;min-width:0}
+.dashboard-transaction-person strong{font-size:10px;color:#33384a}
+.dashboard-transaction-person small{font-size:8px;color:#9297a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.dashboard-transaction-amount{display:grid;justify-items:end;gap:5px;flex:none}
+.dashboard-transaction-amount strong{font-size:10px;color:#303447}
+.dashboard-transaction-amount span{font-size:8px;font-weight:750}
+.transaction-paid{color:#31866f}.transaction-review{color:#b45b60}.transaction-pending{color:#a17b3f}
+.dashboard-empty{font-size:10px;color:#9297a4;padding:20px 0;text-align:center}
+@media(max-width:850px){.dashboard-reference-panels{grid-template-columns:1fr}}
+
+/* Final visual pass: match the supplied dashboard and order-form proportions. */
+.reference-overview-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:4px 0 22px}
+.reference-overview-heading .eyebrow{font-size:9px;letter-spacing:1.2px;margin:0 0 7px;color:#8b91a0;font-weight:800}
+.reference-overview-heading h1{font:800 27px Manrope,sans-serif;letter-spacing:-.8px;line-height:1.1;margin:0 0 7px;color:#252a3a}
+.reference-overview-heading p:last-child{font-size:11px;color:#858a99;margin:0}
+.reference-overview-heading .primary-button{min-height:39px;padding:0 15px;font-size:11px;white-space:nowrap}
+.dashboard-reference-panels{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:stretch;margin-top:15px}
+.dashboard-config-card,.dashboard-transactions-card{min-height:275px;padding:20px 21px;border-radius:11px}
+.dashboard-panel-heading h2{font-size:15px}
+.dashboard-panel-heading p{font-size:10px}
+.configuration-fields{display:grid;gap:7px}
+.configuration-fields label{display:grid;gap:7px;font-size:11px;font-weight:750;color:#34394a;margin-top:3px}
+.configuration-fields label span{font-size:9px;font-weight:500;color:#9297a4;display:inline;margin-left:5px}
+.configuration-fields input{width:100%;height:39px;border:1px solid #dedfe6;border-radius:8px;background:#fdfdfd;padding:0 12px;color:#555c6c;font:12px 'DM Sans',sans-serif;letter-spacing:.4px}
+.configuration-fields>small{font-size:9px;line-height:1.45;color:#9297a4;margin:0 0 3px}
+.config-safe-note{margin-top:11px}
+.order-flow-screen{background:#f7f8fa;padding:24px 16px}
+.order-flow-card.order-form-reference{width:min(100%,662px);padding:30px 31px 25px;border:1px solid #e7e8ec;border-radius:10px;box-shadow:0 5px 22px rgba(35,42,59,.045)}
+.order-form-reference .order-flow-icon{width:62px;height:62px;border-radius:50%;background:#ddf7f1;color:#5a9f94;margin:0 auto 22px;font-size:25px}
+.order-form-reference h1{font:800 23px Manrope,sans-serif;letter-spacing:-.55px;color:#202431;margin:0 0 27px}
+.order-form-reference .order-flow-form{gap:9px}
+.order-form-reference .order-flow-form label{font-size:15px;line-height:1.3;font-weight:700;color:#272c3a;margin:4px 0 1px}
+.order-form-reference .order-flow-form select{height:53px;min-height:53px;border:1px solid #d9dbe1;border-radius:9px;background:#fff;padding:0 14px;font-size:14px;color:#303544}
+.order-form-reference .order-flow-form textarea{height:144px;min-height:144px;border:2px solid #579e94;border-radius:9px;background:#fff;padding:13px 14px;font-size:14px;line-height:1.6;color:#303544}
+.order-form-reference .order-flow-hint{font-size:12px;color:#9a9eaa;line-height:1.5;margin:2px 0 0}
+.order-form-reference .order-flow-actions.order-form-actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:29px}
+.order-form-reference .order-form-actions button{height:48px;min-height:48px;border-radius:8px;font-size:14px;font-weight:750}
+.order-form-reference .order-form-actions .primary-button{background:#438f85;color:#fff}
+.order-form-reference .order-form-actions .secondary-button{background:#f3fbf9;color:#438f85;border:1px solid #64a99e}
+.order-flow-screen:has(.order-form-reference){justify-content:center}
+.order-flow-screen:has(.order-form-reference) .order-flow-card{margin:auto}
+@media(max-width:760px){.reference-overview-heading{align-items:flex-start;flex-direction:column}.reference-overview-heading .primary-button{align-self:flex-start}.dashboard-reference-panels{grid-template-columns:1fr}.order-form-reference .order-flow-form label{font-size:13px}.order-flow-card.order-form-reference{padding:25px 18px}}
+
+
+/* Expanded merchant workspace navigation and module previews. */
+.nav-group-label{padding:18px 13px 7px;color:#9a9eaa;font-size:9px;font-weight:800;letter-spacing:1.15px}
+.side-nav{padding-bottom:18px}
+.nav-item{min-height:39px}
+.workspace-modules{margin:28px 0 25px}
+.workspace-modules-heading{margin-bottom:15px}
+.workspace-modules-heading .eyebrow{font-size:9px;letter-spacing:1.1px;color:#438f85;font-weight:800;margin:0 0 6px}
+.workspace-modules-heading h2{font:800 17px Manrope,sans-serif;letter-spacing:-.35px;color:#292e3e;margin:0 0 6px}
+.workspace-modules-heading p:last-child{font-size:10px;line-height:1.6;color:#858a99;margin:0}
+.workspace-module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.workspace-module-card{display:flex;align-items:flex-start;gap:13px;min-width:0;padding:16px;background:#fff;border:1px solid #e6e8ee;border-radius:11px;scroll-margin-top:24px}
+.workspace-module-card>span{height:34px;width:34px;flex:none;display:grid;place-items:center;border-radius:9px;background:#edf6f3;color:#438f85;font-size:16px;font-weight:800}
+.workspace-module-card h3{font:800 12px Manrope,sans-serif;color:#303447;margin:1px 0 5px}
+.workspace-module-card p{font-size:10px;line-height:1.55;color:#858a99;margin:0 0 8px}
+.workspace-module-card small{font-size:8px;line-height:1.4;color:#9a9eaa;font-weight:700}
+#transactions,#reconciliation,#customers,#shipping,#analytics,#reports,#invoices{scroll-margin-top:24px}
+@media(max-width:760px){.workspace-module-grid{grid-template-columns:1fr}}
+
+
+/* Create-order form: customer entry and optional AI sales-order text. */
+.order-form-reference .order-flow-form input{height:53px;min-height:53px;width:100%;border:1px solid #d9dbe1;border-radius:9px;background:#fff;padding:0 14px;font:14px 'DM Sans',sans-serif;color:#303544;outline:none}
+.order-form-reference .order-flow-form input:focus,.order-form-reference .order-flow-form textarea:focus{border-color:#579e94;box-shadow:0 0 0 3px rgba(87,158,148,.12)}
+.order-form-reference .order-flow-form input::placeholder,.order-form-reference .order-flow-form textarea::placeholder{color:#a0a4af}
+.order-form-reference .order-optional-label{font-size:11px;font-weight:500;color:#969aa6}
+
+/* Workspace module cards are real navigation links. */
+a.workspace-module-card{color:inherit;text-decoration:none;cursor:pointer;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+a.workspace-module-card:hover{border-color:#c9c1ff;box-shadow:0 8px 22px rgba(58,49,125,.08);transform:translateY(-2px)}
+a.workspace-module-card:focus-visible{outline:3px solid rgba(109,92,231,.28);outline-offset:3px}
+a.workspace-module-card small{color:#6757d5}
+a.workspace-module-card small b{padding-left:5px;font-size:12px}
