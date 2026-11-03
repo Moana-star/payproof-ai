@@ -160,7 +160,7 @@ export default function Home() {
     [orders]
   );
 
-  async function startSandboxCheckout(product = "Coffee gift set", quantity = 1) {
+  async function startSandboxCheckout(product = "Coffee gift set", quantity = 1, customerName = "") {
     if (checkoutLoading) return;
     setCheckoutLoading(true);
     setNotice("Creating a PayPal Sandbox checkout using the server-priced catalogue. No real money will be processed.");
@@ -175,7 +175,7 @@ export default function Home() {
       const response = await fetch("/api/paypal/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ product, quantity })
+        body: JSON.stringify({ product, quantity, customerName })
       });
       const data = (await response.json()) as { approvalUrl?: string; error?: string };
       if (!response.ok || !data.approvalUrl) {
@@ -198,7 +198,7 @@ export default function Home() {
     if (!flowMessage.trim()) {
       setFlowProduct("Coffee gift set");
       setFlowQuantity("1");
-      await startSandboxCheckout("Coffee gift set", 1);
+      await startSandboxCheckout("Coffee gift set", 1, flowCustomer.trim());
       return;
     }
     setFlowBusy(true);
@@ -224,7 +224,7 @@ export default function Home() {
       setFlowProduct(product);
       setFlowQuantity(String(quantity));
       // Step 3 is the real PayPal-hosted Sandbox login/checkout page.
-      await startSandboxCheckout(product, quantity);
+      await startSandboxCheckout(product, quantity, flowCustomer.trim());
     } catch (error) {
       setFlowError(error instanceof Error ? error.message : "The order could not be prepared. Please try again.");
     } finally {
