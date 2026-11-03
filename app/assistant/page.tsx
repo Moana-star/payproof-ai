@@ -12,7 +12,81 @@ const suggestions = [
   ["!", "Review an exception", "Give me a checklist for reviewing an incomplete payment."],
   ["✳", "Explore PayProof AI", "What can PayProof AI do, and what decisions must stay with a human?"]
 ];
+
 const fresh = (): Thread => ({ id: crypto.randomUUID(), title: "New conversation", messages: [], updatedAt: Date.now() });
+
+function renderInline(text: string) {
+  return text.split(/(`[^`]+`|\\*\\*[^*]+\\*\\*)/g).map((part, index) => {
+    if (part.startsWith("`") && part.endsWith("`")) return <code key={index}>{part.slice(1, -1)}</code>;
+    if (part.startsWith("**") && part.endsWith("**")) return <strong key={index}>{part.slice(2, -2)}</strong>;
+    return <span key={index}>{part}</span>;
+  });
+}
+
+function renderAssistantContent(content: string) {
+  const lines = content.replace(/\\r/g, "").split("\\n");
+  const blocks: JSX.Element[] = [];
+  let paragraph: string[] = [];
+  let list: { ordered: boolean; items: string[] } | null = null;
+  let code: string[] | null = null;
+
+  const flushParagraph = () => {
+    if (paragraph.length) {
+      blocks.push(<p key={"p" + blocks.length}>{renderInline(paragraph.join(" "))}</p>);
+      paragraph = [];
+    }
+  };
+  const flushList = () => {
+    if (list) {
+      const items = list.items.map((item, index) => <li key={index}>{renderInline(item)}</li>);
+      blocks.push(list.ordered ? <ol key={"l" + blocks.length}>{items}</ol> : <ul key={"l" + blocks.length}>{items}</ul>);
+      list = null;
+    }
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("```")) {
+      flushParagraph(); flushList();
+      if (code) {
+        blocks.push(<pre key={"c" + blocks.length}><code>{code.join("\\n")}</code></pre>);
+        code = null;
+      } else code = [];
+      continue;
+    }
+    if (code) { code.push(line); continue; }
+    if (!trimmed) { flushParagraph(); flushList(); continue; }
+
+    const heading = trimmed.match(/^(#{1,3})\\s+(.+)$/);
+    if (heading) {
+      flushParagraph(); flushList();
+      const level = heading[1].length;
+      const content = renderInline(heading[2]);
+      blocks.push(level === 1 ? <h3 key={"h" + blocks.length}>{content}</h3> : level === 2 ? <h4 key={"h" + blocks.length}>{content}</h4> : <h5 key={"h" + blocks.length}>{content}</h5>);
+      continue;
+    }
+    const bullet = trimmed.match(/^[-*•]\\s+(.+)$/);
+    const numbered = trimmed.match(/^\\d+[.)]\\s+(.+)$/);
+    if (bullet || numbered) {
+      flushParagraph();
+      const ordered = Boolean(numbered);
+      if (list && list.ordered !== ordered) flushList();
+      if (!list) list = { ordered, items: [] };
+      list.items.push((bullet || numbered)![1]);
+      continue;
+    }
+    if (trimmed.startsWith(">")) {
+      flushParagraph(); flushList();
+      blocks.push(<blockquote key={"q" + blocks.length}>{renderInline(trimmed.replace(/^>\\s?/, ""))}</blockquote>);
+      continue;
+    }
+    flushList();
+    paragraph.push(trimmed);
+  }
+  flushParagraph(); flushList();
+  if (code) blocks.push(<pre key={"c" + blocks.length}><code>{code.join("\\n")}</code></pre>);
+  return <div className="pp-response-body">{blocks}</div>;
+}
 
 export default function AssistantPage() {
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -208,7 +282,7 @@ export default function AssistantPage() {
             </div> : <div className="pp-chat-messages">
               {messages.map((message, index) => <article key={index} className={"pp-chat-message " + message.role}>
                 <div className="pp-message-avatar">{message.role === "assistant" ? "✳" : "U"}</div>
-                <div className="pp-message-content"><b>{message.role === "assistant" ? "PayProof AI" : "You"}</b><div>{message.content || (loading && index === messages.length - 1 ? <span className="pp-chat-thinking">● ● ● Thinking</span> : "")}</div>
+                <div className="pp-message-content"><b>{message.role === "assistant" ? "PayProof AI" : "You"}</b><div>{message.content ? (message.role === "assistant" ? renderAssistantContent(message.content) : <div className="pp-user-text">{message.content}</div>) : (loading && index === messages.length - 1 ? <span className="pp-chat-thinking">● ● ● Thinking</span> : "")}</div>
                   {message.role === "assistant" && message.content && <button type="button" onClick={() => navigator.clipboard?.writeText(message.content)}>Copy response</button>}
                 </div>
               </article>)}
