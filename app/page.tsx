@@ -16,11 +16,7 @@ type Order = {
   initials: string;
 };
 
-const initialOrders: Order[] = [
-  { id: "PP-1048", customer: "Amina W.", item: "Handwoven market tote", amount: "$38.00", status: "Paid", time: "Illustrative only · Not live-verified", initials: "AW" },
-  { id: "PP-1047", customer: "Daniel K.", item: "Coffee gift set", amount: "$24.50", status: "Awaiting payment", time: "Sample record · Not saved", initials: "DK" },
-  { id: "PP-1046", customer: "Maya R.", item: "Ceramic mug pair", amount: "$42.00", status: "Review needed", time: "Sample record · Not saved", initials: "MR" }
-];
+const initialOrders: Order[] = [];
 
 const CATALOG_PRICES: Record<string, number> = {
   "Coffee gift set": 24.5,
@@ -57,8 +53,8 @@ export default function Home() {
       setAuthChecked(true);
       setIsSignedIn(false);
       setOrdersSource("sample");
-      setOrdersLoadNote("Public demo mode. Sign in to save and view your own Sandbox orders.");
-      setNotice("Public demo · Sample rows are illustrative only. Sign in to view your private saved Sandbox orders.");
+      setOrdersLoadNote("Sign in and complete a Sandbox checkout to see real orders here. No sample transactions are displayed.");
+      setNotice("Public preview · No account orders are shown. Sign in to create and view your own saved Sandbox orders.");
       return;
     }
     let active = true;
@@ -66,8 +62,8 @@ export default function Home() {
       if (!token) {
         setOrders(initialOrders);
         setOrdersSource("sample");
-        setOrdersLoadNote("Public demo mode. Sample rows are illustrative; sign in to see your own saved orders.");
-        setNotice("Public demo · Sample rows are illustrative only. Sign in to view your private saved Sandbox orders.");
+        setOrdersLoadNote("Sign in and complete a Sandbox checkout to see real orders here. No sample transactions are displayed.");
+        setNotice("Public preview · No account orders are shown. Sign in to create and view your own saved Sandbox orders.");
         return;
       }
       try {
@@ -78,7 +74,7 @@ export default function Home() {
         const data = await response.json() as {
           configured?: boolean;
           orders?: Array<{
-            order_number: string; product_name: string; quantity: number;
+            order_number: string; customer_name?: string | null; product_name: string; quantity: number;
             total_amount: string; currency: string; payment_status: string;
             verified_at?: string | null; created_at?: string | null;
           }>;
@@ -102,12 +98,12 @@ export default function Home() {
           const timestamp = order.verified_at || order.created_at;
           return {
             id: order.order_number,
-            customer: "Your Sandbox order",
+            customer: order.customer_name?.trim() || "Customer name not provided",
             item: `${order.product_name} × ${order.quantity}`,
             amount,
             status,
             time: status === "Paid" ? (timestamp ? `Server verified · ${new Date(timestamp).toLocaleString()}` : "Server-verified Sandbox capture") : status === "Awaiting payment" ? "Awaiting PayPal capture" : "Review required · Do not fulfil",
-            initials: "ME"
+            initials: (order.customer_name?.trim().split(/\\s+/).map((part) => part[0]).join("").slice(0,2).toUpperCase() || "CU")
           };
         });
         setOrders(saved);
@@ -388,11 +384,11 @@ export default function Home() {
               {(orders.filter((order) => `${order.id} ${order.customer} ${order.item} ${order.amount} ${order.status}`.toLowerCase().includes(dashboardSearch.trim().toLowerCase())).slice(0,4)).map((order) => (
                 <div className="dashboard-transaction-row" key={order.id}>
                   <div className="dashboard-transaction-person"><span className="dashboard-transaction-avatar">{order.initials}</span><div><strong>{order.customer}</strong><small>{order.item}</small><small>{order.time}</small></div></div>
-                  <div className="dashboard-transaction-amount"><strong>{order.amount}</strong><span className={order.status === "Paid" ? "transaction-paid" : order.status === "Review needed" ? "transaction-review" : "transaction-pending"}>{ordersSource === "sample" && order.status === "Paid" ? "Sample" : order.status}</span></div>
+                  <div className="dashboard-transaction-amount"><strong>{order.amount}</strong><span className={order.status === "Paid" ? "transaction-paid" : order.status === "Review needed" ? "transaction-review" : "transaction-pending"}>{order.status}</span></div>
                 </div>
               ))}
               {orders.filter((order) => `${order.id} ${order.customer} ${order.item} ${order.amount} ${order.status}`.toLowerCase().includes(dashboardSearch.trim().toLowerCase())).length === 0 && <p className="dashboard-empty">No matching transactions.</p>}
-              <p className="dashboard-sample-note">{ordersSource === "sample" ? "Sample activity · Not live payment evidence" : "Account orders · Paid status requires server verification"}</p>
+              <p className="dashboard-sample-note">{ordersSource === "saved" ? "Account orders · Paid status requires server verification" : "No live account activity yet"}</p>
             </article>
           </section>
 
@@ -424,8 +420,8 @@ export default function Home() {
           <div className="section-heading" id="transactions"><div><h2>Recent orders</h2><p>Track each order without guessing about payment status.</p></div><button className="text-button" onClick={() => setNotice(ordersSource === "saved" ? "Showing saved Sandbox orders. For capture details and verification timestamps, open Payment evidence." : "Showing illustrative sample orders. These are not saved payment records.")}>View all orders <span>→</span></button></div>
 
           <section className="orders-card">
-            <div className="table-toolbar"><div className="table-title">{ordersSource === "saved" ? "Saved orders" : "Sample orders"} <span className="table-count">{orders.length}</span></div><div className="table-filters"><span className="filter-label">Status</span><button className="filter-button" onClick={() => setOrders(orders.slice().reverse())}>Recent activity ↕</button></div></div>
-            <div className="order-table-wrap"><table className="order-table"><thead><tr><th>ORDER</th><th>CUSTOMER / ITEM</th><th>AMOUNT</th><th>PAYMENT STATUS</th><th>LAST ACTIVITY</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><span className="order-id">{order.id}</span></td><td><div className="customer-cell"><div className="avatar">{order.initials}</div><div><strong>{order.customer}</strong><span>{order.item}</span></div></div></td><td className="amount">{order.amount}</td><td><span className={`status-badge ${statusClass[order.status]}`}><i />{order.status === "Paid" ? (ordersSource === "saved" ? "Verified paid" : "Sample · unverified") : order.status}</span></td><td className="activity-text">{order.time}</td></tr>)}{orders.length === 0 && <tr><td colSpan={5}>{ordersSource === "saved" ? "No saved orders yet. Complete a Sandbox checkout to populate this table." : "No sample rows are available. Check the payment evidence page for saved records."}</td></tr>}</tbody></table></div>
+            <div className="table-toolbar"><div className="table-title">{ordersSource === "saved" ? "Saved orders" : "Your orders"} <span className="table-count">{orders.length}</span></div><div className="table-filters"><span className="filter-label">Status</span><button className="filter-button" onClick={() => setOrders(orders.slice().reverse())}>Recent activity ↕</button></div></div>
+            <div className="order-table-wrap"><table className="order-table"><thead><tr><th>ORDER</th><th>CUSTOMER / ITEM</th><th>AMOUNT</th><th>PAYMENT STATUS</th><th>LAST ACTIVITY</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><span className="order-id">{order.id}</span></td><td><div className="customer-cell"><div className="avatar">{order.initials}</div><div><strong>{order.customer}</strong><span>{order.item}</span></div></div></td><td className="amount">{order.amount}</td><td><span className={`status-badge ${statusClass[order.status]}`}><i />{order.status === "Paid" ? (ordersSource === "saved" ? "Verified paid" : "Sample · unverified") : order.status}</span></td><td className="activity-text">{order.time}</td></tr>)}{orders.length === 0 && <tr><td colSpan={5}>{"No orders yet. Create a Sandbox checkout; verified and pending orders will appear here from your account records."}</td></tr>}</tbody></table></div>
             <div className="table-footer"><span>{ordersLoadNote || (ordersSource === "saved" ? "Persistent Sandbox order records" : "Illustrative records · Not live payment evidence")}</span><span>{orders.length ? `1–${orders.length} of ${orders.length}` : "0 orders"}</span></div>
           </section>
 
