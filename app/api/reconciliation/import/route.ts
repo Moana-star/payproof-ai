@@ -83,7 +83,13 @@ export async function POST(request: NextRequest) {
   const actor = reconciliationActor(user.email || user.id);
   const filename = typeof body.filename === "string" ? body.filename.replace(/[^a-zA-Z0-9._ -]/g, "").slice(0, 120) : "statement.csv";
   try {
-    const rows = parseCsv(body.csv); const statementId = createHash("sha256").update(user.id).update(body.csv).digest("hex").slice(0, 32);
+    const rows = parseCsv(body.csv);
+    const syntheticIds = new Set(["DEMO-STMT-001", "DEMO-STMT-002", "DEMO-STMT-003"]);
+    const syntheticReferences = new Set(["DEMO-CAPTURE-001", "DEMO-REFERENCE-MISMATCH", "UNKNOWN-DEMO-REFERENCE", "DEMO-REFERENCE-NOT-LIVE"]);
+    if (/^payproof-demo-statement(?:\\s*\\d+)?\\.csv$/i.test(filename) || rows.some((row) => syntheticIds.has(row.transaction_id.toUpperCase()) || syntheticReferences.has((row.reference || "").toUpperCase()))) {
+      return NextResponse.json({ error: "This is PayProof AI's synthetic judge sample, not a real bank statement. Open Try sample review to use it; import a genuine bank or payment-provider export into your private workspace." }, { status: 400 });
+    }
+    const statementId = createHash("sha256").update(user.id).update(body.csv).digest("hex").slice(0, 32);
     const inserted = await reconciliationDb<Array<{ id: string; transaction_id: string }>>("bank_statement_rows?on_conflict=owner_id,transaction_id&select=id,transaction_id", {
       method: "POST", headers: { Prefer: "resolution=ignore-duplicates,return=representation" },
       body: JSON.stringify(rows.map((row) => ({ ...row, owner_id: user.id, statement_id: statementId, source_file: filename, match_status: "unmatched" })))
