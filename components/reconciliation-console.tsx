@@ -18,7 +18,7 @@ type WorkspaceData = { rows: Row[]; audit: Audit[]; ledger: Ledger[] };
 const DEMO_READ_ONLY_TOKEN = "PAYPROOF-DEMO-READONLY";
 
 const statusLabels: Record<Row["match_status"], string> = {
-  unmatched: "Unmatched", matched_pending_review: "Match · needs approval", exception: "Exception", approved: "Approved · not posted", posted: "Posted to workspace ledger", rejected: "Rejected"
+  unmatched: "Unmatched", matched_pending_review: "Match · needs approval", exception: "Exception", approved: "Approved · not posted", posted: "Posted", rejected: "Rejected"
 };
 
 export function ReconciliationConsole() {
