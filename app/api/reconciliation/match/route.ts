@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const user = await reconciliationUser(request);
   if (!user) return NextResponse.json({ error: "Sign in to match transactions in your workspace." }, { status: 401 });
   let body: { actor?: unknown } = {}; try { body = await request.json(); } catch {}
-  const actor = reconciliationActor(body.actor, user.email || "authenticated reviewer"); const owner = encodeURIComponent(user.id);
+  const actor = reconciliationActor(user.email || user.id); const owner = encodeURIComponent(user.id);
   try {
     const [rows, orders] = await Promise.all([
       reconciliationDb<StatementRow[]>(`bank_statement_rows?owner_id=eq.${owner}&match_status=in.(unmatched,exception)&select=id,transaction_id,amount,currency,reference,match_status&order=created_at.asc&limit=500`),
