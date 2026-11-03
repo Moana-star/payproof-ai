@@ -32,7 +32,6 @@ const statusClass: Record<OrderStatus, string> = {
 
 export default function Home() {
   const [authUserName, setAuthUserName] = useState("");
-  const [authAvatarUrl, setAuthAvatarUrl] = useState("");
   const [authChecked, setAuthChecked] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [authWorkspaceName, setAuthWorkspaceName] = useState("Demo workspace");
@@ -138,9 +137,7 @@ export default function Home() {
       setIsSignedIn(true);
       const metadata = session.user.user_metadata || {};
       setAuthUserName(typeof metadata.display_name === "string" && metadata.display_name.trim() ? metadata.display_name.trim() : (session.user.email?.split("@")[0] || "Account"));
-      setAuthAvatarUrl(typeof metadata.avatar_url === "string" ? metadata.avatar_url : "");
       setAuthWorkspaceName(typeof metadata.workspace_name === "string" && metadata.workspace_name.trim() ? metadata.workspace_name.trim() : "My workspace");
-      setAuthAvatarUrl(typeof metadata.avatar_url === "string" ? metadata.avatar_url : "");
       await loadOrders(session.access_token);
     };
     supabase.auth.getSession().then(({ data }) => applySession(data.session ? {
@@ -364,7 +361,7 @@ export default function Home() {
             <p>AI helps explain. Verified payment data decides.</p>
           </div>
           <div className="profile-row">
-            <div className="avatar profile-avatar">{authAvatarUrl ? <img src={authAvatarUrl} alt="" /> : (authUserName ? authUserName.trim().split(/\s+/)[0].slice(0, 1).toUpperCase() : "P")}</div>
+            <div className="avatar profile-avatar" aria-hidden="true">{authUserName ? authUserName.trim().split(/\s+/)[0].slice(0, 1).toUpperCase() : "P"}</div>
             <div><strong>{authUserName ? authUserName.trim().split(/\s+/)[0] : "Demo workspace"}</strong><span>{authUserName || "Public Sandbox preview"}</span></div>
             <span className="profile-dots">···</span>
           </div>
