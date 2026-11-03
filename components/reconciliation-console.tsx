@@ -22,14 +22,14 @@ const statusLabels: Record<Row["match_status"], string> = {
 };
 
 export function ReconciliationConsole() {
-  const [token, setToken] = useState(DEMO_READ_ONLY_TOKEN);
+  const [token, setToken] = useState("AUTHENTICATED-WORKSPACE");
   const [actor, setActor] = useState("Workspace reviewer");
   const [file, setFile] = useState<File | null>(null);
   const [data, setData] = useState<WorkspaceData>({ rows: [], audit: [], ledger: [] });
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [busy, setBusy] = useState("");
-  const [notice, setNotice] = useState("Public sample token is ready. Select Load sample workspace to view synthetic read-only reconciliation cases.");
+  const [notice, setNotice] = useState("Your private workspace is selected. Load your records or import an actual bank/payment-provider CSV.");
   const [error, setError] = useState("");
   const readOnlyDemo = token === DEMO_READ_ONLY_TOKEN;
 
@@ -217,7 +217,7 @@ export function ReconciliationConsole() {
   return <div className="recon-console">
     <div className="recon-access">
       <div className="recon-access-copy"><strong>Your private reconciliation workspace</strong><p>Live statements, payment evidence, approvals, ledger entries and audit events are saved to your authenticated Supabase workspace. No reviewer token is required.</p></div>
-      <label>Reviewer name<input value={actor} onChange={(e) => setActor(e.target.value)} maxLength={80} placeholder="Your name or reviewer role" /></label>
+      <p className="recon-auth-note">Signed-in account: reviewer identity is recorded automatically from your authenticated session.</p>
       <div className="recon-token-actions">
         <button className="secondary-button" onClick={() => { setToken("AUTHENTICATED-WORKSPACE"); setData({ rows: [], audit: [], ledger: [] }); setError(""); setNotice("Ready to load your private workspace."); }} disabled={!!busy}>Use my workspace</button>
         <button className="secondary-button" onClick={load} disabled={!!busy}>{busy === "load" ? "Loading…" : readOnlyDemo ? "Load sample workspace" : "Load my workspace"}</button>
@@ -249,7 +249,7 @@ export function ReconciliationConsole() {
       <div><span>Internal ledger entries</span><strong>{counts.posted}</strong><small>Explicitly posted</small></div>
     </div>
     <div className="recon-queue-head">
-      <div><h3>2. Match and review queue</h3><p>Only completed, persisted PayPal Sandbox or Live captures with a server verification timestamp are eligible evidence. Reference may be the internal PP order reference or PayPal order/capture ID.</p></div>
+      <div><h3>2. Match and review queue</h3><p>Only your own completed, persisted PayPal captures with a server verification timestamp are eligible evidence. Reference may be the internal PayProof order reference or PayPal order/capture ID.</p></div>
       <button className="primary-button" onClick={match} disabled={!!busy || !token.trim()}>{busy === "match" ? "Matching…" : "Run safe matching"}</button>
     </div>
     <div className="reconciliation-table-heading">
@@ -271,7 +271,7 @@ export function ReconciliationConsole() {
           {row.match_status === "unmatched" && <span className="recon-manual-only">Needs investigation</span>}
           {row.match_status === "rejected" && <span className="recon-manual-only">Rejected by reviewer</span>}
         </div></td>
-      </tr>)}{visible.length === 0 && <tr><td colSpan={6} className="recon-empty">No live statement rows loaded. Enter the reviewer token, load the workspace, and import a CSV to begin.</td></tr>}</tbody>
+      </tr>)}{visible.length === 0 && <tr><td colSpan={6} className="recon-empty">No statement rows yet. Import an actual bank or payment-provider CSV to begin. Synthetic judge samples belong in the separate sample review only.</td></tr>}</tbody>
     </table></div>
     <div className="recon-safety-note"><strong>Posting guardrails</strong><span>Exact reference + amount + currency → manual approval → internal ledger. Exceptions cannot be force-approved. Duplicate ledger posts are blocked. This records reconciliation in PayProof AI; it does not transfer funds or write to a bank’s own ledger.</span></div>
     <div className="recon-console-bottom">
