@@ -1,5 +1,8 @@
 # PayProof AI — Judge Guide
 
+> **LATEST integrated feature preview:** [Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/)  
+> This is the READY feature preview for the conversational assistant and authenticated reconciliation (commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). The stable production app is a separate, older release: https://payproof-ai-beta.vercel.app/
+
 This guide separates the stable production application from the integrated feature preview. The preview contains work from PR #8 and PR #9 and must not be mistaken for the production release.
 
 ## Start here
