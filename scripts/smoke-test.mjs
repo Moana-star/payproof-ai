@@ -56,6 +56,15 @@ await check("unauthenticated PayPal capture is rejected", async () => {
   assert.equal(response.status, 401);
 });
 
+await check("unauthenticated AI order extraction requests are rejected", async () => {
+  const { response } = await json("/api/orders/extract", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: "I would like 2 Coffee gift sets." })
+  });
+  assert.equal(response.status, 401);
+});
+
 await check("unauthenticated AI assistant requests are rejected", async () => {
   const { response } = await json("/api/assistant/chat", {
     method: "POST",
