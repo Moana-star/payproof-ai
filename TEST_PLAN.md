@@ -1,6 +1,6 @@
 # Verification Plan
 
-**Latest application preview:** [Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com)
+**Latest application preview:** [Open PayProof AI]([Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com))
 
 A passing build does not prove that PayPal, Supabase, AI extraction or reconciliation has passed end-to-end testing. Keep all test credentials local. Never paste passwords, access tokens, PayPal buyer credentials or server secrets into chat, GitHub issues, logs or source control.
 
