@@ -34,10 +34,11 @@ PayProof AI brings the workflow into one reviewable place and makes the source o
 ### Current release and active work
 
 - **Live application:** [payproof-ai-beta.vercel.app](https://payproof-ai-beta.vercel.app/) — use this for the currently deployed core workflow.
-- **Persistent reconciliation preview:** [open the latest PR #8 preview](https://payproof-papycsaha-naom6083-2980.vercel.app/) — this preview contains the in-progress authenticated, user-scoped statement import, exact matching, human review, internal ledger and audit workflow.
-- **Implementation PR:** [#8 — Build persistent authenticated reconciliation and ledger posting](https://github.com/Moana-star/payproof-ai/pull/8). It is intentionally separate from the stable app until review and end-to-end checks are complete.
+- **Persistent reconciliation preview:** [open the latest PR #8 preview](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/) — this preview contains the in-progress authenticated, user-scoped statement import, exact matching, human review, internal ledger and audit workflow.
+- **Reconciliation PR:** [#8 — Build persistent authenticated reconciliation and ledger posting](https://github.com/Moana-star/payproof-ai/pull/8).
+- **Assistant PR:** [#9 — Upgrade PayProof AI assistant to conversational chat](https://github.com/Moana-star/payproof-ai/pull/9). The integrated feature preview includes the conversational assistant and the authenticated reconciliation work; both remain preview-only until manual release checks pass.
 
-Do not assume a feature shown only in the PR preview is already part of the stable deployment.
+Do not assume a feature shown only in the PR preview is already part of the stable deployment. Confirm the latest preview deployment is READY and check its commit SHA before recording or sharing it with judges.
 
 ## Judge quick start
 
@@ -47,7 +48,7 @@ Do not assume a feature shown only in the PR preview is already part of the stab
 4. Continue to PayPal Sandbox checkout using a dedicated Sandbox buyer account.
 5. Inspect the server-reported verification result and the saved payment evidence. Do not treat the browser return URL as proof.
 6. Open the AI assistant and ask it to explain a recorded payment state or exception. Check that its answer remains advisory.
-7. For the newer persistent reconciliation workflow, use the [PR #8 preview](https://payproof-papycsaha-naom6083-2980.vercel.app/) and follow the [judge guide](JUDGE_GUIDE.md). That preview requires a signed-in account for private reconciliation records.
+7. For the integrated assistant and persistent reconciliation workflow, use the [latest feature preview](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/) and follow the [judge guide](JUDGE_GUIDE.md). It requires a signed-in account for private features.
 
 **Do not enter real customer information or real payment credentials.** Never ask the project maintainer to share private credentials in a public issue or repository.
 
@@ -168,6 +169,10 @@ PayProof AI is a hackathon prototype. In particular:
 
 See [scope.md](scope.md), [prd.md](prd.md) and [spec.md](spec.md) for the product scope and technical intent.
 
+## Required submission video
+
+The official hackathon rules require a public YouTube demonstration video under three minutes showing the application functioning. Add the YouTube URL to the Devpost submission and confirm it opens while signed out. The separate 30–60 second PayPal-team introduction video mentioned in Devpost's email is optional and does not replace the required submission video. See [DEMO_SCRIPT.md](DEMO_SCRIPT.md).
+
 ## Hackathon evaluation
 
 The project is designed to make five qualities easy to inspect:
@@ -185,7 +190,7 @@ No score, prize placement or outcome is guaranteed. The strongest submission is 
 - [Live application](https://payproof-ai-beta.vercel.app/)
 - [Source code](https://github.com/Moana-star/payproof-ai)
 - [Open reconciliation implementation PR](https://github.com/Moana-star/payproof-ai/pull/8)
-- [Latest reconciliation preview](https://payproof-papycsaha-naom6083-2980.vercel.app/)
+- [Latest reconciliation preview](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/)
 
 ## License
 
