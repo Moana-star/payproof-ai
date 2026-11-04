@@ -351,7 +351,37 @@ export default function AssistantPage() {
         @media(max-width:900px){.pp-chat{grid-template-columns:215px minmax(0,1fr)}.pp-chat-head{padding:0 13px}.pp-chat-tools select{max-width:150px}}
         @media(max-width:700px){.pp-chat{display:block;position:relative;height:calc(100dvh - 220px);min-height:560px}.pp-chat-history{display:none;position:absolute;z-index:20;inset:0 auto 0 0;width:min(290px,86%);height:100%;box-shadow:15px 0 45px #1b29402b}.pp-chat-history.mobile-visible{display:flex}.pp-hide-history{display:none}.pp-mobile-history,.pp-mobile-new{display:inline-flex;align-items:center;gap:5px}.pp-chat-head{height:54px;padding:0 10px}.pp-chat-brand{gap:6px}.pp-chat-tools{gap:5px}.pp-chat-tools label{font-size:0}.pp-chat-tools select{max-width:125px;font-size:9px}.pp-chat-welcome{padding:38px 14px 20px}.pp-chat-welcome h2{font-size:21px}.pp-chat-welcome>p{font-size:11px}.pp-suggestions{grid-template-columns:1fr;gap:7px;margin:20px 0}.pp-suggestions button{min-height:78px;padding:10px 12px;gap:4px}.pp-chat-messages{padding:20px 13px 30px;gap:22px}.pp-chat-message{grid-template-columns:25px minmax(0,1fr);gap:9px}.pp-message-avatar{width:25px;height:25px}.pp-message-content>div{font-size:11px}.pp-composer-wrap{padding:9px 9px 10px}.pp-composer-controls{gap:5px}.pp-composer-left{gap:2px}.pp-composer-icon{width:29px;height:29px}.pp-composer-hint{display:none}.pp-chat-disclaimer{font-size:7px}}
         @media(prefers-reduced-motion:reduce){.pp-suggestions button{transition:none}}
-      `}</style>
+
+        /* Assistant-specific palette alignment */
+        .pp-chat,.pp-chat-main{background:#0D0E11!important;color:#F3F4F6!important}
+        .pp-chat-history,.pp-chat-head,.pp-composer-wrap{background:#18191E!important;border-color:#272A34!important}
+        .pp-chat-history{border-right:1px solid #272A34!important}
+        .pp-chat-history button,.pp-chat-tools select,.pp-chat-brand,.pp-chat-head,.pp-chat-history h2{color:#F3F4F6!important}
+        .pp-chat-history button:hover,.pp-suggestions button,.pp-attach-menu,.pp-attach-menu button{background:#1F232B!important;border-color:#272A34!important;color:#F3F4F6!important}
+        .pp-chat-history button.active,.pp-chat-history button[aria-current="page"]{background:rgba(99,102,241,.16)!important;color:#C7C8FF!important}
+        .pp-chat-welcome h2,.pp-message-content>b,.pp-response-body h3,.pp-response-body h4,.pp-response-body h5,.pp-response-body strong{color:#F3F4F6!important}
+        .pp-chat-welcome>p,.pp-chat-welcome footer,.pp-message-content>div,.pp-chat-thinking,.pp-chat-disclaimer,.pp-composer-hint,.pp-chat-composer small,.pp-suggestions button small{color:#9CA3AF!important}
+        .pp-message-avatar{background:rgba(99,102,241,.18)!important;color:#C7C8FF!important}
+        .pp-chat-message.user .pp-message-avatar{background:#1F232B!important;color:#F3F4F6!important}
+        .pp-response-body code{background:#1F232B!important;color:#C7C8FF!important}
+        .pp-response-body pre{background:#0D0E11!important;border-color:#272A34!important;color:#F3F4F6!important}
+        .pp-response-body blockquote{background:#1F232B!important;border-left-color:#6366F1!important;color:#D1D5DB!important}
+        .pp-chat-composer{background:#18191E!important;border-color:#272A34!important;box-shadow:none!important}
+        .pp-chat-composer:focus-within{border-color:#3F4454!important;box-shadow:0 0 0 3px rgba(99,102,241,.18)!important}
+        .pp-chat-composer textarea{background:transparent!important;color:#F3F4F6!important}
+        .pp-chat-composer textarea::placeholder{color:#6B7280!important}
+        .pp-composer-icon{color:#9CA3AF!important}
+        .pp-composer-icon:hover{background:#1F232B!important;color:#F3F4F6!important}
+        .pp-plus,.pp-attachment-chip,.pp-attach-menu button{background:#1F232B!important;border-color:#272A34!important;color:#D1D5DB!important}
+        .pp-attach-menu button>span{color:#A5A6F6!important}
+        .pp-send-button{background:#6366F1!important;color:#fff!important}
+        .pp-send-button:hover{background:#5558E8!important}
+        .pp-send-button:disabled{background:#272A34!important;color:#6B7280!important}
+        .pp-chat-error{background:rgba(248,113,113,.1)!important;border-color:rgba(248,113,113,.3)!important;color:#FCA5A5!important}
+        .pp-chat-error button{color:#FCA5A5!important}
+        .pp-chat-tools select{background:#1F232B!important;border-color:#272A34!important}
+
+            `}</style>
     </WorkspaceLayout>
   );
 }
