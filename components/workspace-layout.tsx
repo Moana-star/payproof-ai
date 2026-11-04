@@ -65,7 +65,7 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
         <nav className="ops-nav" aria-label="Workspace navigation">
           {navigation.map((item) => <Link key={item.href} href={item.href} className={item.href === (activeRoute[title] || "/") ? "ops-nav-item is-active" : "ops-nav-item"}><span className="ops-nav-icon" aria-hidden="true">{item.icon}</span>{item.label}</Link>)}
         </nav>
-        <div className="ops-nav-section-label">PRESENTATION</div>
+        <p className="ops-nav-label" style={{ marginTop: 18 }}>PRESENTATION</p>
         <nav className="ops-nav" aria-label="Judge resources">
           <Link href="/demo-guide" className={title === "Judge demo guide" ? "ops-nav-item is-active" : "ops-nav-item"}><span className="ops-nav-icon" aria-hidden="true">▶</span>Judge demo guide</Link>
         </nav>
