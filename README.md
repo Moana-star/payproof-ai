@@ -37,7 +37,7 @@ PayProof AI brings the workflow into one reviewable place and makes the source o
 
 ### Current release and active work
 
-- **Latest integrated application preview:** [payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app](https://payproof-ai-beta.vercel.app/) — this is the latest integrated assistant and reconciliation workflow, not the latest feature preview.
+- **Latest integrated application preview:** [payproof-ai-beta.vercel.app](https://payproof-ai-beta.vercel.app/) — this is the latest integrated assistant and reconciliation workflow, not the latest feature preview.
 - **LATEST integrated feature preview:** [open the latest assistant + reconciliation preview](https://payproof-ai-beta.vercel.app/) — this preview contains the in-progress authenticated, user-scoped statement import, exact matching, human review, internal ledger and audit workflow.
 - **Reconciliation PR:** [#8 — Build persistent authenticated reconciliation and ledger posting](https://github.com/Moana-star/payproof-ai/pull/8).
 - **Assistant PR:** [#9 — Upgrade PayProof AI assistant to conversational chat](https://github.com/Moana-star/payproof-ai/pull/9). The integrated feature preview includes the conversational assistant and the authenticated reconciliation work; both remain preview-only until manual release checks pass.
