@@ -88,7 +88,7 @@ On 4 November 2026, the connected Supabase database was checked directly:
 - PayPal requests are hard-locked to the PayPal Sandbox endpoint; a non-Sandbox `PAYPAL_BASE_URL` override is rejected.
 - Direct authenticated Data API access is not granted for statement rows, payment events, ledger entries or reconciliation audit. The app's server routes apply explicit owner filters.
 
-The application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33` has a READY Vercel preview. The latest repository commit `75a340700e4e1ff605c4e3808064ec670282248c` passed GitHub Actions lint, build and public/security smoke checks. The reconciliation workflow helper was added after that CI run and requires a fresh CI result before it is considered validated. These database dry-runs do not replace the two-real-account API integration test. Run it after creating a second test account.
+The application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33` has a READY Vercel preview. GitHub Actions passed lint, build, production-server startup and public/security smoke checks on commit `75a340700e4e1ff605c4e3808064ec670282248c`. The reconciliation workflow helper and local sign-in helper were added after that CI run and still need a fresh CI/local execution. Vercel has rate-limited further preview builds, so do not claim those latest helper files are deployed. The database-only ledger uniqueness migration has been applied and verified in Supabase. These database dry-runs do not replace the two-real-account API integration test. Run it after creating a second test account.
 
 ## Core workflow
 
