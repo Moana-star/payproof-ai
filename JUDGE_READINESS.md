@@ -63,7 +63,7 @@ The latest code commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33` has a READY Ve
 - [ ] Confirm automatic return verification without refreshing and confirm the saved order appears in the same signed-in workspace.
 - [ ] Test cancellation, pending/incomplete payment, provider failure and amount/currency/reference mismatch.
 - [ ] Run `npm run test:security` with two distinct Supabase test-account tokens. The database currently contains owned records for one account only, so create a second test account before claiming the two-account API test passed.
-- [ ] Test duplicate CSV import, rejected review, duplicate posting and audit-trail accuracy.
+- [ ] Run `npm run test:reconciliation` with a dedicated QA account and a verified Sandbox capture; inspect the two `PPQA-` rows, the single ledger entry and audit trail.
 - [ ] Test AI order extraction with clear, ambiguous and unsupported messages.
 - [ ] Test the AI assistant while signed in, then confirm unauthenticated API access is rejected.
 - [ ] Check the preview at desktop, tablet and mobile widths.
