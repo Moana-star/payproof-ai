@@ -38,16 +38,16 @@ PayProof AI helps small online sellers connect chat-based order intake, PayPal c
 
 ## Security item to resolve
 
-Supabase's security advisor currently reports **Leaked Password Protection Disabled**. Enable the Auth password-security option before presenting the project as security-hardened. The advisor also reports four unindexed foreign keys and five unused indexes; these are performance observations, not evidence of an access-control failure.
+Supabase's security advisor currently reports **Leaked Password Protection Disabled**. The connected Supabase organization is on the Free plan, while Supabase documents this control as Pro-plan-and-above; do not claim it is enabled. Enabling it requires an owner-approved paid-plan upgrade. The advisor also reports four unindexed foreign keys and five unused indexes; these are performance observations, not evidence of an access-control failure.
 
 Both AI endpoints—the conversational assistant and AI order extraction—now have server-side Supabase bearer-session checks in the feature branch, and the browser sends the current session token. Verify unauthenticated requests return HTTP 401 on the latest READY preview. Do not claim these checks passed until the deployment and smoke test confirm them.
 
 ## Manual release gates — still required
 
-- [ ] Complete a fresh PayPal Sandbox checkout on the exact preview build used for judging.
+- [ ] Run `npm run test:paypal-sandbox -- create` on the exact preview build, approve with a PayPal Sandbox buyer, confirm automatic return verification, then run the helper's `verify` mode.
 - [ ] Confirm automatic return verification without refreshing and confirm the saved order appears in the same signed-in workspace.
 - [ ] Test cancellation, pending/incomplete payment, provider failure and amount/currency/reference mismatch.
-- [ ] Verify two separate test accounts cannot read or mutate one another's orders, statement rows, ledger entries or audit events.
+- [ ] Run `npm run test:security` with two distinct Supabase test-account tokens. The database currently contains owned records for one account only, so create a second test account before claiming the two-account test passed.
 - [ ] Test duplicate CSV import, rejected review, duplicate posting and audit-trail accuracy.
 - [ ] Test AI order extraction with clear, ambiguous and unsupported messages.
 - [ ] Test the AI assistant while signed in, then confirm unauthenticated API access is rejected.
