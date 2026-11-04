@@ -1,21 +1,21 @@
 # PayProof AI — Judge Guide
 
 > **LATEST integrated feature preview:** [Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/)  
-> This is the READY feature preview for the conversational assistant and authenticated reconciliation (commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). The stable production app is a separate, older release: https://payproof-ai-beta.vercel.app/
+> This is the READY feature preview for the conversational assistant and authenticated reconciliation (commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). The latest integrated preview is a separate, older release: https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/
 
-This guide separates the stable production application from the integrated feature preview. The preview contains work from PR #8 and PR #9 and must not be mistaken for the production release.
+This guide separates the latest integrated previewlication from the integrated feature preview. The preview contains work from PR #8 and PR #9 and must not be mistaken for the production release.
 
 ## Start here
 
 | Resource | Link | What it represents |
 |---|---|---|
-| Stable application | https://payproof-ai-beta.vercel.app/ | Stable core PayProof AI workflow |
+| Latest integrated application preview | https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/ | Stable core PayProof AI workflow |
 | Integrated feature preview | https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/ | Preview with authenticated reconciliation and conversational assistant |
 | Source repository | https://github.com/Moana-star/payproof-ai | Public source, documentation, CI and history |
 | Reconciliation PR | https://github.com/Moana-star/payproof-ai/pull/8 | Persistent, owner-scoped reconciliation implementation |
 | Assistant PR | https://github.com/Moana-star/payproof-ai/pull/9 | Conversational AI assistant and structured responses |
 
-**Important:** The integrated feature preview is not the stable production deployment. Confirm the latest Vercel deployment is READY and inspect its commit SHA before testing or recording. Preview-only features are not production features until released.
+**Important:** The integrated feature preview is not the latest integrated preview. Confirm the latest Vercel deployment is READY and inspect its commit SHA before testing or recording. Preview-only features are not production features until released.
 
 ## What problem is being addressed?
 
@@ -29,7 +29,7 @@ PayProof AI connects these steps around one trust boundary:
 
 ### 1. Understand the dashboard
 
-Open the stable application and inspect the overview. Notice the distinction between sample records, pending items and verified payment evidence. Treat illustrative records as synthetic examples, not real customer transactions.
+Open the latest integrated application preview and inspect the overview. Notice the distinction between sample records, pending items and verified payment evidence. Treat illustrative records as synthetic examples, not real customer transactions.
 
 ### 2. Try AI-assisted order intake
 
@@ -86,7 +86,7 @@ Matching must not auto-approve or post. Duplicate posting is guarded. The intern
 
 ## What is implemented versus what still needs proof
 
-- The stable application demonstrates the core order-to-PayPal-Sandbox workflow.
+- The latest integrated preview demonstrates the current order-to-PayPal-Sandbox workflow and includes the assistant and reconciliation feature work.
 - PR #8 contains authenticated, owner-scoped reconciliation and persistent internal ledger work.
 - PR #9 contains the conversational assistant and authentication checks for the AI endpoints.
 - A successful build or visible UI does not prove that every integration path has passed end-to-end testing.
