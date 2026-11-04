@@ -1,13 +1,9 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { getTestAccessToken } from "./lib/test-auth.mjs";
 
 const baseUrl = (process.env.PAYPROOF_BASE_URL || "https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app").replace(/\/$/, "");
-const token = process.env.PAYPROOF_TEST_USER_TOKEN;
-
-if (!token) {
-  console.error("Set PAYPROOF_TEST_USER_TOKEN to a dedicated signed-in QA account's access token. Never paste it into chat or commit it.");
-  process.exit(2);
-}
+const token = await getTestAccessToken("PAYPROOF_TEST_USER");
 
 async function request(path, body) {
   const response = await fetch(`${baseUrl}${path}`, {
