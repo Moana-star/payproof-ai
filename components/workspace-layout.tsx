@@ -47,12 +47,12 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => {
       const metadata = data.session?.user.user_metadata || {};
-      setAccountName(typeof metadata.display_name === "string" ? metadata.display_name : data.session?.user.email?.split("@")[0] || "");
+      setAccountName(typeof metadata.display_name === "string" ? metadata.display_name : typeof metadata.full_name === "string" ? metadata.full_name : typeof metadata.name === "string" ? metadata.name : data.session?.user.email?.split("@")[0] || "");
       setAccountAvatar(typeof metadata.avatar_url === "string" ? metadata.avatar_url : typeof metadata.picture === "string" ? metadata.picture : "");
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const metadata = session?.user.user_metadata || {};
-      setAccountName(typeof metadata.display_name === "string" ? metadata.display_name : session?.user.email?.split("@")[0] || "");
+      setAccountName(typeof metadata.display_name === "string" ? metadata.display_name : typeof metadata.full_name === "string" ? metadata.full_name : typeof metadata.name === "string" ? metadata.name : session?.user.email?.split("@")[0] || "");
       setAccountAvatar(typeof metadata.avatar_url === "string" ? metadata.avatar_url : typeof metadata.picture === "string" ? metadata.picture : "");
     });
     return () => subscription.unsubscribe();
