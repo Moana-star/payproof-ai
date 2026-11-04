@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test:smoke": "node scripts/smoke-test.mjs"
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "test:security": "node scripts/security-integration-test.mjs",
+    "test:paypal-sandbox": "node scripts/paypal-sandbox-checkout-test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
