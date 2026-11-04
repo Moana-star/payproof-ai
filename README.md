@@ -17,6 +17,7 @@ PayProof AI is an evidence-led payment-operations prototype for small online sel
 - **Verification plan:** [TEST_PLAN.md](TEST_PLAN.md)
 - **Two-account isolation test:** [scripts/security-integration-test.mjs](scripts/security-integration-test.mjs)
 - **PayPal Sandbox checkout test:** [scripts/paypal-sandbox-checkout-test.mjs](scripts/paypal-sandbox-checkout-test.mjs)
+- **Reconciliation workflow test:** [scripts/reconciliation-workflow-test.mjs](scripts/reconciliation-workflow-test.mjs)
 - **Security policy:** [SECURITY.md](SECURITY.md)
 
 The integrated feature preview contains the newer reconciliation and assistant work. It is separate from the stable production deployment. Confirm the latest preview deployment is READY and check the commit SHA before judging or recording.
