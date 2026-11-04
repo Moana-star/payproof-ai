@@ -20,7 +20,7 @@ async function jsonRequest(url, init = {}) {
 
 async function getIdentity(token) {
   const { response, body } = await jsonRequest(`${supabaseUrl}/auth/v1/user`, {
-    headers: { apikey: publicKey, Authorization: `Bearer ${token} }
+    headers: { apikey: publicKey, Authorization: `Bearer ${token}` }
   });
   assert.equal(response.status, 200, "Both test tokens must be valid Supabase sessions.");
   assert.ok(body.id, "Supabase did not return a user ID.");
