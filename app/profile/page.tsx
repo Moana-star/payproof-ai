@@ -11,6 +11,9 @@ export default function ProfilePage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [workspace, setWorkspace] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -37,6 +40,7 @@ export default function ProfilePage() {
       setEmail(user.email || "");
       setName(typeof user.user_metadata.display_name === "string" ? user.user_metadata.display_name : "");
       setWorkspace(typeof user.user_metadata.workspace_name === "string" ? user.user_metadata.workspace_name : "My workspace");
+      setAvatarUrl(typeof user.user_metadata.avatar_url === "string" ? user.user_metadata.avatar_url : typeof user.user_metadata.picture === "string" ? user.user_metadata.picture : "");
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -56,6 +60,30 @@ export default function ProfilePage() {
       active = false;
     };
   }, [router]);
+
+  async function uploadAvatar(file: File | undefined) {
+    if (!file) return;
+    setAvatarError("");
+    if (!file.type.startsWith("image/")) { setAvatarError("Choose an image file."); return; }
+    if (file.size > 3 * 1024 * 1024) { setAvatarError("Choose an image smaller than 3 MB."); return; }
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase || !userId) { setAvatarError("Please sign in again before uploading a photo."); return; }
+    setUploadingAvatar(true);
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `${userId}/profile-${Date.now()}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, cacheControl: "3600", contentType: file.type });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = data.publicUrl;
+      const { error: updateError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
+      if (updateError) throw updateError;
+      setAvatarUrl(url);
+      setMessage("Profile photo updated. It will appear beside your account throughout the workspace.");
+    } catch (e) {
+      setAvatarError(e instanceof Error ? e.message : "The photo could not be uploaded. Check the avatars storage setup.");
+    } finally { setUploadingAvatar(false); }
+  }
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -118,6 +146,8 @@ export default function ProfilePage() {
           <p>Loading your profile…</p>
         ) : (
           <form className="auth-form" onSubmit={saveProfile}>
+            <div className="profile-photo-control"><img src={avatarUrl || "/profile-placeholder.svg"} alt="Your profile" /><div><strong>Profile photo</strong><p>Upload a JPG, PNG, WebP or other image up to 3 MB.</p><label className="secondary-button profile-upload-label" htmlFor="profile-photo">{uploadingAvatar ? "Uploading…" : "Choose photo"}</label><input id="profile-photo" type="file" accept="image/*" disabled={uploadingAvatar} onChange={event => { void uploadAvatar(event.target.files?.[0]); event.currentTarget.value = ""; }} /></div></div>
+            {avatarError && <p className="auth-error" role="alert">{avatarError}</p>}
             <label htmlFor="profile-email">Account email</label>
             <input id="profile-email" type="email" value={email} disabled />
 
