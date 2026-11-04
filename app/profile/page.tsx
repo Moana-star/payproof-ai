@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { AccountAvatar } from "@/components/account-avatar";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -146,7 +147,7 @@ export default function ProfilePage() {
           <p>Loading your profile…</p>
         ) : (
           <form className="auth-form" onSubmit={saveProfile}>
-            <div className="profile-photo-control"><img src={avatarUrl || "/profile-placeholder.svg"} alt="Your profile" /><div><strong>Profile photo</strong><p>Upload a JPG, PNG, WebP or other image up to 3 MB.</p><label className="secondary-button profile-upload-label" htmlFor="profile-photo">{uploadingAvatar ? "Uploading…" : "Choose photo"}</label><input id="profile-photo" type="file" accept="image/*" disabled={uploadingAvatar} onChange={event => { void uploadAvatar(event.target.files?.[0]); event.currentTarget.value = ""; }} /></div></div>
+            <div className="profile-photo-control"><AccountAvatar name={name} imageUrl={avatarUrl} size={76} /><div><strong>Profile photo</strong><p>Upload a JPG, PNG, WebP or other image up to 3 MB.</p><label className="secondary-button profile-upload-label" htmlFor="profile-photo">{uploadingAvatar ? "Uploading…" : "Choose photo"}</label><input id="profile-photo" type="file" accept="image/*" disabled={uploadingAvatar} onChange={event => { void uploadAvatar(event.target.files?.[0]); event.currentTarget.value = ""; }} /></div></div>
             {avatarError && <p className="auth-error" role="alert">{avatarError}</p>}
             <label htmlFor="profile-email">Account email</label>
             <input id="profile-email" type="email" value={email} disabled />
