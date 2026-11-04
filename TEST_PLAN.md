@@ -45,6 +45,16 @@ npm run test:security
 
 Expected: both identities are distinct; private order, statement, audit and ledger responses do not overlap; account B receives 404 when attempting to capture account A's PayPal order or review its statement row; and account B cannot post that row. The script does not mutate account A's records.
 
+## Verified database checks
+
+On 4 November 2026, the connected Supabase database was checked directly:
+- The authenticated owner saw 9 owned orders under RLS; a different simulated UUID saw 0.
+- Direct order writes by `anon` and `authenticated` were revoked. Authenticated SELECT remains owner-scoped. Server-side `service_role` retains write permissions.
+- A rollback-only posting test confirmed one ledger entry is created on the first post and a second post attempt is rejected; the transaction was rolled back, leaving no persistent test entry.
+- Direct authenticated Data API access is not granted for statement rows, payment events, ledger entries or reconciliation audit. The app's server routes apply explicit owner filters.
+
+These checks do not replace the two-real-account integration test. Run it after creating a second test account.
+
 ## Core workflow
 
 | Scenario | Expected result |
