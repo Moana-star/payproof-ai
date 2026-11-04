@@ -81,6 +81,7 @@ async function resultResponse(order: PayPalOrder, ownerId: string, customerName?
     return NextResponse.json({
       verified: false,
       status: "REVIEW_REQUIRED",
+      retryable: false,
       message: "PayPal did not confirm the expected completed order, amount, and currency. Do not fulfil this order.",
       checks: checked.checks
     }, { status: 409 });
@@ -177,6 +178,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         verified: false,
         status: "REVIEW_REQUIRED",
+        retryable: false,
         error: "This PayPal order does not match a supported PayProof AI catalogue order. It was not captured."
       }, { status: 409 });
     }
@@ -189,6 +191,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         verified: false,
         status: "REVIEW_REQUIRED",
+        retryable: existing.status === "CREATED",
         message: "The PayPal order is not approved for capture. No capture was attempted."
       }, { status: 409 });
     }
@@ -208,6 +211,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to verify the PayPal payment.";
     const status = message.includes("credentials are not configured") ? 503 : 502;
-    return NextResponse.json({ verified: false, status: "REVIEW_REQUIRED", error: message }, { status });
+    return NextResponse.json({ verified: false, status: "REVIEW_REQUIRED", retryable: status === 502, error: message }, { status });
   }
 }
