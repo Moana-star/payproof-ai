@@ -844,3 +844,13 @@ option{background:#FFFFFF;color:var(--pp-text)}
 .verification-details{background:#F0F5FA!important;border-color:var(--pp-border)!important}
 .footer i,.sandbox-pill i,.ops-sandbox-pill i{background:var(--pp-success)!important}
 @media(hover:hover){.nav-item:hover,.ops-nav-item:hover,.workspace-module-card:hover,.ops-flow-node:hover{background:#EAF3FA!important}}
+
+
+/* Account photo upload and profile avatar */
+.profile-photo-control{display:flex;align-items:center;gap:16px;padding:14px 0 18px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.profile-photo-control>div{display:grid;gap:6px;min-width:0}
+.profile-photo-control strong{font-size:13px;color:var(--ink)}
+.profile-photo-control p{font-size:11px;color:var(--muted);margin:0;line-height:1.5}
+.profile-photo-control input[type=file]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}
+.profile-upload-label{width:max-content;cursor:pointer;min-height:36px}
+.profile-upload-label:focus-within{outline:3px solid #36BFC0;outline-offset:2px}
