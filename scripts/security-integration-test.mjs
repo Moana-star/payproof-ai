@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-const baseUrl = (process.env.PAYPROOF_BASE_URL || "https://payproof-a75ejx7sf-naom6083-2980.vercel.app").replace(/\/$/, "");
+const baseUrl = (process.env.PAYPROOF_BASE_URL || "https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app").replace(/\/$/, "");
 const supabaseUrl = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
 const publicKey = process.env.SUPABASE_PUBLIC_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const tokenA = process.env.PAYPROOF_TEST_USER_A_TOKEN;
