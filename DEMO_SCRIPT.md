@@ -2,7 +2,8 @@
 
 **Required submission video:** Publish a public YouTube video under 3 minutes and add its URL to Devpost. The 30–60 second PayPal-team intro mentioned in Cassie's email is optional and separate.
 
-**Stable app:** https://payproof-ai-beta.vercel.app/  
+**LATEST integrated feature preview:** ${preview}  
+**Stable production app (older core release):** https://payproof-ai-beta.vercel.app/  
 **Integrated feature preview (PRs #8 and #9):** https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/  
 **Source:** https://github.com/Moana-star/payproof-ai
 
@@ -45,7 +46,7 @@ Review the proposed product and quantity. Confirm the draft.
 
 ### 1:35–2:15 — Reconciliation with human control (integrated feature preview)
 
-**Action:** Open the PR #8 preview, sign in, load the private workspace and show a previously imported statement row with its match reason. Do not create a duplicate test row for an already-used capture.
+**Action:** Open the latest integrated feature preview, sign in, load the private workspace and show a previously imported statement row with its match reason. Do not create a duplicate test row for an already-used capture.
 
 **Say:** “The reconciliation preview compares statement references, amounts and currencies with eligible server-verified PayPal captures. A match is only a candidate. A human must approve it before it can be posted to the internal ledger, and the action is recorded in the audit trail.”
 
