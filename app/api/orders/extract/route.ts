@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MAX_MESSAGE_LENGTH, PRODUCTS, safeDraft } from "@/lib/order-extraction";
+import { getAuthenticatedUser } from "@/lib/auth-server";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
+  const user = await getAuthenticatedUser(request);
+  if (!user) return NextResponse.json({ error: "Sign in to use AI order extraction." }, { status: 401 });
+
   let body: { message?: unknown };
   try {
     body = await request.json();
