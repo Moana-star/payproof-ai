@@ -40,7 +40,7 @@ PayProof AI helps small online sellers connect chat-based order intake, PayPal c
 
 Supabase's security advisor currently reports **Leaked Password Protection Disabled**. Enable the Auth password-security option before presenting the project as security-hardened. The advisor also reports four unindexed foreign keys and five unused indexes; these are performance observations, not evidence of an access-control failure.
 
-The assistant API now has a server-side Supabase bearer-session check in the feature branch, and the browser sends the current session token. Verify the unauthenticated request returns HTTP 401 on the latest READY preview. Do not claim this check passed until the deployment and smoke test confirm it.
+Both AI endpoints—the conversational assistant and AI order extraction—now have server-side Supabase bearer-session checks in the feature branch, and the browser sends the current session token. Verify unauthenticated requests return HTTP 401 on the latest READY preview. Do not claim these checks passed until the deployment and smoke test confirm them.
 
 ## Manual release gates — still required
 
