@@ -7,14 +7,14 @@ PayProof AI is an evidence-led payment operations prototype for small online sel
 <p align="center">
   <a href="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/"><strong>Open the LATEST integrated PayProof AI preview</strong></a>
   ·
-  <a href="https://payproof-ai-beta.vercel.app/">Stable production app</a>
+  <a href="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/">Stable production app</a>
   ·
   <a href="https://github.com/Moana-star/payproof-ai/blob/main/JUDGE_GUIDE.md">Judge guide</a>
   ·
   <a href="https://github.com/Moana-star/payproof-ai/blob/main/DEMO_SCRIPT.md">Demo script</a>
 </p>
 
-> **LATEST WEBSITE — integrated feature preview:** [https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/) — this is the current READY preview containing the conversational assistant and authenticated reconciliation work (deployment commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). Use this link to inspect the latest feature updates. The older stable production app is listed separately below.
+> **LATEST WEBSITE — integrated feature preview:** [https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/) — this is the current READY preview containing the conversational assistant and authenticated reconciliation work (deployment commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). Use this link to inspect the latest feature updates. The older latest integrated preview is listed separately below.
 
 > **Hackathon environment:** The deployed application uses PayPal Sandbox. It is a prototype, not a live-money payment processor, bank integration, fraud-detection service or production accounting system. Use test accounts and synthetic data only.
 
@@ -37,7 +37,7 @@ PayProof AI brings the workflow into one reviewable place and makes the source o
 
 ### Current release and active work
 
-- **Stable production application:** [payproof-ai-beta.vercel.app](https://payproof-ai-beta.vercel.app/) — this is the earlier stable core workflow, not the latest feature preview.
+- **Latest integrated application preview:** [payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/) — this is the latest integrated assistant and reconciliation workflow, not the latest feature preview.
 - **LATEST integrated feature preview:** [open the latest assistant + reconciliation preview](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/) — this preview contains the in-progress authenticated, user-scoped statement import, exact matching, human review, internal ledger and audit workflow.
 - **Reconciliation PR:** [#8 — Build persistent authenticated reconciliation and ledger posting](https://github.com/Moana-star/payproof-ai/pull/8).
 - **Assistant PR:** [#9 — Upgrade PayProof AI assistant to conversational chat](https://github.com/Moana-star/payproof-ai/pull/9). The integrated feature preview includes the conversational assistant and the authenticated reconciliation work; both remain preview-only until manual release checks pass.
@@ -192,7 +192,7 @@ No score, prize placement or outcome is guaranteed. The strongest submission is 
 ## Project links
 
 - [LATEST integrated website](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/)
-- [Stable production application (older core release)](https://payproof-ai-beta.vercel.app/)
+- [Latest integrated application preview (latest integrated release preview)](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/)
 - [Source code](https://github.com/Moana-star/payproof-ai)
 - [Open reconciliation implementation PR](https://github.com/Moana-star/payproof-ai/pull/8)
 - [Latest integrated assistant + reconciliation preview](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/)
