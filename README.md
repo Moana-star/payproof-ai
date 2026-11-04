@@ -2,42 +2,46 @@
 
 **Evidence first. AI explains the record. Verified payment data decides.**
 
-PayProof AI is an evidence-led payment operations prototype for small online sellers. It connects AI-assisted order intake, PayPal Sandbox checkout, server-side payment verification, payment evidence and human-reviewed reconciliation.
+PayProof AI is an evidence-led payment-operations prototype for small online sellers. It connects AI-assisted order intake, PayPal Sandbox checkout, server-side payment verification, payment evidence and human-reviewed reconciliation.
 
 > AI may organise and explain information. Only server-side provider verification can establish the application's payment status. A screenshot, customer claim, AI response or browser redirect is not payment proof.
 
 ## Open the project
 
-- **Stable application:** https://payproof-ai-beta.vercel.app/
-- **This branch's preview:** https://payproof-papycsaha-naom6083-2980.vercel.app/
-- **Implementation PR:** https://github.com/Moana-star/payproof-ai/pull/8
-- **Judge guide:** https://github.com/Moana-star/payproof-ai/blob/main/JUDGE_GUIDE.md
-- **Demo script:** https://github.com/Moana-star/payproof-ai/blob/main/DEMO_SCRIPT.md
-- **Verification plan:** https://github.com/Moana-star/payproof-ai/blob/main/TEST_PLAN.md
-- **Security policy:** https://github.com/Moana-star/payproof-ai/blob/main/SECURITY.md
+- **Latest application preview:** [Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com)
+- **Reconciliation implementation:** https://github.com/Moana-star/payproof-ai/pull/8
+- **Conversational assistant:** https://github.com/Moana-star/payproof-ai/pull/9
+- **Judge readiness and release gates:** [JUDGE_READINESS.md](JUDGE_READINESS.md)
+- **Demo script:** [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
+- **Verification plan:** [TEST_PLAN.md](TEST_PLAN.md)
+- **Two-account isolation test:** [scripts/security-integration-test.mjs](scripts/security-integration-test.mjs)
+- **PayPal Sandbox checkout test:** [scripts/paypal-sandbox-checkout-test.mjs](scripts/paypal-sandbox-checkout-test.mjs)
+- **Reconciliation workflow test:** [scripts/reconciliation-workflow-test.mjs](scripts/reconciliation-workflow-test.mjs)
+- **Security policy:** [SECURITY.md](SECURITY.md)
 
-The persistent reconciliation work in this branch is a preview under review; it is not yet the stable application release.
+The integrated feature preview contains the newer reconciliation and assistant work. It is separate from the production deployment. Confirm the latest preview deployment is READY and check the commit SHA before judging or recording.
 
-## What this branch adds
+## Product workflow
 
-- Authenticated Supabase sessions for private reconciliation operations.
+1. A seller supplies a customer message.
+2. AI proposes a structured order draft for human review.
+3. Application code validates the supported catalogue and calculates the trusted total.
+4. PayPal Sandbox handles checkout.
+5. The server verifies provider status and expected transaction details before the application records a paid state.
+6. The assistant explains workflows and supplied evidence but cannot change authoritative payment state.
+7. Statement rows are matched using exact reference, amount and currency. A human approves a valid candidate before it is posted to the internal ledger and audit trail.
+
+## What the feature preview adds
+
+- Authenticated Supabase sessions for private reconciliation operations, AI order extraction and the AI assistant API.
 - User-scoped statement rows, PayPal evidence, ledger entries and audit events.
 - CSV import with validation and duplicate detection.
-- Exact matching against eligible server-verified PayPal Sandbox captures using reference, amount and currency.
+- Exact matching against eligible server-verified PayPal Sandbox captures.
 - Human approval before posting to the persistent internal ledger.
 - Duplicate-post protection and audit events for import, matching, review and posting.
 - A signed-in user's PayPal evidence CSV export.
-- Clear separation between private account records and the public synthetic judge sample.
-
-## Judge workflow
-
-1. Sign in to the branch preview.
-2. Open Reconciliation and load the private workspace.
-3. Import a statement CSV or inspect the clearly labelled sample.
-4. Run matching and inspect the exact reference, amount and currency match reason.
-5. Confirm the candidate remains pending until a human reviewer approves it.
-6. Post an approved candidate only when you intend to create a test ledger entry.
-7. Inspect the audit trail.
+- Conversational assistant with structured responses and session-scoped chat history.
+- Clearly separated private account records and public synthetic judge examples.
 
 ## Trust boundaries
 
@@ -52,26 +56,20 @@ The persistent reconciliation work in this branch is a preview under review; it 
 
 Requires Node.js 20+, npm, PayPal Sandbox credentials, a Supabase project and a Groq API key for the corresponding features.
 
-```bash
-npm install
-cp .env.example .env.local
-npm run dev
-```
+Run npm install, copy .env.example to .env.local, then run npm run dev.
 
-Run checks:
+Run checks with npm run lint, npm run build, and npm run test:smoke -- http://127.0.0.1:3000. For a signed-in two-account isolation test, configure the local variables documented in TEST_PLAN.md and run npm run test:security. For an exact-preview PayPal Sandbox buyer-approval test, run npm run test:paypal-sandbox -- create, approve the generated URL with a Sandbox buyer, then run npm run test:paypal-sandbox -- verify <PAYPAL_ORDER_ID>.
 
-```bash
-npm run lint
-npm run build
-npm run test:smoke -- http://127.0.0.1:3000
-```
-
-Use your own private values in `.env.local`. Never commit secrets or use live PayPal credentials for the hackathon demo.
+Use your own private values in .env.local. Never commit secrets or use live PayPal credentials for the hackathon demo.
 
 ## Stack
 
 Next.js 15 · React 19 · TypeScript · PayPal Orders API (Sandbox) · Supabase Auth/Database · Groq AI · Vercel
 
+## Submission video
+
+The official submission requires a public YouTube demonstration video under three minutes showing the application functioning. Cassie's separate 30–60 second PayPal-team introduction video is optional. See DEMO_SCRIPT.md.
+
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see LICENSE.

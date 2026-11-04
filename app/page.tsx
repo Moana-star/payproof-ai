@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ReconciliationConsole } from "@/components/reconciliation-console";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { AccountAvatar } from "@/components/account-avatar";
 
 type OrderStatus = "Paid" | "Awaiting payment" | "Review needed";
 type Order = {
@@ -32,6 +33,7 @@ const statusClass: Record<OrderStatus, string> = {
 
 export default function Home() {
   const [authUserName, setAuthUserName] = useState("");
+  const [authUserAvatar, setAuthUserAvatar] = useState("");
   const [authChecked, setAuthChecked] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [authWorkspaceName, setAuthWorkspaceName] = useState("Demo workspace");
@@ -130,6 +132,7 @@ export default function Home() {
         setAuthChecked(true);
         setIsSignedIn(false);
         setAuthUserName("");
+        setAuthUserAvatar("");
         setAuthWorkspaceName("Demo workspace");
         await loadOrders(null);
         return;
@@ -137,7 +140,8 @@ export default function Home() {
       setAuthChecked(true);
       setIsSignedIn(true);
       const metadata = session.user.user_metadata || {};
-      setAuthUserName(typeof metadata.display_name === "string" && metadata.display_name.trim() ? metadata.display_name.trim() : (session.user.email?.split("@")[0] || "Account"));
+      setAuthUserName(typeof metadata.display_name === "string" && metadata.display_name.trim() ? metadata.display_name.trim() : typeof metadata.full_name === "string" && metadata.full_name.trim() ? metadata.full_name.trim() : typeof metadata.name === "string" && metadata.name.trim() ? metadata.name.trim() : (session.user.email?.split("@")[0] || "Account"));
+      setAuthUserAvatar(typeof metadata.avatar_url === "string" ? metadata.avatar_url : typeof metadata.picture === "string" ? metadata.picture : "");
       setAuthWorkspaceName(typeof metadata.workspace_name === "string" && metadata.workspace_name.trim() ? metadata.workspace_name.trim() : "My workspace");
       await loadOrders(session.access_token);
     };
@@ -209,9 +213,12 @@ export default function Home() {
     }
     setFlowBusy(true);
     try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!session) { window.location.assign("/auth"); return; }
       const response = await fetch("/api/orders/extract", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ message: flowMessage })
       });
       const data = await response.json() as {
@@ -274,9 +281,12 @@ export default function Home() {
     setValidationResult(null);
     setNotice("Analysing the message securely. Suggestions remain unconfirmed until you review them.");
     try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!session) { window.location.assign("/auth"); return; }
       const response = await fetch("/api/orders/extract", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ message })
       });
       const data = await response.json() as {
@@ -332,20 +342,57 @@ export default function Home() {
 
   return (
     <main className="app-shell">
-
-
+      <aside className="sidebar desktop-dashboard-sidebar">
+        <Link href="/" className="brand"><span className="brand-mark">P<span>✓</span></span><span className="brand-name">PayProof <span>AI</span></span></Link>
+        <p className="workspace-label">WORKSPACE</p>
+        <nav className="side-nav" aria-label="Main navigation">
+          <a className="nav-item active" href="#overview"><span className="nav-icon">▦</span>Overview</a>
+          <Link className="nav-item" href="/payments"><span className="nav-icon">◈</span>Payment evidence</Link>
+          <a className="nav-item" href="#reconciliation"><span className="nav-icon">⇄</span>Reconciliation</a>
+          <Link className="nav-item" href="/assistant"><span className="nav-icon">✳</span>AI assistant</Link>
+          <Link className="nav-item" href="/exceptions"><span className="nav-icon">!</span>Exception review</Link>
+          <Link className="nav-item" href="/audit"><span className="nav-icon">↗</span>Audit trail</Link>
+          <Link className="nav-item" href="/customers"><span className="nav-icon">♙</span>Customers</Link>
+          <Link className="nav-item" href="/shipping"><span className="nav-icon">▣</span>Shipping</Link>
+          <Link className="nav-item" href="/analytics"><span className="nav-icon">▥</span>Analytics</Link>
+          <Link className="nav-item" href="/reports"><span className="nav-icon">▤</span>Reports</Link>
+          <Link className="nav-item" href="/invoices"><span className="nav-icon">▧</span>Invoices</Link>
+          <a className="nav-item" href="#transactions"><span className="nav-icon">↗</span>Transactions</a>
+          <Link className="nav-item" href="/demo-guide"><span className="nav-icon">?</span>Judge demo guide</Link>
+          <Link className="nav-item" href="/profile"><span className="nav-icon">⚙</span>Settings</Link>
+        </nav>
+        <div className="sidebar-bottom"><div className="trust-card"><span className="trust-icon">✓</span><strong>Evidence first</strong><p>AI explains the record. Verified payment data decides.</p></div><Link className="profile-row" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open your profile" : "Sign in or create an account"}><AccountAvatar name={authUserName} imageUrl={authUserAvatar} size={34} /><div><strong>{isSignedIn ? (authUserName.trim().split(/\s+/)[0] || "My account") : "Public demo"}</strong><span>{isSignedIn ? authWorkspaceName : "Create your workspace"}</span></div></Link></div>
+      </aside>
       <style jsx global>{`
-        .sidebar { display: none !important; }
-        .topbar { position: relative; display: flex; align-items: center; gap: 14px; }
+        .topbar { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "actions" "search"; align-items: center; gap: 12px; min-width: 0; }
+        .dashboard-search { grid-area: search; width: 100%; min-width: 0; max-width: none; }
+        .topbar-actions { grid-area: actions; width: 100%; min-width: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 9px; }
+        .header-primary-row, .header-guide-links { display: flex; align-items: center; justify-content: flex-end; gap: 9px; width: 100%; min-width: 0; }
+        .header-primary-row .sandbox-pill { margin-right: auto; }
+        .header-guide-links { flex-wrap: wrap; }
+        .header-guide-links > * { white-space: nowrap; }
+        .header-guide-links .demo-payment-guide-link { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 8px 11px; border: 1px solid #dfe4ed; border-radius: 9px; background: #fff; color: #34415a; text-decoration: none; font-size: 12px; font-weight: 650; }
+        .header-guide-links .demo-payment-guide-link:hover, .header-guide-links .guide-toggle-button:hover { border-color: #a9b5ca; background: #f4f7fc; }
+        .header-guide-links .guide-toggle-button { min-height: 38px; }
+        .header-guide-links .sign-out-button { min-height: 38px; }
+        .topbar-actions .help-button { white-space: nowrap; }
+        .topbar-actions .sign-out-button { padding: 8px 11px; border: 1px solid #dfe4ed; border-radius: 9px; background: #fff; color: #34415a; }
+        .topbar-actions .guide-toggle-button { padding: 8px 10px; border: 1px solid #dfe4ed; border-radius: 9px; background: #fff; color: #34415a; }
+        .topbar-actions .guide-toggle-button span { color: inherit; }
         .dashboard-menu-wrap { position: relative; flex: 0 0 auto; z-index: 90; }
-        .desktop-main-nav { display: none; }
+        .desktop-main-nav { display: none !important; }
         @media (min-width: 821px) {
+          .app-shell { min-height: 100vh; }
+          .desktop-dashboard-sidebar { display: flex !important; position: sticky; top: 0; height: 100vh; width: 252px; flex: 0 0 252px; overflow-y: auto; z-index: 20; }
+          .main-area { min-width: 0; flex: 1; }
           .dashboard-menu-wrap { display: none !important; }
-          .desktop-main-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 28px; border-bottom: 1px solid #e9edf4; background: #fff; }
-          .desktop-main-nav a { padding: 9px 11px; border-radius: 8px; color: #526078; text-decoration: none; font-size: 12px; font-weight: 650; white-space: nowrap; }
-          .desktop-main-nav a:hover { background: #f0f4ff; color: #263f82; }
+          .topbar { padding-left: 34px; padding-right: 34px; gap: 14px; }
+          .topbar-actions { padding-bottom: 12px; border-bottom: 1px solid #edf0f5; }
+          .dashboard-search { max-width: none; }
+          .content { padding-left: 34px; padding-right: 34px; }
         }
-        .header-icon-actions { display: inline-flex; align-items: center; gap: 8px; }
+        @media (max-width: 820px) { .desktop-dashboard-sidebar { display: none !important; } }
+        .header-icon-actions { order: 10; margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
         .header-icon-button { position: relative; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #dfe4ed; border-radius: 12px; background: #fff; color: #34415a; text-decoration: none; flex: 0 0 auto; }
         .header-icon-button:hover { background: #f4f7fc; border-color: #a9b5ca; }
         .header-icon-button:focus-visible { outline: 3px solid #8ba8ff; outline-offset: 3px; }
@@ -369,20 +416,22 @@ export default function Home() {
         .dashboard-menu-foot strong { color: #26344c; font-size: 12px; }
         .dashboard-menu-foot small { color: #78849a; font-size: 10px; line-height: 1.45; }
         @media (max-width: 820px) {
-          .topbar { height: auto; min-height: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "menu search" "actions actions"; align-items: center; gap: 12px; padding: 14px 18px; }
+          .topbar { height: auto; min-height: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "menu actions" "search search"; align-items: center; gap: 11px 12px; padding: 14px 18px; }
           .dashboard-menu-wrap { grid-area: menu; }
-          .dashboard-search { grid-area: search; width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; height: auto; }
+          .dashboard-search { grid-area: search; width: 100%; min-width: 0; max-width: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; height: auto; }
           .dashboard-search > span:first-child { display: none; }
           .dashboard-search input { width: 100%; min-width: 0; height: 40px; font-size: 13px; }
-          .dashboard-date { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 7px 10px; font-size: 10px; }
-          .topbar-actions { grid-area: actions; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 8px; }
-          .header-icon-actions { grid-column: 1 / -1; justify-content: flex-end; }
-          .header-icon-button { width: 42px; height: 42px; }
+          .dashboard-date { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 6px 9px; font-size: 10px; }
+          .topbar-actions { grid-area: actions; width: 100%; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 9px; min-width: 0; padding: 0; border: 0; }
+          .header-primary-row { justify-content: space-between; gap: 8px; }
+          .header-primary-row .sandbox-pill { margin-right: auto; }
+          .header-icon-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; }
+          .header-icon-button { width: 40px; height: 40px; }
           .account-name-link { display: none !important; }
-          .topbar-actions > * { min-width: 0; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; text-align: center; white-space: normal; line-height: 1.3; border-radius: 8px; padding: 8px 9px; font-size: 11px; }
-          .topbar-actions .sandbox-pill { justify-content: center; }
-          .topbar-actions .demo-payment-guide-link, .topbar-actions .sandbox-checkout-button { border: 1px solid #e7e8ef; background: #fff; color: #565d70; text-decoration: none; }
-          .topbar-actions .help-button { border: 1px solid #e7e8ef; background: #fff; }
+          .header-guide-links { display: flex; justify-content: flex-end; align-items: center; gap: 7px; flex-wrap: wrap; }
+          .header-guide-links > * { min-width: 0; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; text-align: center; white-space: nowrap; line-height: 1.2; border-radius: 9px; padding: 8px 10px; font-size: 11px; }
+          .header-guide-links .demo-payment-guide-link { border: 1px solid #dfe7f0; background: #fff; color: #34415a; }
+          .header-guide-links .sign-out-button, .header-guide-links .guide-toggle-button { min-height: 38px; border: 1px solid #dfe7f0; background: #fff; }
           .dashboard-menu-panel { position: fixed; top: 14px; left: 14px; width: min(320px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); z-index: 120; }
           .reference-overview-heading { align-items: flex-start; gap: 12px; margin: 2px 0 18px; }
           .reference-overview-heading > div { min-width: 0; }
@@ -393,8 +442,10 @@ export default function Home() {
         @media (max-width: 480px) {
           .topbar { padding: 12px 12px; gap: 10px; }
           .dashboard-menu-trigger { width: 42px; height: 42px; }
-          .topbar-actions { gap: 7px; }
-          .topbar-actions > * { min-height: 40px; font-size: 10px; padding: 7px 6px; }
+          .topbar-actions { gap: 8px; }
+          .header-guide-links { gap: 6px; }
+          .header-guide-links > * { min-height: 38px; font-size: 10px; padding: 7px 8px; }
+          .header-guide-links .demo-payment-guide-link { min-height: 38px; font-size: 10px; padding: 7px 8px; }
           .content { padding: 20px 12px 18px; }
           .reference-overview-heading { flex-direction: column; }
           .reference-overview-heading .primary-button { align-self: flex-start; }
@@ -427,12 +478,27 @@ export default function Home() {
               <div className="dashboard-menu-foot"><span>✓</span><div><strong>Evidence first</strong><small>AI helps explain. Verified payment data decides.</small></div></div>
             </div>}
           </div>
+          <div className="topbar-actions">
+            <div className="header-primary-row">
+              <span className="sandbox-pill"><i /> Sandbox mode</span>
+              <div className="header-icon-actions">
+                <Link className="header-icon-button notification-button" href="/exceptions" aria-label={`Notifications: ${orders.filter((order) => order.status !== "Paid").length} items needing attention`} title="Notifications">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
+                  {orders.filter((order) => order.status !== "Paid").length > 0 && <span className="notification-count">{orders.filter((order) => order.status !== "Paid").length > 9 ? "9+" : orders.filter((order) => order.status !== "Paid").length}</span>}
+                </Link>
+                <Link className="header-icon-button profile-icon-button" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open profile" : "Sign in or create an account"} title={isSignedIn ? "Profile" : "Sign in or create an account"}>
+                  <AccountAvatar name={authUserName} imageUrl={authUserAvatar} size={30} />
+                </Link>
+              </div>
+            </div>
+            <div className="header-guide-links">
+              <Link className="demo-payment-guide-link" href="/demo-guide">Judge demo guide <span>↗</span></Link>
+              <button className="help-button guide-toggle-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button>
+              {authUserName ? <button className="help-button sign-out-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button> : null}
+            </div>
+          </div>
           <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" value={dashboardSearch} onChange={(event) => setDashboardSearch(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
-          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link><div className="header-icon-actions"><Link className="header-icon-button notification-button" href="/exceptions" aria-label={`Notifications: ${orders.filter((order) => order.status !== "Paid").length} items needing attention`} title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{orders.filter((order) => order.status !== "Paid").length > 0 && <span className="notification-count">{orders.filter((order) => order.status !== "Paid").length > 9 ? "9+" : orders.filter((order) => order.status !== "Paid").length}</span>}</Link><Link className="header-icon-button profile-icon-button" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open profile" : "Sign in"} title={isSignedIn ? "Profile" : "Sign in"}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></svg></Link></div>{authUserName ? <><Link className="demo-payment-guide-link account-name-link" href="/profile">{authUserName.trim().split(/\s+/)[0] || "Profile"} ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
-        <nav className="desktop-main-nav" aria-label="Desktop navigation">
-          <a href="#overview">Overview</a><a href="/payments">Payment evidence</a><a href="#reconciliation">Reconciliation</a><a href="/assistant">AI assistant</a><a href="/exceptions">Exception review</a><a href="/audit">Audit trail</a><a href="/customers">Customers</a><a href="/shipping">Shipping</a><a href="/analytics">Analytics</a><a href="/reports">Reports</a><a href="/invoices">Invoices</a><a href="/profile">Settings</a>
-        </nav>
 
         <div className="content" id="overview">
           <div className="reference-overview-heading">

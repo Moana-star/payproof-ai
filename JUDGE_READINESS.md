@@ -1,43 +1,87 @@
-# Judge Readiness — Persistent Reconciliation Branch
+# Judge Readiness — Integrated PayProof AI Preview
 
-This file describes the current feature branch. For the full judge walkthrough and evaluation rubric, use the [Judge Guide on the default branch](https://github.com/Moana-star/payproof-ai/blob/main/JUDGE_GUIDE.md).
+This is the integrated feature branch containing authenticated reconciliation from PR #8 and the conversational assistant from PR #9.
 
-## Current branch
+## Evaluation links
 
-- Branch: `feat/persistent-user-scoped-reconciliation`
-- Pull request: [#8](https://github.com/Moana-star/payproof-ai/pull/8)
-- Preview: https://payproof-papycsaha-naom6083-2980.vercel.app/
-- Current branch head before this documentation update: `434be149c2a3f1bf9b0b994e0baee19cc18604c3`
+- **Latest application preview:** [Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com)
+- **Reconciliation implementation:** https://github.com/Moana-star/payproof-ai/pull/8
+- **Assistant implementation:** https://github.com/Moana-star/payproof-ai/pull/9
+- **Source repository:** https://github.com/Moana-star/payproof-ai
 
-## Feature scope
+The feature preview is not the stable production release. Confirm its latest Vercel deployment is READY and check the commit SHA before recording or sharing it with judges. Do not describe preview-only features as production features until their release gates are completed.
 
-- Supabase Auth bearer-session verification for private reconciliation routes.
-- Owner-scoped statement imports, PayPal evidence, ledger entries and audit events.
-- CSV validation and duplicate detection.
-- Exact reference, amount and currency matching against eligible server-verified PayPal Sandbox captures.
-- Human review is required; matching does not auto-approve or post.
-- Approved entries can be posted to the persistent internal application ledger.
-- Duplicate posting is guarded.
-- PayPal evidence export is account-scoped and is not represented as bank settlement proof.
+## Product story
 
-## Verification already recorded
+PayProof AI helps small online sellers connect chat-based order intake, PayPal checkout, payment verification and reconciliation. AI extracts and explains information; deterministic application logic validates catalogue details and calculates totals; server-side PayPal verification determines payment status; a human reviews reconciliation candidates before internal ledger posting.
 
-- The preview deployment for the branch head `434be14` reached READY.
-- A database verification query confirmed six PayProof-generated PayPal evidence rows matched their corresponding server-verified Sandbox captures on exact reference, amount and currency.
-- All six remained `matched_pending_review`; the ledger entry count was zero at the time of that check.
-- No reviewer approval or ledger posting was performed during that verification.
+## What the integrated preview contains
 
-This was a consistency check against PayProof's own saved provider records. It was not independent bank-statement reconciliation and does not establish that every workflow path has passed.
+- AI-assisted customer-message extraction into a reviewable order draft.
+- Server-priced PayPal Sandbox checkout.
+- Server-side verification of provider status and expected transaction details.
+- Payment evidence and exception review.
+- Conversational AI assistant with structured Markdown responses.
+- Session-scoped assistant conversation history (not saved to the PayProof account).
+- Signed-in, owner-scoped reconciliation statement import and exact reference/amount/currency matching.
+- Human approval before internal ledger posting, duplicate-post protection and audit events.
+- Clearly separated synthetic public demo data and private account records.
 
-## Required before merge or production claims
+## Infrastructure and security checks already inspected
 
-- [ ] Complete a fresh end-to-end Sandbox checkout on the exact latest preview.
-- [ ] Verify two separate test accounts cannot read or mutate one another's records.
-- [ ] Exercise mismatch, duplicate import, duplicate post, rejected review and provider-failure paths.
-- [ ] Confirm Supabase migrations and row-level security policies in the target project.
-- [ ] Confirm GitHub Actions and Vercel checks for the latest commit.
-- [ ] Keep Sandbox, synthetic data and internal-ledger limitations visible in the demo.
+- All six exposed application tables inspected in Supabase have row-level security enabled.
+- User-facing policies inspected for owner-scoped tables use the authenticated user's auth.uid() ownership predicate.
+- The ledger-posting database function is not SECURITY DEFINER; its transaction revalidates approval, exact reference, amount, currency and verified capture before posting.
+- The new-user profile trigger is SECURITY DEFINER with an empty search path and execution restricted to postgres and service_role.
+- GitHub Actions and Vercel passed for assistant commit 19fcc3a6ce7b50a15462dc80f2e0dd3223642de0. A subsequent assistant API authentication hardening change is awaiting its own CI and Vercel result.
 
-## Demo safety
+## Security item to resolve
 
-Never use real payment credentials or real customer/banking data. A PayPal capture is provider-side evidence, not bank settlement. The internal ledger is not a bank or external accounting ledger. AI remains advisory.
+Supabase's security advisor currently reports **Leaked Password Protection Disabled**. The connected Supabase organization is on the Free plan, while Supabase documents this control as Pro-plan-and-above; do not claim it is enabled. Enabling it requires an owner-approved paid-plan upgrade. The advisor also reports four unindexed foreign keys and five unused indexes; these are performance observations, not evidence of an access-control failure.
+
+Both AI endpoints—the conversational assistant and AI order extraction—now have server-side Supabase bearer-session checks in the feature branch, and the browser sends the current session token. Verify unauthenticated requests return HTTP 401 on the latest READY preview. Do not claim these checks passed until the deployment and smoke test confirm them.
+
+## Database checks completed — 4 November 2026
+
+- Orders now have an owner-scoped SELECT policy only. Direct INSERT, UPDATE and DELETE permissions have been revoked from `anon` and `authenticated`; the server-side `service_role` retains the write permissions required by authenticated API routes.
+- Verified the orders RLS boundary in a transaction: the existing account saw its 9 owned orders; a different simulated user UUID saw 0. The test transaction was rolled back.
+- Verified the database permissions after the change: `authenticated` can SELECT orders but cannot INSERT, UPDATE or DELETE; `anon` cannot SELECT orders.
+- Verified all 6 existing private statement rows are exact pending-review candidates against their linked paid, server-verified orders (reference, amount and currency all match).
+- Ran a duplicate-import database test: re-importing an existing owner/transaction pair inserted 0 duplicate rows and left the original row intact.
+- Ran a rollback-only rejection test: the row changed to rejected and one audit event appeared inside the transaction; rollback restored pending review and left no test audit event.
+- Ran a rollback-only approval/post test against an exact verified match: the first posting created exactly one ledger row inside the transaction; a second attempt was rejected; rollback left the statement row pending review and created no persistent ledger row.
+- Added a unique constraint on `ledger_entries.order_id`, so two different statement rows cannot post the same verified PayPal order/capture. The posting function returns the existing entry for the same row and rejects a different row for an already-reconciled capture.
+- Verified same-row repost idempotency after the function update: the first post returned a new ledger ID; the second returned the same ID with `already_posted=true`; rollback left zero persistent test entries.
+- Verified the cross-row duplicate-capture guard in a rollback-only transaction: first row posted once; a second row referencing the same capture was rejected; rollback left zero persistent entries for the test order.
+- Supabase migrations `20261104141800_prevent_duplicate_order_ledger_entries` and `20261104142429_fix_idempotent_ledger_reposts` are applied and recorded.
+- The PayPal API client is now hard-locked to the PayPal Sandbox endpoint and rejects a deployment override pointing at PayPal Live.
+- The database currently has owned records for one account only. The two-real-account API integration test is prepared as `npm run test:security`, but remains unrun until a second test account is supplied.
+- The Supabase Data API does not grant authenticated direct access to statement rows, payment events, ledger entries or reconciliation audit; these records are accessed through authenticated server routes with explicit owner filters.
+
+The READY Vercel preview serves application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33`. GitHub Actions passed ESLint, Next.js build, production-server startup and public/security smoke checks on commit `d9242f3c22415b265bd5b55a71da537fbc97c208`. The test helpers were included in that successful lint/build, but their credential-dependent end-to-end runs have not yet been performed. Vercel returned a build-rate-limit failure for further preview builds; the READY application preview remains on commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33`. Later changes are test documentation and database migrations; the database migrations are applied and verified directly in Supabase.
+
+## Manual release gates — still required
+
+- [ ] Run `npm run test:paypal-sandbox -- create` on the exact preview build, approve with a PayPal Sandbox buyer, confirm automatic return verification, then run the helper's `verify` mode.
+- [ ] Confirm automatic return verification without refreshing and confirm the saved order appears in the same signed-in workspace.
+- [ ] Test cancellation, pending/incomplete payment, provider failure and amount/currency/reference mismatch.
+- [ ] Run `npm run test:security` with two distinct Supabase test-account tokens. The database currently contains owned records for one account only, so create a second test account before claiming the two-account API test passed.
+- [ ] Run `npm run test:reconciliation` with a dedicated QA account and a verified Sandbox capture; inspect the two `PPQA-` rows, the single ledger entry and audit trail.
+- [ ] Test AI order extraction with clear, ambiguous and unsupported messages.
+- [ ] Test the AI assistant while signed in, then confirm unauthenticated API access is rejected.
+- [ ] Check the preview at desktop, tablet and mobile widths.
+- [ ] Re-run the full judge walkthrough and capture the actual results on the final commit.
+
+## Official video requirement
+
+The hackathon submission requires a **public YouTube demonstration video under three minutes** showing the application functioning. Add its URL to the Devpost submission and verify it opens while signed out. Cassie's separate 30–60 second PayPal-team introduction video is optional and does not replace the required submission video.
+
+Use the demo script to keep the recording within 2:45. Show only flows that have actually passed on the recorded build.
+
+## Evidence boundaries
+
+- PayPal Sandbox capture evidence is provider-side evidence, not proof of bank settlement.
+- PayProof-generated PayPal evidence matched against PayProof's own captures is a consistency check, not independent bank reconciliation.
+- The persistent ledger is an internal PayProof application record, not a bank ledger or external accounting integration.
+- AI is advisory and cannot verify payment, approve a match, post a ledger entry or execute financial actions.
+- Use synthetic data and Sandbox credentials only. Never publish secrets or real customer/banking data.

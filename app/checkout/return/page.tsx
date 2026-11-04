@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type CaptureResult = {
-  verified?: boolean; status?: string; message?: string; error?: string; persisted?: boolean;
+  verified?: boolean; status?: string; message?: string; error?: string; persisted?: boolean; retryable?: boolean;
   persistenceWarning?: string; verifiedAt?: string; evidenceSource?: string; expectedAmount?: string;
   transaction?: { orderId?: string; referenceId?: string; captureId?: string; amount?: string; currency?: string; product?: string; quantity?: number };
 };
@@ -59,7 +59,7 @@ function ReturnContent() {
             if (currentAttempt < MAX_ATTEMPTS) { await wait(800 * currentAttempt); continue; }
             setResult(body); return;
           }
-          const retryable = response.status === 409 || response.status === 429 || response.status >= 500;
+          const retryable = body.retryable === true || response.status === 429;
           if (!retryable || currentAttempt === MAX_ATTEMPTS) { setResult(body); return; }
         } catch {
           lastResult = { verified: false, status: "REVIEW_REQUIRED", error: "The verification request was interrupted. PayProof AI retried automatically; do not pay again." };

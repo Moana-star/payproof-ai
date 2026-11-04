@@ -46,8 +46,8 @@ Next.js, React, TypeScript, PayPal Sandbox REST APIs, Supabase, and Groq-backed 
 
 ## Links
 
-- **Hosted preview:** https://payproof-ai-git-feat-judge-ready-evidence-7cb616-naom6083-2980.vercel.app/
-- **Payment evidence page:** https://payproof-ai-git-feat-judge-ready-evidence-7cb616-naom6083-2980.vercel.app/payments
+- **Hosted preview:** https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com
+- **Payment evidence page:** https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com
 - **Source code:** https://github.com/Moana-star/payproof-ai
 - **Demo script:** [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
 - **Judge-readiness checklist:** [JUDGE_READINESS.md](JUDGE_READINESS.md)
