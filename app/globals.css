@@ -744,3 +744,103 @@ option{background:var(--pp-card);color:var(--pp-text)}
 @media(hover:hover){
   .nav-item:hover,.ops-nav-item:hover,.workspace-module-card:hover,.ops-flow-node:hover{background:var(--pp-hover)!important}
 }
+
+
+/* PayProof AI — vibrant modern fintech palette */
+:root{
+  color-scheme:light;
+  --pp-bg:#F0F5FA;
+  --pp-card:#FFFFFF;
+  --pp-hover:#E7EFF8;
+  --pp-text:#172B4D;
+  --pp-muted:#64748B;
+  --pp-border:#DCE5EF;
+  --pp-focus:#8CA9D0;
+  --pp-ai:#6658D3;
+  --pp-ai-hover:#5748C4;
+  --pp-success:#15966B;
+  --ink:var(--pp-text);--muted:var(--pp-muted);--line:var(--pp-border);
+  --paper:var(--pp-bg);--purple:var(--pp-ai);--purple-dark:var(--pp-ai-hover);
+  --green:var(--pp-success);--green-soft:#E2F5ED;--slate:var(--pp-focus);
+  --ops-text:var(--pp-text);--ops-muted:var(--pp-muted);--ops-border:var(--pp-border);--ops-card:var(--pp-card);
+}
+html,body{background:var(--pp-bg)!important;color:var(--pp-text)!important;color-scheme:light}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+h1,h2,h3,h4,h5,h6,strong,b{color:var(--pp-text)}
+p,small,label,.subheading,.eyebrow,.field-hint,.breadcrumb,.ops-breadcrumb{color:var(--pp-muted)}
+a{color:#315EAD}
+::selection{background:rgba(54,191,192,.28);color:#172B4D}
+:where(button,a,input,select,textarea,[role="button"]):focus-visible{outline:3px solid #36BFC0!important;outline-offset:3px}
+.sidebar,.topbar,.ops-sidebar,.ops-topbar{background:#FFFFFF!important;border-color:var(--pp-border)!important}
+.main-area,.ops-main,.content,.ops-content{background:var(--pp-bg)!important}
+.brand-mark,.ops-brand-mark{background:#193A70!important;color:#fff!important;box-shadow:0 5px 18px rgba(25,58,112,.2)!important}
+.brand-name span,.ops-brand-name span{color:#36AEB5!important}
+.workspace-label,.ops-nav-label,.nav-group-label{color:var(--pp-muted)!important}
+.nav-item,.ops-nav-item{color:#526985!important;background:transparent!important}
+.nav-item:hover,.nav-item.active,.ops-nav-item:hover,.ops-nav-item.is-active{background:#E5F5F6!important;color:#193A70!important}
+.nav-count{background:#F0F5FA!important;border-color:var(--pp-border)!important;color:var(--pp-muted)!important}
+.trust-card,.ops-trust-card,.guide-panel,.notice,.ops-info-banner{background:#EAF3FA!important;border-color:#D6E5F2!important;color:var(--pp-text)!important}
+.trust-icon,.ops-trust-icon,.panel-icon,.ops-panel-symbol,.ops-cta-icon,.workflow-number,.value-kicker,.ops-metric-icon.purple,.ops-summary-icon.purple{background:#E9E8FA!important;color:#6658D3!important}
+.profile-row,.ops-mode{border-color:var(--pp-border)!important}
+.avatar{background:#DDEAF7!important;color:#193A70!important}
+.profile-avatar{background:#E7EFF8!important;color:#193A70!important}
+.sandbox-pill,.ops-sandbox-pill,.ops-sample-tag,.ops-ai-label,.beta-badge,.workflow-label,.table-count,.ops-id,.ops-event-tag{background:#F0F5FA!important;border-color:var(--pp-border)!important;color:#526985!important}
+.primary-button,.ops-primary-button,.ops-checkout-link{background:#193A70!important;color:#fff!important;box-shadow:0 5px 16px rgba(25,58,112,.18)!important}
+.primary-button:hover,.ops-primary-button:hover,.ops-checkout-link:hover{background:#315EAD!important}
+.secondary-button,.ops-secondary-button,.filter-button,.sandbox-checkout-button,.text-button{background:#FFFFFF!important;border:1px solid var(--pp-border)!important;color:#193A70!important}
+.secondary-button:hover,.ops-secondary-button:hover,.filter-button:hover,.sandbox-checkout-button:hover{background:#EAF3FA!important;border-color:#A9C0D9!important}
+.text-button,.ops-text-link,.help-button span,.workspace-modules-toggle{color:#315EAD!important}
+.metric-card,.orders-card,.intake-card,.attention-card,.value-card,.workflow-step,.workspace-modules,.workspace-module-card,.dashboard-config-card,.dashboard-transactions-card,.ops-metric,.ops-panel,.ops-exception-summary>div,.ops-bottom-cta,.ops-heading-mark,.ops-flow-node,.ops-ai-answer,.ops-case-summary,.ops-chart-panel,.ops-safety-card,.recon-console,.recon-import,.recon-judge-kit,.recon-queue,.recon-panel,.reconciliation-card,.checkout-card{background:#FFFFFF!important;border-color:var(--pp-border)!important;box-shadow:0 5px 20px rgba(25,58,112,.045)!important;color:var(--pp-text)!important}
+.metric-card:hover,.workspace-module-card:hover,.ops-panel:hover{background:#FBFDFF!important;border-color:#A9C0D9!important}
+.metric-top,.metric-foot,.metric-card p,.value-card p,.workflow-step p,.workspace-module-card p,.workspace-module-card small,.section-heading p,.panel-heading p,.ops-section-title p,.ops-panel-top p,.ops-table td>small,.ops-page-heading p:last-child,.ops-footer,.footer,.ops-timeline-content p,.ops-timeline-content small{color:var(--pp-muted)!important}
+.metric-value,.ops-metric strong,.ops-chart-summary strong{color:var(--pp-text)!important}
+.metric-icon.violet,.ops-metric-icon.purple,.ops-summary-icon.purple{background:#E9E8FA!important;color:#6658D3!important}
+.metric-icon.green,.ops-metric-icon.green,.ops-panel-symbol.mint,.ops-live-badge,.config-status,.transaction-paid{background:#E2F5ED!important;color:var(--pp-success)!important}
+.metric-icon.amber,.ops-metric-icon.amber{background:#FFF3DC!important;color:#A66A13!important}
+.metric-icon.red,.ops-metric-icon.red,.attention-icon{background:#FDEBEC!important;color:#C74750!important}
+.orders-card,.intake-card,.attention-card,.ops-panel,.ops-metric,.value-card,.workflow-step,.workspace-module-card{border:1px solid var(--pp-border)!important}
+.table-toolbar,.ops-panel-top,.ops-table td,.ops-evidence-check,.ops-capability,.ops-timeline-event,.ops-audit-field,.attention-item,.table-footer,.metric-foot,.draft-line{border-color:var(--pp-border)!important}
+.order-table th,.ops-table th{background:#EAF1F8!important;color:#526985!important}
+.order-table td,.ops-table td{color:var(--pp-text)!important}
+.order-id,.ops-id,.table-count,.ops-table code{background:#EAF3FA!important;color:#315EAD!important}
+.customer-cell span,.activity-text,.ops-table td>small{color:var(--pp-muted)!important}
+.status-badge.paid,.ops-status.good{background:#E2F5ED!important;color:var(--pp-success)!important}
+.status-badge.paid i,.ops-status.good i{background:var(--pp-success)!important}
+.status-badge.pending,.ops-status.pending{background:#FFF3DC!important;color:#946116!important}
+.status-badge.review,.ops-status.review{background:#FDEBEC!important;color:#B83E49!important}
+.ops-status.neutral{background:#EAF1F8!important;color:var(--pp-muted)!important}
+.attention-count{background:#FDEBEC!important;color:#B83E49!important}
+input,select,textarea,.ops-select,.ops-textarea,.dashboard-search input,.configuration-fields input,.order-form-reference .order-flow-form input,.order-form-reference .order-flow-form select,.order-form-reference .order-flow-form textarea,.reconciliation-filters input,.reconciliation-filters select{background:#FFFFFF!important;border:1px solid #CAD7E5!important;color:var(--pp-text)!important;caret-color:#315EAD}
+input::placeholder,textarea::placeholder{color:#94A3B8!important}
+input:focus,select:focus,textarea:focus,.ops-select:focus,.ops-textarea:focus{border-color:#36BFC0!important;box-shadow:0 0 0 3px rgba(54,191,192,.16)!important;outline:none}
+option{background:#FFFFFF;color:var(--pp-text)}
+.draft-result,.ops-case-summary,.ops-ai-answer,.verification-details,.evidence-note,.ops-evidence-check,.ops-flow-node,.ops-bottom-cta,.ops-chart-empty{background:#F0F5FA!important;border-color:var(--pp-border)!important;color:var(--pp-text)!important}
+.draft-result p,.draft-line span,.evidence-note p,.ops-ai-answer>p,.ops-answer-foot,.ops-case-summary span{color:var(--pp-muted)!important}
+.draft-result .draft-title,.draft-result .draft-line strong,.ops-answer-title strong,.ops-case-summary strong{color:var(--pp-text)!important}
+.validation-success,.ops-status.good,.text-good{background:#E2F5ED!important;border-color:#BCE8D5!important;color:var(--pp-success)!important}
+.validation-warning{background:#FFF3DC!important;border-color:#F2D9A8!important;color:#946116!important}
+.draft-error,.ops-inline-error{background:#FDEBEC!important;border-color:#F4C7CB!important;color:#B83E49!important}
+.ops-warning-banner,.ops-safety-card{background:#F0F5FA!important;border-color:var(--pp-border)!important;color:var(--pp-muted)!important}
+.ops-warning-banner p,.ops-safety-card p{color:var(--pp-muted)!important}
+.ops-status.good,.ops-live-badge,.ops-flow-dot,.ops-flow-node>span,.ops-evidence-check>span,.ops-timeline-marker.green,.ops-panel-symbol.mint{color:var(--pp-success)!important}
+.ops-status.good,.ops-live-badge{background:#E2F5ED!important}
+.ops-flow-node>span,.ops-evidence-check>span,.ops-timeline-marker.green{background:#E2F5ED!important}
+.ops-flow-visual>i,.ops-timeline-event:not(:last-child):before{background:var(--pp-border)!important}
+.ops-flow-visual>i:after{border-left-color:var(--pp-muted)!important}
+.ops-timeline-marker.purple,.ops-timeline-marker.blue,.ops-event-tag,.ops-audit-field>span,.ops-audit-field i{background:#E9E8FA!important;color:#6658D3!important}
+.ops-chart-gridline{stroke:var(--pp-border)!important}
+.ops-chart-line,.ops-chart-point{stroke:#36BFC0!important}
+.ops-chart-point{fill:#FFFFFF!important}
+.ops-product-track{background:#DCE5EF!important}
+.ops-product-track span{background:linear-gradient(90deg,#315EAD,#36BFC0)!important}
+.ops-volume-column span{background:linear-gradient(180deg,#36BFC0,#315EAD)!important}
+.ops-donut-hole{background:#FFFFFF!important}
+.ops-line-chart text,.ops-chart-axis-label{fill:var(--pp-muted)!important}
+.checkout-page{background:radial-gradient(ellipse at top,rgba(54,191,192,.14),transparent 55%),var(--pp-bg)!important}
+.checkout-card{background:#FFFFFF!important;border-color:var(--pp-border)!important}
+.checkout-symbol.loading-symbol,.checkout-symbol.review-symbol{background:#E9E8FA!important;color:#6658D3!important}
+.checkout-symbol.success-symbol{background:#E2F5ED!important;color:var(--pp-success)!important}
+.checkout-eyebrow{color:#315EAD!important}
+.verification-details{background:#F0F5FA!important;border-color:var(--pp-border)!important}
+.footer i,.sandbox-pill i,.ops-sandbox-pill i{background:var(--pp-success)!important}
+@media(hover:hover){.nav-item:hover,.ops-nav-item:hover,.workspace-module-card:hover,.ops-flow-node:hover{background:#EAF3FA!important}}
