@@ -83,8 +83,9 @@ On 4 November 2026, the connected Supabase database was checked directly:
 - A duplicate-import database dry-run inserted 0 duplicate rows for an existing owner/transaction pair.
 - Rollback-only rejection and approval/post tests confirmed audit and ledger behavior without leaving test records behind.
 - A unique constraint on `ledger_entries.order_id` now prevents two different statement rows from posting the same verified PayPal order/capture. A rollback-only test confirmed the second row is rejected and no test ledger entry persists.
+- A second rollback-only test confirmed reposting the same statement row returns the same ledger entry ID with `already_posted=true`, while creating no second entry.
+- Supabase migrations `20261104141800_prevent_duplicate_order_ledger_entries` and `20261104142429_fix_idempotent_ledger_reposts` are applied and verified.
 - PayPal requests are hard-locked to the PayPal Sandbox endpoint; a non-Sandbox `PAYPAL_BASE_URL` override is rejected.
-- Supabase migration `20261104141800_prevent_duplicate_order_ledger_entries` is applied and verified.
 
 The READY Vercel preview serves application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33`. GitHub Actions passed lint, build, production-server startup and public/security smoke checks on commit `75a340700e4e1ff605c4e3808064ec670282248c`. The reconciliation workflow helper and local sign-in helper were added after that CI run and still need a fresh CI/local execution. Vercel has rate-limited further preview builds, so do not claim those latest helper files are deployed. The database-only ledger uniqueness migration has been applied and verified in Supabase.
 
