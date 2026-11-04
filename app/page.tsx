@@ -209,9 +209,12 @@ export default function Home() {
     }
     setFlowBusy(true);
     try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!session) { window.location.assign("/auth"); return; }
       const response = await fetch("/api/orders/extract", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ message: flowMessage })
       });
       const data = await response.json() as {
@@ -274,9 +277,12 @@ export default function Home() {
     setValidationResult(null);
     setNotice("Analysing the message securely. Suggestions remain unconfirmed until you review them.");
     try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!session) { window.location.assign("/auth"); return; }
       const response = await fetch("/api/orders/extract", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ message })
       });
       const data = await response.json() as {
