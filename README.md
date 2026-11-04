@@ -14,7 +14,7 @@ PayProof AI is an evidence-led payment operations prototype for small online sel
   <a href="https://github.com/Moana-star/payproof-ai/blob/main/DEMO_SCRIPT.md">Demo script</a>
 </p>
 
-> **Latest judge / feature preview:** [https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/) — this is the current READY preview containing the conversational assistant and authenticated reconciliation work (deployment commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). Use this link to inspect the latest feature updates. The stable production app is listed separately below.
+> **LATEST WEBSITE — integrated feature preview:** [https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/) — this is the current READY preview containing the conversational assistant and authenticated reconciliation work (deployment commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). Use this link to inspect the latest feature updates. The older stable production app is listed separately below.
 
 > **Hackathon environment:** The deployed application uses PayPal Sandbox. It is a prototype, not a live-money payment processor, bank integration, fraud-detection service or production accounting system. Use test accounts and synthetic data only.
 
@@ -46,7 +46,7 @@ Do not assume a feature shown only in the PR preview is already part of the stab
 
 ## Judge quick start
 
-1. Open the [live application](https://payproof-ai-beta.vercel.app/).
+1. Open the [LATEST PayProof AI website](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/).
 2. Start with the overview and follow the order-intake workflow.
 3. Paste a short sample order message, review the proposed product and quantity, and confirm the order details.
 4. Continue to PayPal Sandbox checkout using a dedicated Sandbox buyer account.
@@ -191,7 +191,8 @@ No score, prize placement or outcome is guaranteed. The strongest submission is 
 
 ## Project links
 
-- [Live application](https://payproof-ai-beta.vercel.app/)
+- [LATEST integrated website](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/)
+- [Stable production application (older core release)](https://payproof-ai-beta.vercel.app/)
 - [Source code](https://github.com/Moana-star/payproof-ai)
 - [Open reconciliation implementation PR](https://github.com/Moana-star/payproof-ai/pull/8)
 - [Latest integrated assistant + reconciliation preview](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/)
