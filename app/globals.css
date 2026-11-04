@@ -854,3 +854,15 @@ option{background:#FFFFFF;color:var(--pp-text)}
 .profile-photo-control input[type=file]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}
 .profile-upload-label{width:max-content;cursor:pointer;min-height:36px}
 .profile-upload-label:focus-within{outline:3px solid #36BFC0;outline-offset:2px}
+
+
+/* Keep the account controls in a clear row immediately above the demo guide. */
+.header-account-guide{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:5px;flex:0 0 auto}
+.header-icon-actions{display:inline-flex;align-items:center;justify-content:flex-end;gap:8px}
+.header-icon-button{position:relative;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);flex:0 0 30px}
+.header-icon-button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.header-icon-button:hover{background:#F1F3F6;border-color:#cfd7e3}
+.notification-count{position:absolute;top:-6px;right:-6px;min-width:15px;height:15px;padding:0 3px;border-radius:9px;background:#c8515c;color:#fff;font-size:9px;font-weight:800;display:grid;place-items:center;border:1px solid #fff}
+.header-account-guide .demo-payment-guide-link{align-self:flex-end}
+@media(max-width:820px){.topbar{height:auto;min-height:60px;padding-top:7px;padding-bottom:7px}.topbar-actions{flex-wrap:wrap;justify-content:flex-end;gap:8px}.header-account-guide{gap:4px}.header-icon-actions{gap:6px}}
+@media(max-width:540px){.topbar{height:auto;min-height:60px}.header-account-guide .demo-payment-guide-link{font-size:0;padding:7px}.header-account-guide .demo-payment-guide-link span{font-size:13px}}
