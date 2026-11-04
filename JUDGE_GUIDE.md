@@ -1,7 +1,7 @@
 # PayProof AI — Judge Guide
 
-> **LATEST integrated feature preview:** [Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/)  
-> This is the READY feature preview for the conversational assistant and authenticated reconciliation (commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). The latest integrated preview is a separate, older release: https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/
+> **LATEST integrated feature preview:** [Open PayProof AI](https://payproof-ai-beta.vercel.app/)  
+> This is the READY feature preview for the conversational assistant and authenticated reconciliation (commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). The latest integrated preview is a separate, older release: https://payproof-ai-beta.vercel.app/
 
 This guide separates the latest integrated previewlication from the integrated feature preview. The preview contains work from PR #8 and PR #9 and must not be mistaken for the production release.
 
@@ -9,8 +9,8 @@ This guide separates the latest integrated previewlication from the integrated f
 
 | Resource | Link | What it represents |
 |---|---|---|
-| Latest integrated application preview | https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/ | Stable core PayProof AI workflow |
-| Integrated feature preview | https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/ | Preview with authenticated reconciliation and conversational assistant |
+| Latest integrated application preview | https://payproof-ai-beta.vercel.app/ | Stable core PayProof AI workflow |
+| Integrated feature preview | https://payproof-ai-beta.vercel.app/ | Preview with authenticated reconciliation and conversational assistant |
 | Source repository | https://github.com/Moana-star/payproof-ai | Public source, documentation, CI and history |
 | Reconciliation PR | https://github.com/Moana-star/payproof-ai/pull/8 | Persistent, owner-scoped reconciliation implementation |
 | Assistant PR | https://github.com/Moana-star/payproof-ai/pull/9 | Conversational AI assistant and structured responses |
