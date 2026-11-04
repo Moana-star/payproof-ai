@@ -1,14 +1,11 @@
 import assert from "node:assert/strict";
+import { getTestAccessToken } from "./lib/test-auth.mjs";
 
 const baseUrl = (process.env.PAYPROOF_BASE_URL || "https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app").replace(/\/$/, "");
-const token = process.env.PAYPROOF_TEST_USER_TOKEN;
+const token = await getTestAccessToken("PAYPROOF_TEST_USER");
 const mode = process.argv[2] || "create";
 const orderIdArg = process.argv[3];
 
-if (!token) {
-  console.error("Set PAYPROOF_TEST_USER_TOKEN to a signed-in test user's Supabase access token in your local shell. Never paste it into chat or commit it.");
-  process.exit(2);
-}
 
 async function request(path, body) {
   const response = await fetch(`${baseUrl}${path}`, {
