@@ -87,7 +87,7 @@ On 4 November 2026, the connected Supabase database was checked directly:
 - Supabase migrations `20261104141800_prevent_duplicate_order_ledger_entries` and `20261104142429_fix_idempotent_ledger_reposts` are applied and verified.
 - PayPal requests are hard-locked to the PayPal Sandbox endpoint; a non-Sandbox `PAYPAL_BASE_URL` override is rejected.
 
-The READY Vercel preview serves application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33`. GitHub Actions passed lint, build, production-server startup and public/security smoke checks on commit `75a340700e4e1ff605c4e3808064ec670282248c`. The reconciliation workflow helper and local sign-in helper were added after that CI run and still need a fresh CI/local execution. Vercel has rate-limited further preview builds, so do not claim those latest helper files are deployed. The database-only ledger uniqueness migration has been applied and verified in Supabase.
+The READY Vercel preview serves application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33`. GitHub Actions passed lint, build, production-server startup and public/security smoke checks on commit `d9242f3c22415b265bd5b55a71da537fbc97c208`. The integration helpers were linted and included in the successful build, but their credential-dependent end-to-end runs are still outstanding. Vercel has rate-limited further preview builds; the READY preview remains on application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33`. The later changes are QA scripts, documentation and database migrations; the database migrations have been applied and verified in Supabase.
 
 ## Core workflow
 
