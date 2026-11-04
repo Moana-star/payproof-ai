@@ -2,8 +2,8 @@
 
 **Required submission video:** Publish a public YouTube video under 3 minutes and add its URL to Devpost. The 30–60 second PayPal-team intro mentioned in Cassie's email is optional and separate.
 
-**LATEST integrated feature preview:** https://payproof-ai-beta.vercel.app/  
-**Latest integrated application preview:** https://payproof-ai-beta.vercel.app/  
+**LATEST integrated feature preview:** https://payproofai.vercel.app/  
+**Latest integrated application preview:** https://payproofai.vercel.app/  
 
 **Source:** https://github.com/Moana-star/payproof-ai
 
