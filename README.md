@@ -34,7 +34,7 @@ PayProof AI brings the workflow into one reviewable place and makes the source o
 ### Current release and active work
 
 - **Live application:** [payproof-ai-beta.vercel.app](https://payproof-ai-beta.vercel.app/) — use this for the currently deployed core workflow.
-- **Persistent reconciliation preview:** [open the latest PR #8 preview](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/) — this preview contains the in-progress authenticated, user-scoped statement import, exact matching, human review, internal ledger and audit workflow.
+- **Integrated feature preview:** [open the latest assistant + reconciliation preview](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/) — this preview contains the in-progress authenticated, user-scoped statement import, exact matching, human review, internal ledger and audit workflow.
 - **Reconciliation PR:** [#8 — Build persistent authenticated reconciliation and ledger posting](https://github.com/Moana-star/payproof-ai/pull/8).
 - **Assistant PR:** [#9 — Upgrade PayProof AI assistant to conversational chat](https://github.com/Moana-star/payproof-ai/pull/9). The integrated feature preview includes the conversational assistant and the authenticated reconciliation work; both remain preview-only until manual release checks pass.
 
@@ -136,7 +136,7 @@ npm run lint
 npm run build
 ```
 
-The repository's GitHub Actions workflow also runs lint and TypeScript checks for pushes and pull requests to the default branch.
+The repository's GitHub Actions workflow runs lint, build and smoke checks for the relevant pull-request workflow.
 
 **Secrets must remain server-side.** Never commit `.env.local`, PayPal client secrets, Supabase service-role keys, Groq keys, reviewer tokens or real user data. Do not prefix server secrets with `NEXT_PUBLIC_`.
 
