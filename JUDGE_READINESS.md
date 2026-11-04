@@ -57,7 +57,7 @@ Both AI endpoints—the conversational assistant and AI order extraction—now h
 - The database currently has owned records for one account only. The two-real-account API integration test is prepared as `npm run test:security`, but remains unrun until a second test account is supplied.
 - The Supabase Data API does not grant authenticated direct access to statement rows, payment events, ledger entries or reconciliation audit; these records are accessed through authenticated server routes with explicit owner filters.
 
-The latest code commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33` has a READY Vercel preview. GitHub Actions completed ESLint, Next.js build, production-server startup and the public/security smoke suite successfully.
+The READY Vercel preview serves application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33`. GitHub Actions passed ESLint, Next.js build, production-server startup and public/security smoke checks on commit `75a340700e4e1ff605c4e3808064ec670282248c`. The reconciliation workflow and local authentication test helpers were added after that CI run and remain unvalidated by CI. Vercel returned a build-rate-limit failure for further preview builds; do not claim the latest test-helper commits are deployed. The database ledger-uniqueness migration has been applied and verified directly in Supabase.
 
 ## Manual release gates — still required
 
