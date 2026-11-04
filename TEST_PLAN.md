@@ -1,6 +1,6 @@
 # Verification Plan
 
-A passing build does not prove that PayPal, Supabase, AI extraction or reconciliation has passed end-to-end testing.
+A passing build does not prove that PayPal, Supabase, AI extraction or reconciliation has passed end-to-end testing. Keep all test credentials local. Never paste passwords, access tokens, PayPal buyer credentials or server secrets into chat, GitHub issues, logs or source control.
 
 ## Local checks
 
@@ -11,49 +11,43 @@ npm run build
 npm run test:smoke -- http://127.0.0.1:3000
 ```
 
-The smoke suite checks public route availability, unauthenticated API boundaries and the synthetic-only public preview. The two-account integration suite checks private API isolation and cross-account mutation rejection. The PayPal Sandbox helper creates a real Sandbox order and verifies a completed capture after buyer approval. Neither suite should be described as passed until it has been run against the exact judging deployment.
+The smoke suite checks public route availability, unauthenticated API boundaries and the synthetic-only public preview.
 
 ## Exact judging-preview PayPal Sandbox test
 
-Use a dedicated PayPal Sandbox buyer and a dedicated signed-in PayProof test account. Set the base URL to the exact READY judging preview and obtain the access token locally from that signed-in session. Never paste access tokens, passwords, client secrets or buyer credentials into chat, issues, logs or source control.
+Use a dedicated PayProof QA account and a PayPal Sandbox buyer. Sign into the same QA account in the browser before opening the PayPal approval link so the return page has the correct session.
 
 ```bash
 export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
+export SUPABASE_URL="https://ylswydogvrffzojwnakx.supabase.co"
+export SUPABASE_PUBLIC_KEY="<your Supabase publishable key>"
 export PAYPROOF_TEST_USER_EMAIL="qa-account@example.com"
-export PAYPROOF_TEST_USER_PASSWORD="your-test-account-password"
-# Or set PAYPROOF_TEST_USER_TOKEN to a short-lived access token.
+read -s -p "QA account password: " PAYPROOF_TEST_USER_PASSWORD
+export PAYPROOF_TEST_USER_PASSWORD
 npm run test:paypal-sandbox -- create
 ```
 
-Open the printed approval URL in the same browser profile where the test account is signed in, approve with a PayPal Sandbox buyer, and confirm PayPal returns to `/checkout/return`. The page must automatically verify without a manual refresh. Then run:
+The helper creates a server-priced Sandbox order and prints the PayPal approval URL. Open it in the browser profile where the same PayProof account is signed in, approve with a PayPal Sandbox buyer, and confirm PayPal returns to `/checkout/return`. The page must automatically verify without a manual refresh and show the saved paid order in that same workspace.
+
+Then run:
 
 ```bash
 npm run test:paypal-sandbox -- verify "<PAYPAL_ORDER_ID>"
 ```
 
-Expected: PayPal reports a completed capture; expected and captured amount/currency match; the order is saved and visible as paid in the same signed-in workspace. Also test buyer cancellation and confirm the order remains unpaid. Do not use a real PayPal account or real-money credentials.
+Expected: PayPal reports a completed capture; expected and captured amount/currency match; the server saves the order and it appears as paid in the same signed-in workspace. Also test buyer cancellation and confirm the order remains unpaid. Never use a real PayPal account or real-money credentials.
 
 ## End-to-end reconciliation workflow test
 
-Use a dedicated signed-in QA account that has at least one completed, persisted PayPal Sandbox capture. This test imports two clearly marked QA rows referencing that capture, then exercises duplicate import, matching, rejection, approval, ledger posting, idempotent reposting and audit verification.
+Use a dedicated signed-in QA account with at least one completed, persisted PayPal Sandbox capture. This test imports two clearly marked QA rows referencing that capture, then exercises duplicate import, matching, rejection, approval, ledger posting, idempotent reposting and audit verification.
 
 ```bash
 export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
+export SUPABASE_URL="https://ylswydogvrffzojwnakx.supabase.co"
+export SUPABASE_PUBLIC_KEY="<your Supabase publishable key>"
 export PAYPROOF_TEST_USER_EMAIL="qa-account@example.com"
-export PAYPROOF_TEST_USER_PASSWORD="your-test-account-password"
-# Or set PAYPROOF_TEST_USER_TOKEN to a short-lived access token.
-npm run test:reconciliation
-```
-
-The test intentionally leaves two `PPQA-` statement rows (one rejected, one posted) and one internal ledger entry in that dedicated QA account so the reviewer can inspect the persistent audit trail. Do not run it in an account containing real operational records.
-
-## End-to-end reconciliation workflow test
-
-Use a dedicated signed-in QA account that has at least one completed, persisted PayPal Sandbox capture. This test imports two clearly marked QA rows referencing that capture, then exercises duplicate import, matching, rejection, approval, ledger posting, idempotent reposting and audit verification.
-
-```bash
-export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
-export PAYPROOF_TEST_USER_TOKEN="<short-lived access token for the dedicated QA account>"
+read -s -p "QA account password: " PAYPROOF_TEST_USER_PASSWORD
+export PAYPROOF_TEST_USER_PASSWORD
 npm run test:reconciliation
 ```
 
@@ -61,34 +55,38 @@ The test intentionally leaves two `PPQA-` statement rows (one rejected, one post
 
 ## Two-account isolation test
 
-Create or use two different Supabase test accounts. Sign into each account separately and copy each short-lived access token locally; do not send either token to anyone. The first account must have at least one saved order and one statement row. The second account can be empty.
+Use two different Supabase accounts. Account A must have at least one saved order and one statement row; Account B may be empty. The script authenticates each account locally and tests both private reads and cross-account mutations.
 
 ```bash
-export SUPABASE_URL="<project URL>"
-export SUPABASE_PUBLIC_KEY="<publishable key>"
+export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
+export SUPABASE_URL="https://ylswydogvrffzojwnakx.supabase.co"
+export SUPABASE_PUBLIC_KEY="<your Supabase publishable key>"
 export PAYPROOF_TEST_USER_A_EMAIL="account-a@example.com"
-export PAYPROOF_TEST_USER_A_PASSWORD="account-a-test-password"
+read -s -p "Account A password: " PAYPROOF_TEST_USER_A_PASSWORD
+export PAYPROOF_TEST_USER_A_PASSWORD
 export PAYPROOF_TEST_USER_B_EMAIL="account-b@example.com"
-export PAYPROOF_TEST_USER_B_PASSWORD="account-b-test-password"
-# Or set PAYPROOF_TEST_USER_A_TOKEN and PAYPROOF_TEST_USER_B_TOKEN instead.
+read -s -p "Account B password: " PAYPROOF_TEST_USER_B_PASSWORD
+export PAYPROOF_TEST_USER_B_PASSWORD
 npm run test:security
 ```
 
-Expected: both identities are distinct; private order, statement, audit and ledger responses do not overlap; account B receives 404 when attempting to capture account A's PayPal order or review its statement row; and account B cannot post that row. The script does not mutate account A's records.
+Expected: both identities are distinct; private order, statement, audit and ledger responses do not overlap; Account B receives 404 when attempting to verify Account A's PayPal order or review its statement row; and Account B cannot post that row. The script does not mutate Account A's records. If an account uses Google-only sign-in, set its short-lived `PAYPROOF_TEST_USER_A_TOKEN` or `PAYPROOF_TEST_USER_B_TOKEN` locally instead of email/password.
 
 ## Verified database checks
 
 On 4 November 2026, the connected Supabase database was checked directly:
-- The authenticated owner saw 9 owned orders under RLS; a different simulated UUID saw 0.
-- Direct order writes by `anon` and `authenticated` were revoked. Authenticated SELECT remains owner-scoped. Server-side `service_role` retains write permissions.
-- All 6 existing owner-scoped statement rows were confirmed as exact pending-review candidates against their linked paid, verified orders.
-- A duplicate import dry-run inserted 0 duplicates for an existing owner/transaction pair.
-- A rejection dry-run wrote the rejected state and audit event inside a transaction; rollback restored the original pending-review state and removed the test audit event.
-- An approval/post dry-run created exactly one ledger entry; a second post was rejected; rollback left no persistent test entry.
-- PayPal requests are hard-locked to the PayPal Sandbox endpoint; a non-Sandbox `PAYPAL_BASE_URL` override is rejected.
-- Direct authenticated Data API access is not granted for statement rows, payment events, ledger entries or reconciliation audit. The app's server routes apply explicit owner filters.
 
-The application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33` has a READY Vercel preview. GitHub Actions passed lint, build, production-server startup and public/security smoke checks on commit `75a340700e4e1ff605c4e3808064ec670282248c`. The reconciliation workflow helper and local sign-in helper were added after that CI run and still need a fresh CI/local execution. Vercel has rate-limited further preview builds, so do not claim those latest helper files are deployed. The database-only ledger uniqueness migration has been applied and verified in Supabase. These database dry-runs do not replace the two-real-account API integration test. Run it after creating a second test account.
+- The authenticated owner saw 9 owned orders under RLS; a different simulated user UUID saw 0.
+- Direct order writes by `anon` and `authenticated` were revoked. Authenticated SELECT remains owner-scoped; the server-side `service_role` retains the write permissions required by API routes.
+- Authenticated direct Data API access is not granted for statement rows, payment events, ledger entries or reconciliation audit. Those records are accessed through authenticated server routes with explicit owner filters.
+- All 6 existing private statement rows were confirmed as exact pending-review candidates against their linked paid, server-verified orders.
+- A duplicate-import database dry-run inserted 0 duplicate rows for an existing owner/transaction pair.
+- Rollback-only rejection and approval/post tests confirmed audit and ledger behavior without leaving test records behind.
+- A unique constraint on `ledger_entries.order_id` now prevents two different statement rows from posting the same verified PayPal order/capture. A rollback-only test confirmed the second row is rejected and no test ledger entry persists.
+- PayPal requests are hard-locked to the PayPal Sandbox endpoint; a non-Sandbox `PAYPAL_BASE_URL` override is rejected.
+- Supabase migration `20261104141800_prevent_duplicate_order_ledger_entries` is applied and verified.
+
+The READY Vercel preview serves application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33`. GitHub Actions passed lint, build, production-server startup and public/security smoke checks on commit `75a340700e4e1ff605c4e3808064ec670282248c`. The reconciliation workflow helper and local sign-in helper were added after that CI run and still need a fresh CI/local execution. Vercel has rate-limited further preview builds, so do not claim those latest helper files are deployed. The database-only ledger uniqueness migration has been applied and verified in Supabase.
 
 ## Core workflow
 
@@ -106,20 +104,6 @@ The application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33` has a READY Ve
 | Repeated confirmation | No duplicate local paid record |
 | AI provider unavailable | Safe fallback; no fabricated payment result |
 
-## Authenticated reconciliation
-
-- [ ] Sign in with a test account and load its private workspace.
-- [ ] Run `npm run test:reconciliation` in a dedicated QA account after a verified Sandbox checkout; retain redacted output and inspect the resulting `PPQA-` rows and audit events.
-- [ ] Confirm exact reference + amount + currency matches remain pending until human approval.
-- [ ] Exact reference + amount + currency yields pending human review, not approval.
-- [ ] Mismatches remain exceptions/unmatched.
-- [ ] Run `npm run test:security` with two different account tokens; retain redacted output as evidence.
-- [ ] Approve a valid candidate as the signed-in reviewer.
-- [ ] Post only an approved candidate to the internal ledger.
-- [ ] Retry posting and verify duplicate entries are prevented.
-- [ ] Inspect import, matching, review and posting audit events.
-- [ ] Confirm exported PayPal evidence is labelled provider-side evidence.
-
 ## Evidence boundary
 
 Matching PayProof's own PayPal evidence CSV against its saved verified captures is a consistency check. It is not independent bank reconciliation. A genuine bank-exported CSV is required to demonstrate matching against an independent bank statement.
@@ -130,7 +114,7 @@ Record date/time and timezone, commit SHA, deployment URL, environment, test acc
 
 ## Current Supabase Auth plan limitation
 
-The connected Supabase organization is on the Free plan. Supabase documents leaked-password protection as a Pro-plan-and-above feature, so the current `auth_leaked_password_protection` advisor warning cannot be cleared on this plan. Do not claim this control is enabled. Enabling it requires an owner-approved plan upgrade; do not upgrade or incur charges without explicit approval. The project can still be tested with strong password requirements supported by the current Auth plan, but those settings do not replace breached-password screening.
+The connected Supabase organization is on the Free plan. Supabase documents leaked-password protection as a Pro-plan-and-above feature, so the current `auth_leaked_password_protection` advisor warning cannot be cleared on this plan. Do not claim this control is enabled. Enabling it requires an owner-approved paid-plan upgrade. Stronger password requirements do not replace breached-password screening.
 
 ## Limitations
 
