@@ -31,7 +31,7 @@ The integrated feature preview contains the newer reconciliation and assistant w
 
 ## What the feature preview adds
 
-- Authenticated Supabase sessions for private reconciliation operations and the AI assistant API.
+- Authenticated Supabase sessions for private reconciliation operations, AI order extraction and the AI assistant API.
 - User-scoped statement rows, PayPal evidence, ledger entries and audit events.
 - CSV import with validation and duplicate detection.
 - Exact matching against eligible server-verified PayPal Sandbox captures.
