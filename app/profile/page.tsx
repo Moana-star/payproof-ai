@@ -39,7 +39,7 @@ export default function ProfilePage() {
       const user = data.user;
       setUserId(user.id);
       setEmail(user.email || "");
-      setName(typeof user.user_metadata.display_name === "string" ? user.user_metadata.display_name : "");
+      setName(typeof user.user_metadata.display_name === "string" ? user.user_metadata.display_name : typeof user.user_metadata.full_name === "string" ? user.user_metadata.full_name : typeof user.user_metadata.name === "string" ? user.user_metadata.name : "");
       setWorkspace(typeof user.user_metadata.workspace_name === "string" ? user.user_metadata.workspace_name : "My workspace");
       setAvatarUrl(typeof user.user_metadata.avatar_url === "string" ? user.user_metadata.avatar_url : typeof user.user_metadata.picture === "string" ? user.user_metadata.picture : "");
 
@@ -51,7 +51,7 @@ export default function ProfilePage() {
 
       if (!active) return;
       if (profile) {
-        setName(profile.display_name || (typeof user.user_metadata.display_name === "string" ? user.user_metadata.display_name : ""));
+        setName(profile.display_name || (typeof user.user_metadata.display_name === "string" ? user.user_metadata.display_name : typeof user.user_metadata.full_name === "string" ? user.user_metadata.full_name : typeof user.user_metadata.name === "string" ? user.user_metadata.name : ""));
         setWorkspace(profile.workspace_name || "My workspace");
       }
       setLoading(false);
@@ -73,7 +73,7 @@ export default function ProfilePage() {
     try {
       const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const path = `${userId}/profile-${Date.now()}.${extension}`;
-      const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, cacheControl: "3600", contentType: file.type });
+      const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: false, cacheControl: "3600", contentType: file.type });
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
       const url = data.publicUrl;
