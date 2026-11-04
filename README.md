@@ -15,6 +15,8 @@ PayProof AI is an evidence-led payment-operations prototype for small online sel
 - **Judge readiness and release gates:** [JUDGE_READINESS.md](JUDGE_READINESS.md)
 - **Demo script:** [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
 - **Verification plan:** [TEST_PLAN.md](TEST_PLAN.md)
+- **Two-account isolation test:** [scripts/security-integration-test.mjs](scripts/security-integration-test.mjs)
+- **PayPal Sandbox checkout test:** [scripts/paypal-sandbox-checkout-test.mjs](scripts/paypal-sandbox-checkout-test.mjs)
 - **Security policy:** [SECURITY.md](SECURITY.md)
 
 The integrated feature preview contains the newer reconciliation and assistant work. It is separate from the stable production deployment. Confirm the latest preview deployment is READY and check the commit SHA before judging or recording.
@@ -56,7 +58,7 @@ Requires Node.js 20+, npm, PayPal Sandbox credentials, a Supabase project and a 
 
 Run npm install, copy .env.example to .env.local, then run npm run dev.
 
-Run checks with npm run lint, npm run build, and npm run test:smoke -- http://127.0.0.1:3000.
+Run checks with npm run lint, npm run build, and npm run test:smoke -- http://127.0.0.1:3000. For a signed-in two-account isolation test, configure the local variables documented in TEST_PLAN.md and run npm run test:security. For an exact-preview PayPal Sandbox buyer-approval test, run npm run test:paypal-sandbox -- create, approve the generated URL with a Sandbox buyer, then run npm run test:paypal-sandbox -- verify <PAYPAL_ORDER_ID>.
 
 Use your own private values in .env.local. Never commit secrets or use live PayPal credentials for the hackathon demo.
 
