@@ -42,12 +42,21 @@ Supabase's security advisor currently reports **Leaked Password Protection Disab
 
 Both AI endpoints—the conversational assistant and AI order extraction—now have server-side Supabase bearer-session checks in the feature branch, and the browser sends the current session token. Verify unauthenticated requests return HTTP 401 on the latest READY preview. Do not claim these checks passed until the deployment and smoke test confirm them.
 
+## Database checks completed — 4 November 2026
+
+- Orders now have an owner-scoped SELECT policy only. Direct INSERT, UPDATE and DELETE permissions have been revoked from `anon` and `authenticated`; the server-side `service_role` retains the write permissions required by authenticated API routes.
+- Verified the orders RLS boundary in a transaction: the existing account saw its 9 owned orders; a different simulated user UUID saw 0. The test transaction was rolled back.
+- Verified the database permissions after the change: `authenticated` can SELECT orders but cannot INSERT, UPDATE or DELETE; `anon` cannot SELECT orders.
+- Ran a rollback-only reconciliation posting test against an existing exact verified match: the first posting created exactly one ledger row inside the test transaction; a second attempt was rejected; rollback left the statement row pending review and created no persistent ledger row.
+- The database currently has owned records for one account only. The two-real-account API integration test is prepared as `npm run test:security`, but remains unrun until a second test account is supplied.
+- The Supabase Data API does not grant authenticated direct access to statement rows, payment events, ledger entries or reconciliation audit; these records are accessed through authenticated server routes with explicit owner filters.
+
 ## Manual release gates — still required
 
 - [ ] Run `npm run test:paypal-sandbox -- create` on the exact preview build, approve with a PayPal Sandbox buyer, confirm automatic return verification, then run the helper's `verify` mode.
 - [ ] Confirm automatic return verification without refreshing and confirm the saved order appears in the same signed-in workspace.
 - [ ] Test cancellation, pending/incomplete payment, provider failure and amount/currency/reference mismatch.
-- [ ] Run `npm run test:security` with two distinct Supabase test-account tokens. The database currently contains owned records for one account only, so create a second test account before claiming the two-account test passed.
+- [ ] Run `npm run test:security` with two distinct Supabase test-account tokens. The database currently contains owned records for one account only, so create a second test account before claiming the two-account API test passed.
 - [ ] Test duplicate CSV import, rejected review, duplicate posting and audit-trail accuracy.
 - [ ] Test AI order extraction with clear, ambiguous and unsupported messages.
 - [ ] Test the AI assistant while signed in, then confirm unauthenticated API access is rejected.
