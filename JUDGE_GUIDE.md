@@ -7,11 +7,13 @@ This guide is the recommended route for evaluating the project. It distinguishes
 | Resource | Link | What it represents |
 |---|---|---|
 | Stable application | https://payproof-ai-beta.vercel.app/ | Currently deployed core PayProof AI workflow |
-| Reconciliation feature preview | https://payproof-papycsaha-naom6083-2980.vercel.app/ | Latest preview for PR #8; includes authenticated persistent reconciliation work |
+| Integrated feature preview | https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/ | Current preview branch with PR #8 reconciliation and PR #9 conversational assistant; not production |
+| Reconciliation PR | https://github.com/Moana-star/payproof-ai/pull/8 | Authenticated, persistent reconciliation implementation |
+| Assistant PR | https://github.com/Moana-star/payproof-ai/pull/9 | Conversational AI assistant and structured responses |
 | Source repository | https://github.com/Moana-star/payproof-ai | Source, docs, CI and history |
 | Feature PR | https://github.com/Moana-star/payproof-ai/pull/8 | Reviewable implementation and change history |
 
-**Important:** The reconciliation preview is not the stable production deployment. Use the feature PR and preview to inspect the newer account-scoped workflow. Do not infer that a preview-only feature is already merged or released.
+**Important:** The integrated feature preview is not the stable production deployment. It combines work from PR #8 and PR #9. Confirm the latest deployment is READY and inspect its commit before testing. Do not infer that preview-only features are already merged or released.
 
 ## What problem is being addressed?
 
@@ -45,7 +47,13 @@ Evaluate whether the application makes uncertainty visible. AI output should not
 
 A browser redirect, screenshot or customer message is not payment proof. Do not use personal PayPal accounts or real-money credentials.
 
-### 4. Inspect AI explanations
+### 4. Inspect the conversational AI assistant
+
+Open the integrated feature preview and sign in. Ask the assistant to explain a synthetic completed, mismatch or pending example. Inspect its structured response formatting. The assistant does not have live account-record access; its selected sample contexts are synthetic. Its API requires a signed-in Supabase session.
+
+The assistant is advisory. It must not create a transaction identifier, override a failed verification, change a payment status or execute a financial action.
+
+### 5. Inspect persistent reconciliation (integrated feature preview)
 
 Ask the assistant to explain a known order or payment state. Compare the answer with the structured evidence shown in the application.
 
@@ -92,6 +100,10 @@ Matching must not auto-approve or post. Duplicate posting is guarded. The intern
 - Never publish API keys, passwords, Supabase service-role keys, reviewer tokens or private environment values.
 - Do not interpret a PayPal capture as bank settlement.
 - Do not interpret an internal ledger post as a transfer of funds or an external accounting write.
+
+## Required submission video
+
+The official rules require a public YouTube demonstration video under three minutes showing the project working. Include its URL in the Devpost submission and verify it opens while signed out. The separate 30–60 second introduction video mentioned in the Devpost email is optional. Use [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the timed walkthrough.
 
 ## Reproducibility checklist
 
