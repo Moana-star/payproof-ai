@@ -4,8 +4,7 @@ This is the integrated feature branch containing authenticated reconciliation fr
 
 ## Evaluation links
 
-- **Latest application preview:** https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com
-- **Latest integrated feature preview:** https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com
+- **Latest application preview:** [Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com)
 - **Reconciliation implementation:** https://github.com/Moana-star/payproof-ai/pull/8
 - **Assistant implementation:** https://github.com/Moana-star/payproof-ai/pull/9
 - **Source repository:** https://github.com/Moana-star/payproof-ai
