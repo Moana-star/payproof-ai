@@ -19,7 +19,9 @@ Use a dedicated PayPal Sandbox buyer and a dedicated signed-in PayProof test acc
 
 ```bash
 export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
-export PAYPROOF_TEST_USER_TOKEN="<short-lived access token for the signed-in test account>"
+export PAYPROOF_TEST_USER_EMAIL="qa-account@example.com"
+export PAYPROOF_TEST_USER_PASSWORD="your-test-account-password"
+# Or set PAYPROOF_TEST_USER_TOKEN to a short-lived access token.
 npm run test:paypal-sandbox -- create
 ```
 
@@ -37,7 +39,9 @@ Use a dedicated signed-in QA account that has at least one completed, persisted 
 
 ```bash
 export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
-export PAYPROOF_TEST_USER_TOKEN="<short-lived access token for the dedicated QA account>"
+export PAYPROOF_TEST_USER_EMAIL="qa-account@example.com"
+export PAYPROOF_TEST_USER_PASSWORD="your-test-account-password"
+# Or set PAYPROOF_TEST_USER_TOKEN to a short-lived access token.
 npm run test:reconciliation
 ```
 
@@ -62,8 +66,11 @@ Create or use two different Supabase test accounts. Sign into each account separ
 ```bash
 export SUPABASE_URL="<project URL>"
 export SUPABASE_PUBLIC_KEY="<publishable key>"
-export PAYPROOF_TEST_USER_A_TOKEN="<account A access token>"
-export PAYPROOF_TEST_USER_B_TOKEN="<account B access token>"
+export PAYPROOF_TEST_USER_A_EMAIL="account-a@example.com"
+export PAYPROOF_TEST_USER_A_PASSWORD="account-a-test-password"
+export PAYPROOF_TEST_USER_B_EMAIL="account-b@example.com"
+export PAYPROOF_TEST_USER_B_PASSWORD="account-b-test-password"
+# Or set PAYPROOF_TEST_USER_A_TOKEN and PAYPROOF_TEST_USER_B_TOKEN instead.
 npm run test:security
 ```
 
