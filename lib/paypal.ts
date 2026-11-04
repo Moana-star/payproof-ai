@@ -1,14 +1,13 @@
-const PAYPAL_SANDBOX_BASE_URL = "https://api-m.sandbox.paypal.com";
+const PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com";
 
 // This hackathon release is intentionally Sandbox-only. Refuse a deployment
 // override that points at PayPal Live so the UI can never label a live charge
 // as a Sandbox payment.
-function getPayPalBaseUrl() {
+function assertSandboxBaseUrl() {
   const configured = process.env.PAYPAL_BASE_URL?.replace(/\\/+$/, "");
-  if (configured && configured !== PAYPAL_SANDBOX_BASE_URL) {
+  if (configured && configured !== PAYPAL_BASE_URL) {
     throw new Error("PayProof AI is locked to PayPal Sandbox. PAYPAL_BASE_URL must point to https://api-m.sandbox.paypal.com.");
   }
-  return PAYPAL_SANDBOX_BASE_URL;
 }
 
 function getCredentials() {
@@ -21,9 +20,10 @@ function getCredentials() {
 }
 
 export async function getPayPalAccessToken() {
+  assertSandboxBaseUrl();
   const { clientId, clientSecret } = getCredentials();
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
-  const response = await fetch(`${getPayPalBaseUrl()}/v1/oauth2/token`, {
+  const response = await fetch(`${PAYPAL_BASE_URL}/v1/oauth2/token`, {
     method: "POST",
     headers: {
       Authorization: `Basic ${auth}`,
@@ -47,7 +47,8 @@ export async function paypalRequest<T>(
   accessToken: string,
   init: RequestInit = {}
 ): Promise<T> {
-  const response = await fetch(`${getPayPalBaseUrl()}${path}`, {
+  assertSandboxBaseUrl();
+  const response = await fetch(`${PAYPAL_BASE_URL}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${accessToken}`,
