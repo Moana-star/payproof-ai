@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ReconciliationConsole } from "@/components/reconciliation-console";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { AccountAvatar } from "@/components/account-avatar";
 
 type OrderStatus = "Paid" | "Awaiting payment" | "Review needed";
 type Order = {
@@ -32,6 +33,7 @@ const statusClass: Record<OrderStatus, string> = {
 
 export default function Home() {
   const [authUserName, setAuthUserName] = useState("");
+  const [authUserAvatar, setAuthUserAvatar] = useState("");
   const [authChecked, setAuthChecked] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [authWorkspaceName, setAuthWorkspaceName] = useState("Demo workspace");
@@ -130,6 +132,7 @@ export default function Home() {
         setAuthChecked(true);
         setIsSignedIn(false);
         setAuthUserName("");
+        setAuthUserAvatar("");
         setAuthWorkspaceName("Demo workspace");
         await loadOrders(null);
         return;
@@ -138,6 +141,7 @@ export default function Home() {
       setIsSignedIn(true);
       const metadata = session.user.user_metadata || {};
       setAuthUserName(typeof metadata.display_name === "string" && metadata.display_name.trim() ? metadata.display_name.trim() : (session.user.email?.split("@")[0] || "Account"));
+      setAuthUserAvatar(typeof metadata.avatar_url === "string" ? metadata.avatar_url : typeof metadata.picture === "string" ? metadata.picture : "");
       setAuthWorkspaceName(typeof metadata.workspace_name === "string" && metadata.workspace_name.trim() ? metadata.workspace_name.trim() : "My workspace");
       await loadOrders(session.access_token);
     };
@@ -357,7 +361,7 @@ export default function Home() {
           <Link className="nav-item" href="/demo-guide"><span className="nav-icon">?</span>Help &amp; support</Link>
           <Link className="nav-item" href="/profile"><span className="nav-icon">⚙</span>Settings</Link>
         </nav>
-        <div className="sidebar-bottom"><div className="trust-card"><span className="trust-icon">✓</span><strong>Evidence first</strong><p>AI explains the record. Verified payment data decides.</p></div><div className="profile-row"><span className="avatar">P✓</span><div><strong>PayProof AI</strong><span>Sandbox workspace</span></div></div></div>
+        <div className="sidebar-bottom"><div className="trust-card"><span className="trust-icon">✓</span><strong>Evidence first</strong><p>AI explains the record. Verified payment data decides.</p></div><Link className="profile-row" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open your profile" : "Sign in or create an account"}><AccountAvatar name={authUserName} imageUrl={authUserAvatar} size={34} /><div><strong>{isSignedIn ? (authUserName.trim().split(/\\s+/)[0] || "My account") : "Sign in"}</strong><span>{isSignedIn ? authWorkspaceName : "Your account"}</span></div></Link></div>
       </aside>
       <style jsx global>{`
         .topbar { position: relative; display: flex; align-items: center; gap: 14px; }
@@ -455,7 +459,7 @@ export default function Home() {
             </div>}
           </div>
           <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" value={dashboardSearch} onChange={(event) => setDashboardSearch(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
-          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link><div className="header-icon-actions"><Link className="header-icon-button notification-button" href="/exceptions" aria-label={`Notifications: ${orders.filter((order) => order.status !== "Paid").length} items needing attention`} title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{orders.filter((order) => order.status !== "Paid").length > 0 && <span className="notification-count">{orders.filter((order) => order.status !== "Paid").length > 9 ? "9+" : orders.filter((order) => order.status !== "Paid").length}</span>}</Link><Link className="header-icon-button profile-icon-button" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open profile" : "Sign in"} title={isSignedIn ? "Profile" : "Sign in"}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></svg></Link></div>{authUserName ? <><Link className="demo-payment-guide-link account-name-link" href="/profile">{authUserName.trim().split(/\s+/)[0] || "Profile"} ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : <Link className="sandbox-checkout-button" href="/auth">Sign in / Create account ↗</Link>}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
+          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link><div className="header-icon-actions"><Link className="header-icon-button notification-button" href="/exceptions" aria-label={`Notifications: ${orders.filter((order) => order.status !== "Paid").length} items needing attention`} title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{orders.filter((order) => order.status !== "Paid").length > 0 && <span className="notification-count">{orders.filter((order) => order.status !== "Paid").length > 9 ? "9+" : orders.filter((order) => order.status !== "Paid").length}</span>}</Link><Link className="header-icon-button profile-icon-button" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open profile" : "Sign in or create an account"} title={isSignedIn ? "Profile" : "Sign in or create an account"}><AccountAvatar name={authUserName} imageUrl={authUserAvatar} size={30} /></Link></div>{authUserName ? <><Link className="demo-payment-guide-link account-name-link" href="/profile">{authUserName.trim().split(/\s+/)[0] || "Profile"} ↗</Link><button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button></> : }<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
 
         <div className="content" id="overview">
