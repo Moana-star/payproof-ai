@@ -1,7 +1,9 @@
-# PayProof AI — 2:45 Demo Script
+# PayProof AI — 2:45 Hackathon Demo Script
+
+**Required submission video:** Publish a public YouTube video under 3 minutes and add its URL to Devpost. The 30–60 second PayPal-team intro mentioned in Cassie's email is optional and separate.
 
 **Stable app:** https://payproof-ai-beta.vercel.app/  
-**Reconciliation preview (PR #8):** https://payproof-papycsaha-naom6083-2980.vercel.app/  
+**Integrated feature preview (PRs #8 and #9):** https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/  
 **Source:** https://github.com/Moana-star/payproof-ai
 
 ## Before recording
@@ -66,4 +68,4 @@ Review the proposed product and quantity. Confirm the draft.
 - [ ] Show the actual reconciliation preview, not a mockup, when discussing PR #8.
 - [ ] Do not describe PayPal capture as bank settlement.
 - [ ] Do not claim time savings, fraud reduction or customer outcomes without measured evidence.
-- [ ] Keep the final video within the requested hackathon duration and make it publicly viewable if the submission requires that.
+- [ ] Keep the final video within the requested hackathon duration and upload it to YouTube as Public, add the URL to Devpost and verify it opens while signed out.
