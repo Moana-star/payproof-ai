@@ -65,6 +65,10 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
         <nav className="ops-nav" aria-label="Workspace navigation">
           {navigation.map((item) => <Link key={item.href} href={item.href} className={item.href === (activeRoute[title] || "/") ? "ops-nav-item is-active" : "ops-nav-item"}><span className="ops-nav-icon" aria-hidden="true">{item.icon}</span>{item.label}</Link>)}
         </nav>
+        <div className="ops-nav-section-label">PRESENTATION</div>
+        <nav className="ops-nav" aria-label="Judge resources">
+          <Link href="/demo-guide" className={title === "Judge demo guide" ? "ops-nav-item is-active" : "ops-nav-item"}><span className="ops-nav-icon" aria-hidden="true">▶</span>Judge demo guide</Link>
+        </nav>
         <div className="ops-sidebar-bottom"><div className="ops-trust-card"><span className="ops-trust-icon">✓</span><strong>Evidence first</strong><p>AI explains the record. Verified payment data decides.</p></div><div className="ops-mode"><i className="ops-mode-dot" />Sandbox workspace</div></div>
       </aside>
       <style jsx global>{`
@@ -118,6 +122,10 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
                     <span aria-hidden="true">{item.icon}</span>{item.label}
                   </Link>
                 ))}
+              </nav>
+              <div className="ops-menu-heading" style={{ paddingTop: 12 }}><strong>PRESENTATION</strong><span>Judge resources</span></div>
+              <nav aria-label="Judge resources">
+                <Link className={title === "Judge demo guide" ? "ops-menu-item is-active" : "ops-menu-item"} href="/demo-guide" onClick={() => setMenuOpen(false)}><span aria-hidden="true">▶</span>Judge demo guide</Link>
               </nav>
               <div className="ops-menu-footer"><span>✓</span><div><strong>Evidence first</strong><small>AI explains the record. Verified payment data decides.</small></div></div>
             </div>}
