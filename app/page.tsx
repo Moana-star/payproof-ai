@@ -384,7 +384,7 @@ export default function Home() {
           .content { padding-left: 34px; padding-right: 34px; }
         }
         @media (max-width: 820px) { .desktop-dashboard-sidebar { display: none !important; } }
-        .header-icon-actions { display: inline-flex; align-items: center; gap: 8px; }
+        .header-icon-actions { order: 10; margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
         .header-icon-button { position: relative; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #dfe4ed; border-radius: 12px; background: #fff; color: #34415a; text-decoration: none; flex: 0 0 auto; }
         .header-icon-button:hover { background: #f4f7fc; border-color: #a9b5ca; }
         .header-icon-button:focus-visible { outline: 3px solid #8ba8ff; outline-offset: 3px; }
@@ -415,7 +415,7 @@ export default function Home() {
           .dashboard-search input { width: 100%; min-width: 0; height: 40px; font-size: 13px; }
           .dashboard-date { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 6px 9px; font-size: 10px; }
           .topbar-actions { grid-area: actions; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; padding: 0; border: 0; }
-          .header-icon-actions { display: inline-flex; align-items: center; gap: 7px; margin-left: 0; }
+          .header-icon-actions { order: 10; margin-left: auto; display: inline-flex; align-items: center; gap: 7px; }
           .header-icon-button { width: 40px; height: 40px; }
           .account-name-link { display: none !important; }
           .topbar-actions > * { min-width: 0; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; text-align: center; white-space: nowrap; line-height: 1.2; border-radius: 9px; padding: 8px 10px; font-size: 11px; }
