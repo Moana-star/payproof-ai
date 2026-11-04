@@ -20,6 +20,14 @@ npm run test:smoke -- http://127.0.0.1:3000
 
 The smoke suite checks public route availability, unauthenticated API boundaries and the synthetic-only public preview. It does not replace a real signed-in account test, AI-provider test or PayPal Sandbox transaction.
 
+## AI endpoint access checks
+
+- [ ] Unauthenticated POST to /api/orders/extract returns HTTP 401.
+- [ ] Unauthenticated POST to /api/assistant/chat returns HTTP 401.
+- [ ] Signed-in browser requests include the current Supabase bearer token.
+- [ ] Signed-in AI extraction produces a reviewable draft and never saves an order or marks payment verified.
+- [ ] Signed-in assistant responses remain advisory and do not claim access to live account records unless those records are explicitly supplied.
+
 ## Core workflow scenarios
 
 | Scenario | Expected safe result | Evidence to capture |
