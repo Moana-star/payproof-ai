@@ -47,9 +47,15 @@ Both AI endpoints—the conversational assistant and AI order extraction—now h
 - Orders now have an owner-scoped SELECT policy only. Direct INSERT, UPDATE and DELETE permissions have been revoked from `anon` and `authenticated`; the server-side `service_role` retains the write permissions required by authenticated API routes.
 - Verified the orders RLS boundary in a transaction: the existing account saw its 9 owned orders; a different simulated user UUID saw 0. The test transaction was rolled back.
 - Verified the database permissions after the change: `authenticated` can SELECT orders but cannot INSERT, UPDATE or DELETE; `anon` cannot SELECT orders.
-- Ran a rollback-only reconciliation posting test against an existing exact verified match: the first posting created exactly one ledger row inside the test transaction; a second attempt was rejected; rollback left the statement row pending review and created no persistent ledger row.
+- Verified all 6 existing private statement rows are exact pending-review candidates against their linked paid, server-verified orders (reference, amount and currency all match).
+- Ran a duplicate-import database test: re-importing an existing owner/transaction pair inserted 0 duplicate rows and left the original row intact.
+- Ran a rollback-only rejection test: the row changed to rejected and one audit event appeared inside the transaction; rollback restored pending review and left no test audit event.
+- Ran a rollback-only approval/post test against an exact verified match: the first posting created exactly one ledger row inside the transaction; a second attempt was rejected; rollback left the statement row pending review and created no persistent ledger row.
+- The PayPal API client is now hard-locked to the PayPal Sandbox endpoint and rejects a deployment override pointing at PayPal Live.
 - The database currently has owned records for one account only. The two-real-account API integration test is prepared as `npm run test:security`, but remains unrun until a second test account is supplied.
 - The Supabase Data API does not grant authenticated direct access to statement rows, payment events, ledger entries or reconciliation audit; these records are accessed through authenticated server routes with explicit owner filters.
+
+The latest code commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33` has a READY Vercel preview. GitHub Actions completed ESLint, Next.js build, production-server startup and the public/security smoke suite successfully.
 
 ## Manual release gates — still required
 
