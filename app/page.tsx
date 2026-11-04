@@ -364,9 +364,9 @@ export default function Home() {
         <div className="sidebar-bottom"><div className="trust-card"><span className="trust-icon">✓</span><strong>Evidence first</strong><p>AI explains the record. Verified payment data decides.</p></div><Link className="profile-row" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open your profile" : "Sign in or create an account"}><AccountAvatar name={authUserName} imageUrl={authUserAvatar} size={34} /><div><strong>{isSignedIn ? (authUserName.trim().split(/\s+/)[0] || "My account") : "Public demo"}</strong><span>{isSignedIn ? authWorkspaceName : "Create your workspace"}</span></div></Link></div>
       </aside>
       <style jsx global>{`
-        .topbar { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 22px; min-width: 0; }
-        .dashboard-search { flex: 1 1 420px; min-width: 240px; max-width: 650px; }
-        .topbar-actions { flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-end; gap: 12px; min-width: 0; }
+        .topbar { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "actions" "search"; align-items: center; gap: 12px; min-width: 0; }
+        .dashboard-search { grid-area: search; width: 100%; min-width: 0; max-width: none; }
+        .topbar-actions { grid-area: actions; width: 100%; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; min-width: 0; }
         .topbar-actions .help-button { white-space: nowrap; }
         .topbar-actions .sign-out-button { padding: 8px 11px; border: 1px solid #dfe4ed; border-radius: 9px; background: #fff; color: #34415a; }
         .topbar-actions .guide-toggle-button { padding: 8px 10px; border: 1px solid #dfe4ed; border-radius: 9px; background: #fff; color: #34415a; }
@@ -378,7 +378,9 @@ export default function Home() {
           .desktop-dashboard-sidebar { display: flex !important; position: sticky; top: 0; height: 100vh; width: 252px; flex: 0 0 252px; overflow-y: auto; z-index: 20; }
           .main-area { min-width: 0; flex: 1; }
           .dashboard-menu-wrap { display: none !important; }
-          .topbar { padding-left: 34px; }
+          .topbar { padding-left: 34px; padding-right: 34px; gap: 14px; }
+          .topbar-actions { padding-bottom: 12px; border-bottom: 1px solid #edf0f5; }
+          .dashboard-search { max-width: none; }
           .content { padding-left: 34px; padding-right: 34px; }
         }
         @media (max-width: 820px) { .desktop-dashboard-sidebar { display: none !important; } }
@@ -406,14 +408,14 @@ export default function Home() {
         .dashboard-menu-foot strong { color: #26344c; font-size: 12px; }
         .dashboard-menu-foot small { color: #78849a; font-size: 10px; line-height: 1.45; }
         @media (max-width: 820px) {
-          .topbar { height: auto; min-height: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "menu search" "actions actions"; align-items: center; gap: 11px 12px; padding: 14px 18px; }
+          .topbar { height: auto; min-height: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "menu actions" "search search"; align-items: center; gap: 11px 12px; padding: 14px 18px; }
           .dashboard-menu-wrap { grid-area: menu; }
           .dashboard-search { grid-area: search; width: 100%; min-width: 0; max-width: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; height: auto; }
           .dashboard-search > span:first-child { display: none; }
           .dashboard-search input { width: 100%; min-width: 0; height: 40px; font-size: 13px; }
           .dashboard-date { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 6px 9px; font-size: 10px; }
-          .topbar-actions { grid-area: actions; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 8px; padding-top: 10px; border-top: 1px solid #edf0f5; }
-          .header-icon-actions { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; }
+          .topbar-actions { grid-area: actions; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; padding: 0; border: 0; }
+          .header-icon-actions { display: inline-flex; align-items: center; gap: 7px; margin-left: 0; }
           .header-icon-button { width: 40px; height: 40px; }
           .account-name-link { display: none !important; }
           .topbar-actions > * { min-width: 0; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; text-align: center; white-space: nowrap; line-height: 1.2; border-radius: 9px; padding: 8px 10px; font-size: 11px; }
@@ -464,8 +466,8 @@ export default function Home() {
               <div className="dashboard-menu-foot"><span>✓</span><div><strong>Evidence first</strong><small>AI helps explain. Verified payment data decides.</small></div></div>
             </div>}
           </div>
-          <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" value={dashboardSearch} onChange={(event) => setDashboardSearch(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
           <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link><div className="header-icon-actions"><Link className="header-icon-button notification-button" href="/exceptions" aria-label={`Notifications: ${orders.filter((order) => order.status !== "Paid").length} items needing attention`} title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{orders.filter((order) => order.status !== "Paid").length > 0 && <span className="notification-count">{orders.filter((order) => order.status !== "Paid").length > 9 ? "9+" : orders.filter((order) => order.status !== "Paid").length}</span>}</Link><Link className="header-icon-button profile-icon-button" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open profile" : "Sign in or create an account"} title={isSignedIn ? "Profile" : "Sign in or create an account"}><AccountAvatar name={authUserName} imageUrl={authUserAvatar} size={30} /></Link></div>{authUserName ? <button className="help-button sign-out-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button> : null}<button className="help-button guide-toggle-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
+          <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" value={dashboardSearch} onChange={(event) => setDashboardSearch(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
         </header>
 
         <div className="content" id="overview">
