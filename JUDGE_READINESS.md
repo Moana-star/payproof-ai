@@ -51,6 +51,8 @@ Both AI endpoints—the conversational assistant and AI order extraction—now h
 - Ran a duplicate-import database test: re-importing an existing owner/transaction pair inserted 0 duplicate rows and left the original row intact.
 - Ran a rollback-only rejection test: the row changed to rejected and one audit event appeared inside the transaction; rollback restored pending review and left no test audit event.
 - Ran a rollback-only approval/post test against an exact verified match: the first posting created exactly one ledger row inside the transaction; a second attempt was rejected; rollback left the statement row pending review and created no persistent ledger row.
+- Added a unique constraint on `ledger_entries.order_id`, so two different statement rows cannot post the same verified PayPal order/capture. The posting function returns the existing entry for the same row and rejects a different row for an already-reconciled capture.
+- Verified the cross-row duplicate-capture guard in a rollback-only transaction: first row posted once; a second row referencing the same capture was rejected; rollback left zero persistent entries for the test order.
 - The PayPal API client is now hard-locked to the PayPal Sandbox endpoint and rejects a deployment override pointing at PayPal Live.
 - The database currently has owned records for one account only. The two-real-account API integration test is prepared as `npm run test:security`, but remains unrun until a second test account is supplied.
 - The Supabase Data API does not grant authenticated direct access to statement rows, payment events, ledger entries or reconciliation audit; these records are accessed through authenticated server routes with explicit owner filters.
