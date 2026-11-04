@@ -57,7 +57,7 @@ The differentiator is not simply adding a chatbot to a payment dashboard. PayPro
 
 ## Demo links
 
-- Live application: https://payproof-5jgb7rn9d-naom6083-2980.vercel.app/
+- Live application: https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com
 - Source code: https://github.com/Moana-star/payproof-ai
 - Judge testing guide: https://github.com/Moana-star/payproof-ai/blob/main/JUDGE_GUIDE.md
 - Demo script: https://github.com/Moana-star/payproof-ai/blob/main/DEMO_SCRIPT.md
