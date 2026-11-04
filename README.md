@@ -5,14 +5,14 @@
 PayProof AI is an evidence-led payment operations prototype for small online sellers. It connects customer order intake, PayPal Sandbox checkout, server-side payment verification and reviewable payment evidence. Its guiding rule is simple: **AI can organise and explain information, but it cannot declare that money was received.**
 
 <p align="center">
-  <a href="https://payproof-gnwfragpl-naom6083-2980.vercel.app/"><strong>Open the latest PayProof AI website</strong></a>
+  <a href="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com"><strong>Open the latest PayProof AI website</strong></a>
   ·
   <a href="https://github.com/Moana-star/payproof-ai/blob/main/JUDGE_GUIDE.md">Judge guide</a>
   ·
   <a href="https://github.com/Moana-star/payproof-ai/blob/main/DEMO_SCRIPT.md">Demo script</a>
 </p>
 
-> **LATEST WEBSITE:** [https://payproof-gnwfragpl-naom6083-2980.vercel.app/](https://payproof-gnwfragpl-naom6083-2980.vercel.app/) — this is the latest READY integrated feature deployment.
+> **LATEST WEBSITE:** [https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com) — this is the latest READY integrated feature deployment.
 
 > **Hackathon environment:** The deployed application uses PayPal Sandbox. It is a prototype, not a live-money payment processor, bank integration, fraud-detection service or production accounting system. Use test accounts and synthetic data only.
 
@@ -35,13 +35,13 @@ PayProof AI brings the workflow into one reviewable place and makes the source o
 
 ### Current release and active work
 
-- **Latest integrated feature deployment:** [https://payproof-gnwfragpl-naom6083-2980.vercel.app/](https://payproof-gnwfragpl-naom6083-2980.vercel.app/).
+- **Latest integrated feature deployment:** [https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com).
 - **Reconciliation PR:** [#8 — Build persistent authenticated reconciliation and ledger posting](https://github.com/Moana-star/payproof-ai/pull/8).
 - **Assistant PR:** [#9 — Upgrade PayProof AI assistant to conversational chat](https://github.com/Moana-star/payproof-ai/pull/9). These pull requests remain open; do not assume they have been merged into the default branch.
 
 ## Judge quick start
 
-1. Open the [latest PayProof AI deployment](https://payproof-gnwfragpl-naom6083-2980.vercel.app/).
+1. Open the [latest PayProof AI deployment](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com).
 2. Start with the overview and follow the order-intake workflow.
 3. Paste a short sample order message, review the proposed product and quantity, and confirm the order details.
 4. Continue to PayPal Sandbox checkout using a dedicated Sandbox buyer account.
@@ -185,7 +185,7 @@ No score, prize placement or outcome is guaranteed. The strongest submission is 
 
 ## Project links
 
-- [Latest PayProof AI website](https://payproof-gnwfragpl-naom6083-2980.vercel.app/)
+- [Latest PayProof AI website](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com)
 - [Source code](https://github.com/Moana-star/payproof-ai)
 - [Open reconciliation implementation PR](https://github.com/Moana-star/payproof-ai/pull/8)
 
