@@ -18,7 +18,7 @@ The smoke suite checks public route availability, unauthenticated API boundaries
 Use a dedicated PayPal Sandbox buyer and a dedicated signed-in PayProof test account. Set the base URL to the exact READY judging preview and obtain the access token locally from that signed-in session. Never paste access tokens, passwords, client secrets or buyer credentials into chat, issues, logs or source control.
 
 ```bash
-export PAYPROOF_BASE_URL="https://payproof-a75ejx7sf-naom6083-2980.vercel.app"
+export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
 export PAYPROOF_TEST_USER_TOKEN="<short-lived access token for the signed-in test account>"
 npm run test:paypal-sandbox -- create
 ```
