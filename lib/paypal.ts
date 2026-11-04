@@ -4,7 +4,7 @@ const PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com";
 // override that points at PayPal Live so the UI can never label a live charge
 // as a Sandbox payment.
 function assertSandboxBaseUrl() {
-  const configured = process.env.PAYPAL_BASE_URL?.replace(/\\/+$/, "");
+  const configured = process.env.PAYPAL_BASE_URL?.replace(/\/+$/, "");
   if (configured && configured !== PAYPAL_BASE_URL) {
     throw new Error("PayProof AI is locked to PayPal Sandbox. PAYPAL_BASE_URL must point to https://api-m.sandbox.paypal.com.");
   }
