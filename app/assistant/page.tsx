@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { WorkspaceLayout } from "@/components/workspace-layout";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type Message = { role: "user" | "assistant"; content: string };
 type Thread = { id: string; title: string; messages: Message[]; updatedAt: number };
@@ -208,8 +209,15 @@ export default function AssistantPage() {
       const messageContent = (text || "Please review the attached file(s).") + textContents.join("") +
         (attachmentNote ? "\n" + attachmentNote + "\nThis file type is attached by name only; its contents are not readable here." : "");
       if (messageContent.length > 5900) throw new Error("The message and attached text are too long. Please shorten them.");
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!session) {
+        window.location.assign("/auth");
+        return;
+      }
       const response = await fetch("/api/assistant/chat", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ messages: [...messages, { role: "user", content: messageContent }].slice(-24), images: imageData, caseId: caseId || undefined })
       });
       if (!response.ok) {
