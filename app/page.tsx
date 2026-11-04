@@ -364,7 +364,13 @@ export default function Home() {
         <div className="sidebar-bottom"><div className="trust-card"><span className="trust-icon">✓</span><strong>Evidence first</strong><p>AI explains the record. Verified payment data decides.</p></div><Link className="profile-row" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open your profile" : "Sign in or create an account"}><AccountAvatar name={authUserName} imageUrl={authUserAvatar} size={34} /><div><strong>{isSignedIn ? (authUserName.trim().split(/\s+/)[0] || "My account") : "Public demo"}</strong><span>{isSignedIn ? authWorkspaceName : "Create your workspace"}</span></div></Link></div>
       </aside>
       <style jsx global>{`
-        .topbar { position: relative; display: flex; align-items: center; gap: 14px; }
+        .topbar { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 22px; min-width: 0; }
+        .dashboard-search { flex: 1 1 420px; min-width: 240px; max-width: 650px; }
+        .topbar-actions { flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-end; gap: 12px; min-width: 0; }
+        .topbar-actions .help-button { white-space: nowrap; }
+        .topbar-actions .sign-out-button { padding: 8px 11px; border: 1px solid #dfe4ed; border-radius: 9px; background: #fff; color: #34415a; }
+        .topbar-actions .guide-toggle-button { padding: 8px 10px; border: 1px solid #dfe4ed; border-radius: 9px; background: #fff; color: #34415a; }
+        .topbar-actions .guide-toggle-button span { color: inherit; }
         .dashboard-menu-wrap { position: relative; flex: 0 0 auto; z-index: 90; }
         .desktop-main-nav { display: none !important; }
         @media (min-width: 821px) {
@@ -400,20 +406,20 @@ export default function Home() {
         .dashboard-menu-foot strong { color: #26344c; font-size: 12px; }
         .dashboard-menu-foot small { color: #78849a; font-size: 10px; line-height: 1.45; }
         @media (max-width: 820px) {
-          .topbar { height: auto; min-height: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "menu search" "actions actions"; align-items: center; gap: 12px; padding: 14px 18px; }
+          .topbar { height: auto; min-height: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "menu search" "actions actions"; align-items: center; gap: 11px 12px; padding: 14px 18px; }
           .dashboard-menu-wrap { grid-area: menu; }
-          .dashboard-search { grid-area: search; width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; height: auto; }
+          .dashboard-search { grid-area: search; width: 100%; min-width: 0; max-width: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; height: auto; }
           .dashboard-search > span:first-child { display: none; }
           .dashboard-search input { width: 100%; min-width: 0; height: 40px; font-size: 13px; }
-          .dashboard-date { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 7px 10px; font-size: 10px; }
-          .topbar-actions { grid-area: actions; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 8px; }
-          .header-icon-actions { grid-column: 1 / -1; justify-content: flex-end; }
-          .header-icon-button { width: 42px; height: 42px; }
+          .dashboard-date { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 6px 9px; font-size: 10px; }
+          .topbar-actions { grid-area: actions; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 8px; padding-top: 10px; border-top: 1px solid #edf0f5; }
+          .header-icon-actions { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; }
+          .header-icon-button { width: 40px; height: 40px; }
           .account-name-link { display: none !important; }
-          .topbar-actions > * { min-width: 0; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; text-align: center; white-space: normal; line-height: 1.3; border-radius: 8px; padding: 8px 9px; font-size: 11px; }
+          .topbar-actions > * { min-width: 0; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; text-align: center; white-space: nowrap; line-height: 1.2; border-radius: 9px; padding: 8px 10px; font-size: 11px; }
           .topbar-actions .sandbox-pill { justify-content: center; }
-          .topbar-actions .demo-payment-guide-link, .topbar-actions .sandbox-checkout-button { border: 1px solid #e7e8ef; background: #fff; color: #565d70; text-decoration: none; }
-          .topbar-actions .help-button { border: 1px solid #e7e8ef; background: #fff; }
+          .topbar-actions .demo-payment-guide-link, .topbar-actions .sandbox-checkout-button { border: 1px solid #dfe7f0; background: #fff; color: #34415a; text-decoration: none; }
+          .topbar-actions .sign-out-button, .topbar-actions .guide-toggle-button { min-height: 40px; border: 1px solid #dfe7f0; background: #fff; }
           .dashboard-menu-panel { position: fixed; top: 14px; left: 14px; width: min(320px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); z-index: 120; }
           .reference-overview-heading { align-items: flex-start; gap: 12px; margin: 2px 0 18px; }
           .reference-overview-heading > div { min-width: 0; }
@@ -459,7 +465,7 @@ export default function Home() {
             </div>}
           </div>
           <div className="dashboard-search"><span>⌕</span><input aria-label="Search workspace" placeholder="Search orders and payments" value={dashboardSearch} onChange={(event) => setDashboardSearch(event.target.value)} /><span className="dashboard-date">▦ &nbsp; Sandbox activity</span></div>
-          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link><div className="header-icon-actions"><Link className="header-icon-button notification-button" href="/exceptions" aria-label={`Notifications: ${orders.filter((order) => order.status !== "Paid").length} items needing attention`} title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{orders.filter((order) => order.status !== "Paid").length > 0 && <span className="notification-count">{orders.filter((order) => order.status !== "Paid").length > 9 ? "9+" : orders.filter((order) => order.status !== "Paid").length}</span>}</Link><Link className="header-icon-button profile-icon-button" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open profile" : "Sign in or create an account"} title={isSignedIn ? "Profile" : "Sign in or create an account"}><AccountAvatar name={authUserName} imageUrl={authUserAvatar} size={30} /></Link></div>{authUserName ? <button className="help-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button> : null}<button className="help-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
+          <div className="topbar-actions"><span className="sandbox-pill"><i /> Sandbox mode</span><Link className="demo-payment-guide-link" href="/demo-guide">Try demo payment guide <span>↗</span></Link><div className="header-icon-actions"><Link className="header-icon-button notification-button" href="/exceptions" aria-label={`Notifications: ${orders.filter((order) => order.status !== "Paid").length} items needing attention`} title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{orders.filter((order) => order.status !== "Paid").length > 0 && <span className="notification-count">{orders.filter((order) => order.status !== "Paid").length > 9 ? "9+" : orders.filter((order) => order.status !== "Paid").length}</span>}</Link><Link className="header-icon-button profile-icon-button" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open profile" : "Sign in or create an account"} title={isSignedIn ? "Profile" : "Sign in or create an account"}><AccountAvatar name={authUserName} imageUrl={authUserAvatar} size={30} /></Link></div>{authUserName ? <button className="help-button sign-out-button" onClick={async () => { const supabase = getSupabaseBrowserClient(); await supabase?.auth.signOut(); }}>Sign out</button> : null}<button className="help-button guide-toggle-button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide}>How it works <span>↗</span></button></div>
         </header>
 
         <div className="content" id="overview">
