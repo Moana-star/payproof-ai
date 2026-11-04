@@ -1,15 +1,11 @@
 import assert from "node:assert/strict";
+import { getTestAccessToken } from "./lib/test-auth.mjs";
 
 const baseUrl = (process.env.PAYPROOF_BASE_URL || "https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app").replace(/\/$/, "");
 const supabaseUrl = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
 const publicKey = process.env.SUPABASE_PUBLIC_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const tokenA = process.env.PAYPROOF_TEST_USER_A_TOKEN;
-const tokenB = process.env.PAYPROOF_TEST_USER_B_TOKEN;
 
-if (!supabaseUrl || !publicKey || !tokenA || !tokenB) {
-  console.error("Set SUPABASE_URL, SUPABASE_PUBLIC_KEY, PAYPROOF_TEST_USER_A_TOKEN and PAYPROOF_TEST_USER_B_TOKEN in your local shell. Never paste tokens into GitHub or chat.");
-  process.exit(2);
-}
+if (!supabaseUrl || !publicKey) throw new Error("Set SUPABASE_URL and SUPABASE_PUBLIC_KEY in your local shell.");
 
 async function jsonRequest(url, init = {}) {
   const response = await fetch(url, { cache: "no-store", ...init });
@@ -35,6 +31,8 @@ async function appRequest(path, token, body) {
   });
 }
 
+const tokenA = await getTestAccessToken("PAYPROOF_TEST_USER_A");
+const tokenB = await getTestAccessToken("PAYPROOF_TEST_USER_B");
 const userA = await getIdentity(tokenA);
 const userB = await getIdentity(tokenB);
 assert.notEqual(userA, userB, "Use two different Supabase accounts, not two sessions for the same user.");
