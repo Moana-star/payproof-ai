@@ -50,10 +50,14 @@ Expected: both identities are distinct; private order, statement, audit and ledg
 On 4 November 2026, the connected Supabase database was checked directly:
 - The authenticated owner saw 9 owned orders under RLS; a different simulated UUID saw 0.
 - Direct order writes by `anon` and `authenticated` were revoked. Authenticated SELECT remains owner-scoped. Server-side `service_role` retains write permissions.
-- A rollback-only posting test confirmed one ledger entry is created on the first post and a second post attempt is rejected; the transaction was rolled back, leaving no persistent test entry.
+- All 6 existing owner-scoped statement rows were confirmed as exact pending-review candidates against their linked paid, verified orders.
+- A duplicate import dry-run inserted 0 duplicates for an existing owner/transaction pair.
+- A rejection dry-run wrote the rejected state and audit event inside a transaction; rollback restored the original pending-review state and removed the test audit event.
+- An approval/post dry-run created exactly one ledger entry; a second post was rejected; rollback left no persistent test entry.
+- PayPal requests are hard-locked to the PayPal Sandbox endpoint; a non-Sandbox `PAYPAL_BASE_URL` override is rejected.
 - Direct authenticated Data API access is not granted for statement rows, payment events, ledger entries or reconciliation audit. The app's server routes apply explicit owner filters.
 
-These checks do not replace the two-real-account integration test. Run it after creating a second test account.
+The latest code commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33` passed GitHub Actions lint, build and public/security smoke checks and has a READY Vercel preview. These database dry-runs do not replace the two-real-account API integration test. Run it after creating a second test account.
 
 ## Core workflow
 
