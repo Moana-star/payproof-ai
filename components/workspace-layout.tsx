@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { AccountAvatar } from "@/components/account-avatar";
 import type { ReactNode } from "react";
 
 const navigation = [
@@ -38,6 +40,23 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
   children: ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  const [accountAvatar, setAccountAvatar] = useState("");
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data }) => {
+      const metadata = data.session?.user.user_metadata || {};
+      setAccountName(typeof metadata.display_name === "string" ? metadata.display_name : data.session?.user.email?.split("@")[0] || "");
+      setAccountAvatar(typeof metadata.avatar_url === "string" ? metadata.avatar_url : typeof metadata.picture === "string" ? metadata.picture : "");
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const metadata = session?.user.user_metadata || {};
+      setAccountName(typeof metadata.display_name === "string" ? metadata.display_name : session?.user.email?.split("@")[0] || "");
+      setAccountAvatar(typeof metadata.avatar_url === "string" ? metadata.avatar_url : typeof metadata.picture === "string" ? metadata.picture : "");
+    });
+    return () => subscription.unsubscribe();
+  }, []);
   return (
     <main className="ops-shell">
       <aside className="ops-sidebar ops-desktop-sidebar">
@@ -104,7 +123,7 @@ export function WorkspaceLayout({ title, eyebrow, description, children }: {
             </div>}
           </div>
           <div className="ops-breadcrumb"><Link href="/">Workspace</Link><span>/</span>{title}</div>
-          <div className="ops-top-actions"><span className="ops-sandbox-pill"><i /> Sandbox mode</span><Link className="ops-checkout-link" href="/">Test PayPal checkout <span>↗</span></Link><div className="ops-header-icons"><Link className="ops-header-icon" href="/exceptions" aria-label="Notifications and exceptions" title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg></Link><Link className="ops-header-icon" href="/profile" aria-label="Open profile" title="Profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></svg></Link></div></div>
+          <div className="ops-top-actions"><span className="ops-sandbox-pill"><i /> Sandbox mode</span><Link className="ops-checkout-link" href="/">Test PayPal checkout <span>↗</span></Link><div className="ops-header-icons"><Link className="ops-header-icon" href="/exceptions" aria-label="Notifications and exceptions" title="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg></Link><Link className="ops-header-icon" href="/profile" aria-label="Open profile" title={accountName || "Profile"}><AccountAvatar name={accountName} imageUrl={accountAvatar} size={30} /></Link></div></div>
         </header>
         <div className="ops-content">
           <div className="ops-page-heading">
