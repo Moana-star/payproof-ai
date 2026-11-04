@@ -1,43 +1,69 @@
-# Judge Readiness — Persistent Reconciliation Branch
+# Judge Readiness — Integrated PayProof AI Preview
 
-This file describes the current feature branch. For the full judge walkthrough and evaluation rubric, use the [Judge Guide on the default branch](https://github.com/Moana-star/payproof-ai/blob/main/JUDGE_GUIDE.md).
+This is the integrated feature branch containing authenticated reconciliation from PR #8 and the conversational assistant from PR #9.
 
-## Current branch
+## Evaluation links
 
-- Branch: `feat/persistent-user-scoped-reconciliation`
-- Pull request: [#8](https://github.com/Moana-star/payproof-ai/pull/8)
-- Preview: https://payproof-papycsaha-naom6083-2980.vercel.app/
-- Current branch head before this documentation update: `434be149c2a3f1bf9b0b994e0baee19cc18604c3`
+- **Stable application:** https://payproof-ai-beta.vercel.app/
+- **Latest integrated feature preview:** https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/
+- **Reconciliation implementation:** https://github.com/Moana-star/payproof-ai/pull/8
+- **Assistant implementation:** https://github.com/Moana-star/payproof-ai/pull/9
+- **Source repository:** https://github.com/Moana-star/payproof-ai
 
-## Feature scope
+The feature preview is not the stable production release. Confirm its latest Vercel deployment is READY and check the commit SHA before recording or sharing it with judges. Do not describe preview-only features as production features until their release gates are completed.
 
-- Supabase Auth bearer-session verification for private reconciliation routes.
-- Owner-scoped statement imports, PayPal evidence, ledger entries and audit events.
-- CSV validation and duplicate detection.
-- Exact reference, amount and currency matching against eligible server-verified PayPal Sandbox captures.
-- Human review is required; matching does not auto-approve or post.
-- Approved entries can be posted to the persistent internal application ledger.
-- Duplicate posting is guarded.
-- PayPal evidence export is account-scoped and is not represented as bank settlement proof.
+## Product story
 
-## Verification already recorded
+PayProof AI helps small online sellers connect chat-based order intake, PayPal checkout, payment verification and reconciliation. AI extracts and explains information; deterministic application logic validates catalogue details and calculates totals; server-side PayPal verification determines payment status; a human reviews reconciliation candidates before internal ledger posting.
 
-- The preview deployment for the branch head `434be14` reached READY.
-- A database verification query confirmed six PayProof-generated PayPal evidence rows matched their corresponding server-verified Sandbox captures on exact reference, amount and currency.
-- All six remained `matched_pending_review`; the ledger entry count was zero at the time of that check.
-- No reviewer approval or ledger posting was performed during that verification.
+## What the integrated preview contains
 
-This was a consistency check against PayProof's own saved provider records. It was not independent bank-statement reconciliation and does not establish that every workflow path has passed.
+- AI-assisted customer-message extraction into a reviewable order draft.
+- Server-priced PayPal Sandbox checkout.
+- Server-side verification of provider status and expected transaction details.
+- Payment evidence and exception review.
+- Conversational AI assistant with structured Markdown responses.
+- Session-scoped assistant conversation history (not saved to the PayProof account).
+- Signed-in, owner-scoped reconciliation statement import and exact reference/amount/currency matching.
+- Human approval before internal ledger posting, duplicate-post protection and audit events.
+- Clearly separated synthetic public demo data and private account records.
 
-## Required before merge or production claims
+## Infrastructure and security checks already inspected
 
-- [ ] Complete a fresh end-to-end Sandbox checkout on the exact latest preview.
-- [ ] Verify two separate test accounts cannot read or mutate one another's records.
-- [ ] Exercise mismatch, duplicate import, duplicate post, rejected review and provider-failure paths.
-- [ ] Confirm Supabase migrations and row-level security policies in the target project.
-- [ ] Confirm GitHub Actions and Vercel checks for the latest commit.
-- [ ] Keep Sandbox, synthetic data and internal-ledger limitations visible in the demo.
+- All six exposed application tables inspected in Supabase have row-level security enabled.
+- User-facing policies inspected for owner-scoped tables use the authenticated user's auth.uid() ownership predicate.
+- The ledger-posting database function is not SECURITY DEFINER; its transaction revalidates approval, exact reference, amount, currency and verified capture before posting.
+- The new-user profile trigger is SECURITY DEFINER with an empty search path and execution restricted to postgres and service_role.
+- GitHub Actions and Vercel passed for assistant commit 19fcc3a6ce7b50a15462dc80f2e0dd3223642de0. A subsequent assistant API authentication hardening change is awaiting its own CI and Vercel result.
 
-## Demo safety
+## Security item to resolve
 
-Never use real payment credentials or real customer/banking data. A PayPal capture is provider-side evidence, not bank settlement. The internal ledger is not a bank or external accounting ledger. AI remains advisory.
+Supabase's security advisor currently reports **Leaked Password Protection Disabled**. Enable the Auth password-security option before presenting the project as security-hardened. The advisor also reports four unindexed foreign keys and five unused indexes; these are performance observations, not evidence of an access-control failure.
+
+The assistant API now has a server-side Supabase bearer-session check in the feature branch, and the browser sends the current session token. Verify the unauthenticated request returns HTTP 401 on the latest READY preview. Do not claim this check passed until the deployment and smoke test confirm it.
+
+## Manual release gates — still required
+
+- [ ] Complete a fresh PayPal Sandbox checkout on the exact preview build used for judging.
+- [ ] Confirm automatic return verification without refreshing and confirm the saved order appears in the same signed-in workspace.
+- [ ] Test cancellation, pending/incomplete payment, provider failure and amount/currency/reference mismatch.
+- [ ] Verify two separate test accounts cannot read or mutate one another's orders, statement rows, ledger entries or audit events.
+- [ ] Test duplicate CSV import, rejected review, duplicate posting and audit-trail accuracy.
+- [ ] Test AI order extraction with clear, ambiguous and unsupported messages.
+- [ ] Test the AI assistant while signed in, then confirm unauthenticated API access is rejected.
+- [ ] Check the preview at desktop, tablet and mobile widths.
+- [ ] Re-run the full judge walkthrough and capture the actual results on the final commit.
+
+## Official video requirement
+
+The hackathon submission requires a **public YouTube demonstration video under three minutes** showing the application functioning. Add its URL to the Devpost submission and verify it opens while signed out. Cassie's separate 30–60 second PayPal-team introduction video is optional and does not replace the required submission video.
+
+Use the demo script to keep the recording within 2:45. Show only flows that have actually passed on the recorded build.
+
+## Evidence boundaries
+
+- PayPal Sandbox capture evidence is provider-side evidence, not proof of bank settlement.
+- PayProof-generated PayPal evidence matched against PayProof's own captures is a consistency check, not independent bank reconciliation.
+- The persistent ledger is an internal PayProof application record, not a bank ledger or external accounting integration.
+- AI is advisory and cannot verify payment, approve a match, post a ledger entry or execute financial actions.
+- Use synthetic data and Sandbox credentials only. Never publish secrets or real customer/banking data.
