@@ -381,6 +381,35 @@ export default function AssistantPage() {
         .pp-chat-error button{color:#FCA5A5!important}
         .pp-chat-tools select{background:#1F232B!important;border-color:#272A34!important}
 
+
+        /* Modern fintech assistant palette */
+        .pp-chat,.pp-chat-main{background:#F0F5FA!important;color:#172B4D!important}
+        .pp-chat-history,.pp-chat-head,.pp-composer-wrap{background:#FFFFFF!important;border-color:#DCE5EF!important}
+        .pp-chat-history{border-right:1px solid #DCE5EF!important}
+        .pp-chat-history button,.pp-chat-tools select,.pp-chat-brand,.pp-chat-head,.pp-chat-history h2{color:#172B4D!important}
+        .pp-chat-history button:hover,.pp-suggestions button,.pp-attach-menu,.pp-attach-menu button{background:#F0F5FA!important;border-color:#DCE5EF!important;color:#172B4D!important}
+        .pp-chat-history button.active,.pp-chat-history button[aria-current="page"]{background:#E5F5F6!important;color:#193A70!important}
+        .pp-chat-welcome h2,.pp-message-content>b,.pp-response-body h3,.pp-response-body h4,.pp-response-body h5,.pp-response-body strong{color:#172B4D!important}
+        .pp-chat-welcome>p,.pp-chat-welcome footer,.pp-message-content>div,.pp-chat-thinking,.pp-chat-disclaimer,.pp-composer-hint,.pp-chat-composer small,.pp-suggestions button small{color:#64748B!important}
+        .pp-message-avatar{background:#E9E8FA!important;color:#6658D3!important}
+        .pp-chat-message.user .pp-message-avatar{background:#DDEAF7!important;color:#193A70!important}
+        .pp-response-body code{background:#E9E8FA!important;color:#5748C4!important}
+        .pp-response-body pre{background:#193A70!important;border-color:#193A70!important;color:#FFFFFF!important}
+        .pp-response-body blockquote{background:#EAF3FA!important;border-left-color:#36BFC0!important;color:#315E70!important}
+        .pp-chat-composer{background:#FFFFFF!important;border-color:#CAD7E5!important;box-shadow:0 6px 22px rgba(25,58,112,.06)!important}
+        .pp-chat-composer:focus-within{border-color:#36BFC0!important;box-shadow:0 0 0 3px rgba(54,191,192,.16)!important}
+        .pp-chat-composer textarea{background:transparent!important;color:#172B4D!important}
+        .pp-chat-composer textarea::placeholder{color:#94A3B8!important}
+        .pp-composer-icon{color:#64748B!important}
+        .pp-composer-icon:hover{background:#EAF3FA!important;color:#193A70!important}
+        .pp-plus,.pp-attachment-chip,.pp-attach-menu button{background:#F0F5FA!important;border-color:#DCE5EF!important;color:#526985!important}
+        .pp-attach-menu button>span{color:#6658D3!important}
+        .pp-send-button{background:#193A70!important;color:#FFFFFF!important}
+        .pp-send-button:hover{background:#315EAD!important}
+        .pp-send-button:disabled{background:#DCE5EF!important;color:#94A3B8!important}
+        .pp-chat-error{background:#FDEBEC!important;border-color:#F4C7CB!important;color:#B83E49!important}
+        .pp-chat-error button{color:#B83E49!important}
+        .pp-chat-tools select{background:#FFFFFF!important;border-color:#DCE5EF!important}
             `}</style>
     </WorkspaceLayout>
   );
