@@ -1,25 +1,24 @@
 # PayProof AI — Judge Guide
 
-This guide is the recommended route for evaluating the project. It distinguishes the stable deployed application from work that is still in a pull request.
+This guide separates the stable production application from the integrated feature preview. The preview contains work from PR #8 and PR #9 and must not be mistaken for the production release.
 
 ## Start here
 
 | Resource | Link | What it represents |
 |---|---|---|
-| Stable application | https://payproof-ai-beta.vercel.app/ | Currently deployed core PayProof AI workflow |
-| Integrated feature preview | https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/ | Current preview branch with PR #8 reconciliation and PR #9 conversational assistant; not production |
-| Reconciliation PR | https://github.com/Moana-star/payproof-ai/pull/8 | Authenticated, persistent reconciliation implementation |
+| Stable application | https://payproof-ai-beta.vercel.app/ | Stable core PayProof AI workflow |
+| Integrated feature preview | https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/ | Preview with authenticated reconciliation and conversational assistant |
+| Source repository | https://github.com/Moana-star/payproof-ai | Public source, documentation, CI and history |
+| Reconciliation PR | https://github.com/Moana-star/payproof-ai/pull/8 | Persistent, owner-scoped reconciliation implementation |
 | Assistant PR | https://github.com/Moana-star/payproof-ai/pull/9 | Conversational AI assistant and structured responses |
-| Source repository | https://github.com/Moana-star/payproof-ai | Source, docs, CI and history |
-| Feature PR | https://github.com/Moana-star/payproof-ai/pull/8 | Reviewable implementation and change history |
 
-**Important:** The integrated feature preview is not the stable production deployment. It combines work from PR #8 and PR #9. Confirm the latest deployment is READY and inspect its commit before testing. Do not infer that preview-only features are already merged or released.
+**Important:** The integrated feature preview is not the stable production deployment. Confirm the latest Vercel deployment is READY and inspect its commit SHA before testing or recording. Preview-only features are not production features until released.
 
 ## What problem is being addressed?
 
-Small sellers may receive orders through chat but track payment status in a separate provider dashboard. This creates manual work and a risk of treating a customer's claim, a screenshot or a browser redirect as proof of payment.
+Small sellers may receive orders through chat but track payment status in a separate provider dashboard. They must re-enter product and quantity details, initiate checkout, verify payment and investigate mismatched records. A customer claim, screenshot or browser redirect can be mistaken for proof of payment.
 
-PayProof AI connects order intake, checkout, provider verification and evidence review around one trust boundary:
+PayProof AI connects these steps around one trust boundary:
 
 > AI may organise and explain information. Only deterministic server-side checks against the payment provider can establish the application's payment status.
 
@@ -27,45 +26,41 @@ PayProof AI connects order intake, checkout, provider verification and evidence 
 
 ### 1. Understand the dashboard
 
-Open the stable application and inspect the overview. Notice the distinction between sample records, pending items and verified payment evidence. Do not treat illustrative dashboard records as real customer transactions.
+Open the stable application and inspect the overview. Notice the distinction between sample records, pending items and verified payment evidence. Treat illustrative records as synthetic examples, not real customer transactions.
 
 ### 2. Try AI-assisted order intake
 
-- Open the order-intake workflow.
-- Paste a simple test message, for example: `Hi, I would like 2 Coffee gift sets, please.`
+- Open the order-intake workflow in the integrated feature preview.
+- Sign in with a test account.
+- Paste: `Hi, I would like 2 Coffee gift sets, please.`
 - Review the proposed product and quantity.
 - Confirm or correct the draft before checkout.
 
-Evaluate whether the application makes uncertainty visible. AI output should not set catalogue prices, calculate the trusted total or mark an order paid.
+AI proposes the draft. The seller reviews it. Application code validates catalogue items and calculates the trusted total; the model does not set prices, totals or payment status.
 
-### 3. Inspect checkout and verification
+### 3. Inspect PayPal checkout and verification
 
 - Use a dedicated PayPal Sandbox buyer account.
 - Complete a Sandbox checkout if credentials and test funds are available.
 - Inspect the server-reported result and saved order/payment evidence.
-- Distinguish provider verification from successful persistence: they are separate outcomes.
+- Distinguish provider verification from successful persistence; they are separate outcomes.
 
 A browser redirect, screenshot or customer message is not payment proof. Do not use personal PayPal accounts or real-money credentials.
 
 ### 4. Inspect the conversational AI assistant
 
-Open the integrated feature preview and sign in. Ask the assistant to explain a synthetic completed, mismatch or pending example. Inspect its structured response formatting. The assistant does not have live account-record access; its selected sample contexts are synthetic. Its API requires a signed-in Supabase session.
+- Open the integrated feature preview and sign in.
+- Ask the assistant to explain a synthetic completed, mismatch or pending example.
+- Inspect the structured response formatting.
 
-The assistant is advisory. It must not create a transaction identifier, override a failed verification, change a payment status or execute a financial action.
+The assistant does not have live account-record access. Its selectable sample contexts are synthetic. It is advisory and cannot create transaction identifiers, override failed verification, change payment status or execute financial actions. Both AI endpoints require a signed-in Supabase bearer session.
 
-### 5. Inspect persistent reconciliation (integrated feature preview)
+### 5. Inspect persistent reconciliation
 
-Ask the assistant to explain a known order or payment state. Compare the answer with the structured evidence shown in the application.
+This workflow is in the integrated feature preview and requires a signed-in account.
 
-The assistant is advisory. It must not create a transaction identifier, override a failed verification, change a payment status or execute a financial action.
-
-### 5. Inspect persistent reconciliation (PR #8 preview)
-
-This workflow is in the feature branch and requires a signed-in account.
-
-- Sign in to the PR preview.
 - Open Reconciliation and load the private workspace.
-- Import an original statement CSV when available, or use the clearly labelled sample only to understand the interface.
+- Import an original statement CSV when available, or use clearly labelled synthetic data only to understand the interface.
 - Run matching. A candidate requires exact reference, amount and currency alignment with an eligible server-verified PayPal capture.
 - Inspect the match reason and evidence.
 - Approve or reject as a human reviewer.
@@ -74,24 +69,25 @@ This workflow is in the feature branch and requires a signed-in account.
 
 Matching must not auto-approve or post. Duplicate posting is guarded. The internal ledger is an application record, not a bank ledger.
 
-**Evidence boundary:** Importing PayProof's own PayPal evidence CSV and matching it against PayProof's saved captures demonstrates consistency between provider evidence and the application's records. It is not independent proof of bank settlement. A real bank export is needed to demonstrate matching against a bank statement.
+**Evidence boundary:** Importing PayProof's own PayPal evidence CSV and matching it against PayProof's saved captures demonstrates consistency between provider evidence and application records. It is not independent proof of bank settlement. A genuine bank export is needed to demonstrate matching against an independent bank statement.
 
 ## What to evaluate
 
-| Evaluation area | What to inspect | Strong evidence |
+| Criterion | What to inspect | Strong evidence |
 |---|---|---|
-| Technical implementation | Order extraction, catalogue validation, PayPal API flow, server verification, persistence | Reproducible successful and failed/pending paths |
-| Design and usability | Order review, payment states, evidence visibility, exceptions | A reviewer can understand what happened and what action is safe |
+| Technological implementation | Order extraction, catalogue validation, PayPal API flow, server verification, persistence and AI use | Reproducible successful and failed/pending paths |
+| Design | Order review, payment states, evidence visibility, exceptions and navigation | A reviewer can understand what happened and what action is safe |
 | Potential impact | Manual handoffs and unverified payment claims | A concrete seller workflow, not unsupported savings claims |
 | Innovation | Bounded AI + deterministic verification + human review | AI is useful without being granted payment authority |
-| Presentation | Demo sequence and limitations | Clear narration, working links and accurate Sandbox labels |
+| Presentation | Working end-to-end demo, pitch and limitations | Clear narration, accurate Sandbox labels and easy-to-follow flow |
 
 ## What is implemented versus what still needs proof
 
-- The deployed core application demonstrates the order-intake and PayPal Sandbox workflow.
-- PR #8 contains the newer authenticated, user-scoped reconciliation and persistent internal ledger work.
-- A successful build or a visible UI is not, by itself, proof that every integration path has passed end-to-end testing.
-- Before treating any scenario as passed, verify it on the exact deployed commit and record the result.
+- The stable application demonstrates the core order-to-PayPal-Sandbox workflow.
+- PR #8 contains authenticated, owner-scoped reconciliation and persistent internal ledger work.
+- PR #9 contains the conversational assistant and authentication checks for the AI endpoints.
+- A successful build or visible UI does not prove that every integration path has passed end-to-end testing.
+- Before treating a scenario as passed, verify it on the exact deployed commit and record the result.
 
 ## Safety and privacy
 
@@ -103,20 +99,21 @@ Matching must not auto-approve or post. Duplicate posting is guarded. The intern
 
 ## Required submission video
 
-The official rules require a public YouTube demonstration video under three minutes showing the project working. Include its URL in the Devpost submission and verify it opens while signed out. The separate 30–60 second introduction video mentioned in the Devpost email is optional. Use [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the timed walkthrough.
+The official rules require a **public YouTube demonstration video under three minutes** showing the project working. Add its URL to the Devpost submission and verify it opens while signed out. The separate 30–60 second introduction video mentioned in Cassie's email is optional and does not replace the required submission video. Use [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the timed walkthrough.
 
 ## Reproducibility checklist
 
-- [ ] Confirm the deployment URL and commit/preview being evaluated.
-- [ ] Check the sign-in flow before testing private features.
+- [ ] Confirm the deployment URL and commit SHA.
+- [ ] Check sign-in before testing private features.
 - [ ] Complete a new Sandbox order, if Sandbox buyer access is available.
-- [ ] Verify the provider result and the saved record independently.
+- [ ] Verify the provider result and saved record independently.
 - [ ] Try a pending, failed or mismatched scenario where available.
 - [ ] Confirm AI explanations do not change authoritative state.
-- [ ] For PR #8, confirm a match stays pending until human approval.
+- [ ] Confirm unauthenticated requests to both AI endpoints return HTTP 401 on the latest preview.
+- [ ] Confirm a reconciliation match stays pending until human approval.
 - [ ] Confirm ledger posting is explicit and appears in the audit trail.
 - [ ] Keep synthetic samples clearly labelled.
-- [ ] Record any unavailable integration as not tested rather than passed.
+- [ ] Record unavailable integration paths as not tested, not passed.
 
 ## Maintainer note
 
