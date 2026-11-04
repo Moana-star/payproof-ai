@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/auth-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +13,9 @@ const CASES: Record<string, { label: string; evidence: string }> = {
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 export async function POST(request: NextRequest) {
+  const user = await getAuthenticatedUser(request);
+  if (!user) return NextResponse.json({ error: "Sign in to use the PayProof AI assistant." }, { status: 401 });
+
   let body: { messages?: unknown; caseId?: unknown; images?: unknown };
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: "Send a valid chat request." }, { status: 400 });
