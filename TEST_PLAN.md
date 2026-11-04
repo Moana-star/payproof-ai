@@ -31,6 +31,18 @@ npm run test:paypal-sandbox -- verify "<PAYPAL_ORDER_ID>"
 
 Expected: PayPal reports a completed capture; expected and captured amount/currency match; the order is saved and visible as paid in the same signed-in workspace. Also test buyer cancellation and confirm the order remains unpaid. Do not use a real PayPal account or real-money credentials.
 
+## End-to-end reconciliation workflow test
+
+Use a dedicated signed-in QA account that has at least one completed, persisted PayPal Sandbox capture. This test imports two clearly marked QA rows referencing that capture, then exercises duplicate import, matching, rejection, approval, ledger posting, idempotent reposting and audit verification.
+
+```bash
+export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
+export PAYPROOF_TEST_USER_TOKEN="<short-lived access token for the dedicated QA account>"
+npm run test:reconciliation
+```
+
+The test intentionally leaves two `PPQA-` statement rows (one rejected, one posted) and one internal ledger entry in that dedicated QA account so the reviewer can inspect the persistent audit trail. Do not run it in an account containing real operational records.
+
 ## Two-account isolation test
 
 Create or use two different Supabase test accounts. Sign into each account separately and copy each short-lived access token locally; do not send either token to anyone. The first account must have at least one saved order and one statement row. The second account can be empty.
@@ -57,7 +69,7 @@ On 4 November 2026, the connected Supabase database was checked directly:
 - PayPal requests are hard-locked to the PayPal Sandbox endpoint; a non-Sandbox `PAYPAL_BASE_URL` override is rejected.
 - Direct authenticated Data API access is not granted for statement rows, payment events, ledger entries or reconciliation audit. The app's server routes apply explicit owner filters.
 
-The latest code commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33` passed GitHub Actions lint, build and public/security smoke checks and has a READY Vercel preview. These database dry-runs do not replace the two-real-account API integration test. Run it after creating a second test account.
+The application commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33` has a READY Vercel preview. The latest repository commit `75a340700e4e1ff605c4e3808064ec670282248c` passed GitHub Actions lint, build and public/security smoke checks. The reconciliation workflow helper was added after that CI run and requires a fresh CI result before it is considered validated. These database dry-runs do not replace the two-real-account API integration test. Run it after creating a second test account.
 
 ## Core workflow
 
@@ -78,9 +90,8 @@ The latest code commit `2ad41db48d60c1afa5470d9825d9df1d892ecf33` passed GitHub 
 ## Authenticated reconciliation
 
 - [ ] Sign in with a test account and load its private workspace.
-- [ ] Import a valid statement CSV.
-- [ ] Re-import the same file and verify duplicate rows are not duplicated.
-- [ ] Run matching against the same owner's eligible verified PayPal captures.
+- [ ] Run `npm run test:reconciliation` in a dedicated QA account after a verified Sandbox checkout; retain redacted output and inspect the resulting `PPQA-` rows and audit events.
+- [ ] Confirm exact reference + amount + currency matches remain pending until human approval.
 - [ ] Exact reference + amount + currency yields pending human review, not approval.
 - [ ] Mismatches remain exceptions/unmatched.
 - [ ] Run `npm run test:security` with two different account tokens; retain redacted output as evidence.
