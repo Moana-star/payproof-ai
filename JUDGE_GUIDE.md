@@ -1,21 +1,18 @@
 # PayProof AI — Judge Guide
 
-> **LATEST integrated feature preview:** [Open PayProof AI](https://payproofai.vercel.app/)  
-> This is the READY feature preview for the conversational assistant and authenticated reconciliation (commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). The latest integrated preview is a separate, older release: https://payproofai.vercel.app/
-
-This guide separates the latest integrated previewlication from the integrated feature preview. The preview contains work from PR #8 and PR #9 and must not be mistaken for the production release.
+> **LATEST READY integrated deployment:** [Open PayProof AI](https://payproof-gnwfragpl-naom6083-2980.vercel.app/)  
+> Deployment commit: `4db20db9c2d4d5bca94c12ae278395a385b9bd91`. This preview contains the integrated conversational assistant and authenticated reconciliation work. PRs #8 and #9 remain open; this preview is not the same as a merged production release.
 
 ## Start here
 
 | Resource | Link | What it represents |
 |---|---|---|
-| Latest integrated application preview | https://payproofai.vercel.app/ | Stable core PayProof AI workflow |
-| Integrated feature preview | https://payproofai.vercel.app/ | Preview with authenticated reconciliation and conversational assistant |
+| Latest READY integrated deployment | [Open application](https://payproof-gnwfragpl-naom6083-2980.vercel.app/) | Current preview for the assistant and reconciliation feature work |
 | Source repository | https://github.com/Moana-star/payproof-ai | Public source, documentation, CI and history |
 | Reconciliation PR | https://github.com/Moana-star/payproof-ai/pull/8 | Persistent, owner-scoped reconciliation implementation |
 | Assistant PR | https://github.com/Moana-star/payproof-ai/pull/9 | Conversational AI assistant and structured responses |
 
-**Important:** The integrated feature preview is not the latest integrated preview. Confirm the latest Vercel deployment is READY and inspect its commit SHA before testing or recording. Preview-only features are not production features until released.
+**Important:** Preview-only features are not production features until released. Confirm the deployment is READY and inspect its commit SHA before testing or recording.
 
 ## What problem is being addressed?
 
