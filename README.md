@@ -5,14 +5,14 @@
 PayProof AI is an evidence-led payment operations prototype for small online sellers. It connects customer order intake, PayPal Sandbox checkout, server-side payment verification and reviewable payment evidence. Its guiding rule is simple: **AI can organise and explain information, but it cannot declare that money was received.**
 
 <p align="center">
-  <a href="https://payproofai.vercel.app/"><strong>Open the latest PayProof AI website</strong></a>
+  <a href="https://payproof-gnwfragpl-naom6083-2980.vercel.app/"><strong>Open the latest PayProof AI website</strong></a>
   ·
   <a href="https://github.com/Moana-star/payproof-ai/blob/main/JUDGE_GUIDE.md">Judge guide</a>
   ·
   <a href="https://github.com/Moana-star/payproof-ai/blob/main/DEMO_SCRIPT.md">Demo script</a>
 </p>
 
-> **LATEST WEBSITE:** [https://payproofai.vercel.app/](https://payproofai.vercel.app/) — use this link for the current PayProof AI website.
+> **LATEST WEBSITE:** [https://payproof-gnwfragpl-naom6083-2980.vercel.app/](https://payproof-gnwfragpl-naom6083-2980.vercel.app/) — this is the latest READY integrated feature deployment.
 
 > **Hackathon environment:** The deployed application uses PayPal Sandbox. It is a prototype, not a live-money payment processor, bank integration, fraud-detection service or production accounting system. Use test accounts and synthetic data only.
 
@@ -35,19 +35,19 @@ PayProof AI brings the workflow into one reviewable place and makes the source o
 
 ### Current release and active work
 
-- **Current PayProof AI website:** [https://payproofai.vercel.app/](https://payproofai.vercel.app/).
+- **Latest integrated feature deployment:** [https://payproof-gnwfragpl-naom6083-2980.vercel.app/](https://payproof-gnwfragpl-naom6083-2980.vercel.app/).
 - **Reconciliation PR:** [#8 — Build persistent authenticated reconciliation and ledger posting](https://github.com/Moana-star/payproof-ai/pull/8).
-- **Assistant PR:** [#9 — Upgrade PayProof AI assistant to conversational chat](https://github.com/Moana-star/payproof-ai/pull/9). These pull requests remain preview work until merged and released; do not assume every feature is in the production deployment.
+- **Assistant PR:** [#9 — Upgrade PayProof AI assistant to conversational chat](https://github.com/Moana-star/payproof-ai/pull/9). These pull requests remain open; do not assume they have been merged into the default branch.
 
 ## Judge quick start
 
-1. Open the [PayProof AI website](https://payproofai.vercel.app/).
+1. Open the [latest PayProof AI deployment](https://payproof-gnwfragpl-naom6083-2980.vercel.app/).
 2. Start with the overview and follow the order-intake workflow.
 3. Paste a short sample order message, review the proposed product and quantity, and confirm the order details.
 4. Continue to PayPal Sandbox checkout using a dedicated Sandbox buyer account.
 5. Inspect the server-reported verification result and the saved payment evidence. Do not treat the browser return URL as proof.
 6. Open the AI assistant and ask it to explain a recorded payment state or exception. Check that its answer remains advisory.
-7. For the integrated assistant and persistent reconciliation workflow, use the [PayProof AI website](https://payproofai.vercel.app/) and follow the [judge guide](JUDGE_GUIDE.md). It requires a signed-in account for private features.
+7. For private features, sign in with a test account.
 
 **Do not enter real customer information or real payment credentials.** Never ask the project maintainer to share private credentials in a public issue or repository.
 
@@ -65,7 +65,7 @@ PayProof AI brings the workflow into one reviewable place and makes the source o
 |---|---|---|
 | Web application | Next.js 15, React 19, TypeScript | Dashboard, order workflow and API routes |
 | Payment provider | PayPal Orders API — Sandbox | Test checkout and provider transaction lifecycle |
-| Persistence and identity | Supabase | Database-backed records and authenticated workspace features in the reconciliation branch |
+| Persistence and identity | Supabase | Database-backed records and authenticated workspace features |
 | AI | Groq API / configured language model | Structured order extraction and evidence explanations |
 | Hosting | Vercel | Preview and application deployment |
 
@@ -97,7 +97,6 @@ AI explains recorded facts (advisory only)
 
 Statement CSV -> exact reference/amount/currency matching
               -> human review -> internal ledger + audit trail
-                 (persistent workflow in PR #8 preview)
 ```
 
 ## Run locally
@@ -186,7 +185,7 @@ No score, prize placement or outcome is guaranteed. The strongest submission is 
 
 ## Project links
 
-- [PayProof AI website](https://payproofai.vercel.app/)
+- [Latest PayProof AI website](https://payproof-gnwfragpl-naom6083-2980.vercel.app/)
 - [Source code](https://github.com/Moana-star/payproof-ai)
 - [Open reconciliation implementation PR](https://github.com/Moana-star/payproof-ai/pull/8)
 
