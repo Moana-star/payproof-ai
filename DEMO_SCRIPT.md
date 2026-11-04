@@ -2,7 +2,7 @@
 
 **Required submission video:** Publish a public YouTube video under 3 minutes and add its URL to Devpost. The 30–60 second PayPal-team intro mentioned in Cassie's email is optional and separate.
 
-**Latest READY PayProof AI website:** https://payproof-gnwfragpl-naom6083-2980.vercel.app/
+**Latest READY PayProof AI website:** https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com
 
 **Source:** https://github.com/Moana-star/payproof-ai
 
