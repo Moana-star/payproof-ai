@@ -5,16 +5,16 @@
 PayProof AI is an evidence-led payment operations prototype for small online sellers. It connects customer order intake, PayPal Sandbox checkout, server-side payment verification and reviewable payment evidence. Its guiding rule is simple: **AI can organise and explain information, but it cannot declare that money was received.**
 
 <p align="center">
-  <a href="https://payproof-ai-beta.vercel.app/"><strong>Open the LATEST integrated PayProof AI preview</strong></a>
+  <a href="https://payproofai.vercel.app/"><strong>Open the LATEST integrated PayProof AI preview</strong></a>
   ·
-  <a href="https://payproof-ai-beta.vercel.app/">Stable production app</a>
+  <a href="https://payproofai.vercel.app/">Stable production app</a>
   ·
   <a href="https://github.com/Moana-star/payproof-ai/blob/main/JUDGE_GUIDE.md">Judge guide</a>
   ·
   <a href="https://github.com/Moana-star/payproof-ai/blob/main/DEMO_SCRIPT.md">Demo script</a>
 </p>
 
-> **LATEST WEBSITE — integrated feature preview:** [https://payproof-ai-beta.vercel.app/](https://payproof-ai-beta.vercel.app/) — this is the current READY preview containing the conversational assistant and authenticated reconciliation work (deployment commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). Use this link to inspect the latest feature updates. The older latest integrated preview is listed separately below.
+> **LATEST WEBSITE — integrated feature preview:** [https://payproofai.vercel.app/](https://payproofai.vercel.app/) — this is the current READY preview containing the conversational assistant and authenticated reconciliation work (deployment commit `4db20db9c2d4d5bca94c12ae278395a385b9bd91`). Use this link to inspect the latest feature updates. The older latest integrated preview is listed separately below.
 
 > **Hackathon environment:** The deployed application uses PayPal Sandbox. It is a prototype, not a live-money payment processor, bank integration, fraud-detection service or production accounting system. Use test accounts and synthetic data only.
 
@@ -37,8 +37,8 @@ PayProof AI brings the workflow into one reviewable place and makes the source o
 
 ### Current release and active work
 
-- **Latest integrated application preview:** [payproof-ai-beta.vercel.app](https://payproof-ai-beta.vercel.app/) — this is the latest integrated assistant and reconciliation workflow, not the latest feature preview.
-- **LATEST integrated feature preview:** [open the latest assistant + reconciliation preview](https://payproof-ai-beta.vercel.app/) — this preview contains the in-progress authenticated, user-scoped statement import, exact matching, human review, internal ledger and audit workflow.
+- **Latest integrated application preview:** [payproofai.vercel.app](https://payproofai.vercel.app/) — this is the latest integrated assistant and reconciliation workflow, not the latest feature preview.
+- **LATEST integrated feature preview:** [open the latest assistant + reconciliation preview](https://payproofai.vercel.app/) — this preview contains the in-progress authenticated, user-scoped statement import, exact matching, human review, internal ledger and audit workflow.
 - **Reconciliation PR:** [#8 — Build persistent authenticated reconciliation and ledger posting](https://github.com/Moana-star/payproof-ai/pull/8).
 - **Assistant PR:** [#9 — Upgrade PayProof AI assistant to conversational chat](https://github.com/Moana-star/payproof-ai/pull/9). The integrated feature preview includes the conversational assistant and the authenticated reconciliation work; both remain preview-only until manual release checks pass.
 
@@ -46,13 +46,13 @@ Do not assume a feature shown only in the PR preview is already part of the stab
 
 ## Judge quick start
 
-1. Open the [LATEST PayProof AI website](https://payproof-ai-beta.vercel.app/).
+1. Open the [LATEST PayProof AI website](https://payproofai.vercel.app/).
 2. Start with the overview and follow the order-intake workflow.
 3. Paste a short sample order message, review the proposed product and quantity, and confirm the order details.
 4. Continue to PayPal Sandbox checkout using a dedicated Sandbox buyer account.
 5. Inspect the server-reported verification result and the saved payment evidence. Do not treat the browser return URL as proof.
 6. Open the AI assistant and ask it to explain a recorded payment state or exception. Check that its answer remains advisory.
-7. For the integrated assistant and persistent reconciliation workflow, use the [latest feature preview](https://payproof-ai-beta.vercel.app/) and follow the [judge guide](JUDGE_GUIDE.md). It requires a signed-in account for private features.
+7. For the integrated assistant and persistent reconciliation workflow, use the [latest feature preview](https://payproofai.vercel.app/) and follow the [judge guide](JUDGE_GUIDE.md). It requires a signed-in account for private features.
 
 **Do not enter real customer information or real payment credentials.** Never ask the project maintainer to share private credentials in a public issue or repository.
 
@@ -191,11 +191,11 @@ No score, prize placement or outcome is guaranteed. The strongest submission is 
 
 ## Project links
 
-- [LATEST integrated website](https://payproof-ai-beta.vercel.app/)
-- [Latest integrated application preview (latest integrated release preview)](https://payproof-ai-beta.vercel.app/)
+- [LATEST integrated website](https://payproofai.vercel.app/)
+- [Latest integrated application preview (latest integrated release preview)](https://payproofai.vercel.app/)
 - [Source code](https://github.com/Moana-star/payproof-ai)
 - [Open reconciliation implementation PR](https://github.com/Moana-star/payproof-ai/pull/8)
-- [Latest integrated assistant + reconciliation preview](https://payproof-ai-beta.vercel.app/)
+- [Latest integrated assistant + reconciliation preview](https://payproofai.vercel.app/)
 
 ## License
 
