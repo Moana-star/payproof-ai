@@ -43,7 +43,7 @@ Review the proposed product and quantity. Confirm the draft.
 
 **Show:** Provider status, transaction/capture reference and verification timestamp where available. Explicitly label the transaction as Sandbox.
 
-### 1:35–2:15 — Reconciliation with human control (PR #8 preview)
+### 1:35–2:15 — Reconciliation with human control (integrated feature preview)
 
 **Action:** Open the PR #8 preview, sign in, load the private workspace and show a previously imported statement row with its match reason. Do not create a duplicate test row for an already-used capture.
 
@@ -65,7 +65,7 @@ Review the proposed product and quantity. Confirm the draft.
 - [ ] Test AI intake before recording; if the model is unavailable, state that and show the safe fallback.
 - [ ] Have a completed Sandbox verification ready.
 - [ ] Use only synthetic examples and test accounts.
-- [ ] Show the actual reconciliation preview, not a mockup, when discussing PR #8.
+- [ ] Show the actual reconciliation preview, not a mockup, when discussing the integrated feature preview.
 - [ ] Do not describe PayPal capture as bank settlement.
 - [ ] Do not claim time savings, fraud reduction or customer outcomes without measured evidence.
 - [ ] Keep the final video within the requested hackathon duration and upload it to YouTube as Public, add the URL to Devpost and verify it opens while signed out.
