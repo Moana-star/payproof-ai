@@ -361,7 +361,7 @@ export default function Home() {
           <Link className="nav-item" href="/demo-guide"><span className="nav-icon">?</span>Help &amp; support</Link>
           <Link className="nav-item" href="/profile"><span className="nav-icon">⚙</span>Settings</Link>
         </nav>
-        <div className="sidebar-bottom"><div className="trust-card"><span className="trust-icon">✓</span><strong>Evidence first</strong><p>AI explains the record. Verified payment data decides.</p></div><Link className="profile-row" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open your profile" : "Sign in or create an account"}><AccountAvatar name={authUserName} imageUrl={authUserAvatar} size={34} /><div><strong>{isSignedIn ? (authUserName.trim().split(/\\s+/)[0] || "My account") : "Sign in"}</strong><span>{isSignedIn ? authWorkspaceName : "Your account"}</span></div></Link></div>
+        <div className="sidebar-bottom"><div className="trust-card"><span className="trust-icon">✓</span><strong>Evidence first</strong><p>AI explains the record. Verified payment data decides.</p></div><Link className="profile-row" href={isSignedIn ? "/profile" : "/auth"} aria-label={isSignedIn ? "Open your profile" : "Sign in or create an account"}><AccountAvatar name={authUserName} imageUrl={authUserAvatar} size={34} /><div><strong>{isSignedIn ? (authUserName.trim().split(/\s+/)[0] || "My account") : "Sign in"}</strong><span>{isSignedIn ? authWorkspaceName : "Your account"}</span></div></Link></div>
       </aside>
       <style jsx global>{`
         .topbar { position: relative; display: flex; align-items: center; gap: 14px; }
