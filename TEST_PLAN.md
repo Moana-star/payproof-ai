@@ -43,6 +43,18 @@ npm run test:reconciliation
 
 The test intentionally leaves two `PPQA-` statement rows (one rejected, one posted) and one internal ledger entry in that dedicated QA account so the reviewer can inspect the persistent audit trail. Do not run it in an account containing real operational records.
 
+## End-to-end reconciliation workflow test
+
+Use a dedicated signed-in QA account that has at least one completed, persisted PayPal Sandbox capture. This test imports two clearly marked QA rows referencing that capture, then exercises duplicate import, matching, rejection, approval, ledger posting, idempotent reposting and audit verification.
+
+```bash
+export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
+export PAYPROOF_TEST_USER_TOKEN="<short-lived access token for the dedicated QA account>"
+npm run test:reconciliation
+```
+
+The test intentionally leaves two `PPQA-` statement rows (one rejected, one posted) and one internal ledger entry in that dedicated QA account so the reviewer can inspect the persistent audit trail. Do not run it in an account containing real operational records.
+
 ## Two-account isolation test
 
 Create or use two different Supabase test accounts. Sign into each account separately and copy each short-lived access token locally; do not send either token to anyone. The first account must have at least one saved order and one statement row. The second account can be empty.
