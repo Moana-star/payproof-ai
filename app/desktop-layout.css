@@ -1,0 +1,194 @@
+/* Desktop-only workspace polish.
+   Kept behind a min-width guard so the existing mobile layout remains unchanged. */
+@media (min-width: 821px) {
+  .app-shell {
+    min-height: 100vh;
+    align-items: stretch;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    width: 252px;
+    height: 100vh;
+    min-height: 680px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 28px 18px 20px;
+  }
+
+  .brand {
+    padding-bottom: 38px;
+  }
+
+  .side-nav {
+    gap: 6px;
+  }
+
+  .nav-item {
+    min-height: 44px;
+    transition: background .16s ease, color .16s ease;
+  }
+
+  .nav-item:not(.active):hover {
+    background: #f8f7fc;
+    color: #5544cb;
+  }
+
+  .main-area {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    min-height: 74px;
+    height: auto;
+    padding: 14px clamp(26px, 3vw, 48px);
+    gap: 24px;
+  }
+
+  .topbar-actions {
+    gap: clamp(12px, 1.5vw, 22px);
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .topbar-actions > * {
+    flex-shrink: 0;
+  }
+
+  .content {
+    width: 100%;
+    max-width: 1560px;
+    padding: clamp(30px, 2.8vw, 44px) clamp(28px, 3vw, 52px) 30px;
+  }
+
+  .welcome-row {
+    align-items: center;
+    margin-bottom: 26px;
+  }
+
+  .welcome-row > div {
+    min-width: 0;
+  }
+
+  .welcome-row h1 {
+    font-size: clamp(27px, 2vw, 32px);
+    line-height: 1.18;
+  }
+
+  .subheading {
+    max-width: 68ch;
+    line-height: 1.65;
+  }
+
+  .welcome-row > .primary-button {
+    flex: 0 0 auto;
+    min-width: 132px;
+    min-height: 44px;
+  }
+
+  .notice {
+    min-height: 44px;
+    padding: 11px 14px;
+    line-height: 1.5;
+  }
+
+  .value-strip,
+  .workflow-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .value-card {
+    min-height: 154px;
+    padding: 21px 22px;
+  }
+
+  .value-card p {
+    max-width: 42ch;
+  }
+
+  .workflow-step {
+    min-height: 108px;
+    padding: 19px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .metric-card {
+    min-height: 142px;
+    padding: 19px 20px 16px;
+  }
+
+  .reconciliation-panel {
+    margin-bottom: 36px;
+  }
+
+  .reconciliation-header {
+    padding: 25px 27px 21px;
+  }
+
+  .reconciliation-flow {
+    padding: 20px 27px;
+    gap: 14px;
+  }
+
+  .reconciliation-flow-step strong {
+    font-size: 10px;
+  }
+
+  .reconciliation-flow-step small {
+    font-size: 9px;
+  }
+
+  .reconciliation-stats {
+    padding: 19px 27px;
+  }
+
+  .reconciliation-table-heading {
+    padding: 22px 27px 15px;
+  }
+
+  .reconciliation-table th {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .reconciliation-table td {
+    padding: 15px 18px;
+  }
+
+  .section-heading {
+    margin-top: 4px;
+  }
+
+  .orders-card {
+    box-shadow: 0 5px 22px #20233606;
+  }
+
+  .lower-grid {
+    gap: 20px;
+    margin-top: 24px;
+  }
+}
+
+/* Wider monitors: give the workspace room without stretching text excessively. */
+@media (min-width: 1440px) {
+  .sidebar {
+    width: 264px;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .content {
+    max-width: 1640px;
+  }
+}
