@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./workspace-pages.css";
+import "./desktop-overrides.css";
 
 export const metadata: Metadata = {
   title: "PayProof AI — Payment operations, with proof",
