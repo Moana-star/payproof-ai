@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
-import { getOwnedOrderByPayPalId, isOrderStoreConfigured, saveVerifiedOrder } from "@/lib/order-store";
+import { getOwnedOrderByPayPalId, isOrderStoreConfigured, recordPaymentEvent, saveVerifiedOrder } from "@/lib/order-store";
 import { getAuthenticatedUser } from "@/lib/auth-server";
 import { getPayPalAccessToken, paypalRequest } from "@/lib/paypal";
 
@@ -195,6 +195,21 @@ export async function POST(request: NextRequest) {
         message: "The PayPal order is not approved for capture. No capture was attempted."
       }, { status: 409 });
     }
+
+    // Record the capture attempt before calling PayPal. If the audit write fails,
+    // fail closed rather than performing an untraceable capture attempt.
+    await recordPaymentEvent({
+      orderId: ownedOrder.id,
+      eventType: "sandbox.capture.attempted",
+      providerEventId: `payproof:${orderId}:capture-attempted`,
+      details: {
+        order_number: ownedOrder.order_number,
+        paypal_order_id: orderId,
+        environment: "sandbox",
+        actor: "PayProof AI server",
+        outcome: "Capture request initiated after confirming the order belongs to this signed-in account and matches the supported catalogue."
+      }
+    });
 
     // Stable request ID makes retries for this PayPal order idempotent.
     const requestId = createHash("sha256").update(`payproof-capture:${orderId}`).digest("hex").slice(0, 32);
