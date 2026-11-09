@@ -54,9 +54,9 @@ async function supabaseRequest<T>(path: string, init: RequestInit = {}): Promise
 export async function createPendingOrder(order: StoredOrder, ownerId: string) {
   if (!isOrderStoreConfigured()) return { persisted: false as const };
 
-  await supabaseRequest<unknown[]>("orders", {
+  const inserted = await supabaseRequest<Array<{ id: string }>>("orders", {
     method: "POST",
-    headers: { Prefer: "return=minimal" },
+    headers: { Prefer: "return=representation" },
     body: JSON.stringify({
       ...order,
       owner_id: ownerId,
@@ -65,7 +65,29 @@ export async function createPendingOrder(order: StoredOrder, ownerId: string) {
     })
   });
 
-  return { persisted: true as const };
+  const orderId = inserted[0]?.id;
+  if (!orderId) throw new Error("The new order record could not be confirmed.");
+  return { persisted: true as const, orderId };
+}
+
+export async function recordPaymentEvent(input: {
+  orderId: string;
+  eventType: string;
+  providerEventId: string;
+  details?: Record<string, unknown>;
+}) {
+  if (!isOrderStoreConfigured()) return;
+  await supabaseRequest<unknown[]>("payment_events?on_conflict=provider_event_id", {
+    method: "POST",
+    headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
+    body: JSON.stringify({
+      order_id: input.orderId,
+      provider: "paypal",
+      event_type: input.eventType,
+      provider_event_id: input.providerEventId,
+      details: input.details || {}
+    })
+  });
 }
 
 export async function updateOrderByNumber(orderNumber: string, patch: Partial<StoredOrder>, ownerId: string) {
@@ -140,9 +162,24 @@ export async function saveVerifiedOrder(order: StoredOrder, captureId: string, o
         paypal_order_id: order.paypal_order_id,
         capture_id: captureId,
         amount: order.total_amount,
-        currency: order.currency
+        currency: order.currency,
+        actor: "PayPal Sandbox",
+        outcome: "Completed capture persisted after server-side amount, currency and reference checks."
       }
     })
+  });
+
+  await recordPaymentEvent({
+    orderId: savedOrderId,
+    eventType: "sandbox.capture.verified",
+    providerEventId: `${captureId}:verified`,
+    details: { order_number: order.order_number, paypal_order_id: order.paypal_order_id, capture_id: captureId, outcome: "PayPal order status, capture status, amount, currency and internal reference matched." }
+  });
+  await recordPaymentEvent({
+    orderId: savedOrderId,
+    eventType: "sandbox.order.persisted",
+    providerEventId: `${captureId}:persisted`,
+    details: { order_number: order.order_number, capture_id: captureId, outcome: "Verified order and payment event saved to the account-owned database record." }
   });
 
   return { persisted: true as const };
@@ -168,10 +205,10 @@ export async function listRecentOrders(limit = 100, ownerId?: string): Promise<P
   );
 }
 
-export async function getOwnedOrderByPayPalId(paypalOrderId: string, ownerId: string): Promise<{ order_number: string; owner_id: string; customer_name?: string | null } | null> {
+export async function getOwnedOrderByPayPalId(paypalOrderId: string, ownerId: string): Promise<{ id: string; order_number: string; owner_id: string; customer_name?: string | null } | null> {
   if (!isOrderStoreConfigured()) return null;
-  const rows = await supabaseRequest<Array<{ order_number: string; owner_id: string }>>(
-    `orders?select=order_number,owner_id,customer_name&paypal_order_id=eq.${encodeURIComponent(paypalOrderId)}&owner_id=eq.${encodeURIComponent(ownerId)}&limit=1`,
+  const rows = await supabaseRequest<Array<{ id: string; order_number: string; owner_id: string }>>(
+    `orders?select=id,order_number,owner_id,customer_name&paypal_order_id=eq.${encodeURIComponent(paypalOrderId)}&owner_id=eq.${encodeURIComponent(ownerId)}&limit=1`,
     { method: "GET" }
   );
   return rows[0] || null;
