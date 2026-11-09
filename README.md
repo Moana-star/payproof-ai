@@ -12,7 +12,7 @@ PayProof AI is an evidence-led payment operations prototype for small online sel
   <a href="https://github.com/Moana-star/payproof-ai/blob/main/DEMO_SCRIPT.md">Demo script</a>
 </p>
 
- > **LATEST WEBSITE:** [Open the latest PayProof AI preview](https://payproof-8m20ueg9r-naom6083-2980.vercel.app) — confirm the deployment is READY before recording or judging.
+> **LATEST WEBSITE:** [Open the latest PayProof AI preview](https://payproof-8m20ueg9r-naom6083-2980.vercel.app) — confirm the deployment is READY before recording or judging.
 
 > **Hackathon environment:** The deployed application uses PayPal Sandbox. It is a prototype, not a live-money payment processor, bank integration, fraud-detection service or production accounting system. Use test accounts and synthetic data only.
 
