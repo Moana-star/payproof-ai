@@ -2,8 +2,8 @@
 
 **Official submission video:** Publish a public YouTube video under 3 minutes and add its URL to the Devpost submission. This is required by the official rules. Cassie's separate 30–60 second PayPal-team introduction video is optional.
 
-- Latest application preview: [Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com)
-- Latest assistant + reconciliation feature preview: [Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com)
+- Latest application preview: [Open PayProof AI](https://payproof-8m20ueg9r-naom6083-2980.vercel.app)
+- Latest assistant + reconciliation feature preview: [Open PayProof AI](https://payproof-8m20ueg9r-naom6083-2980.vercel.app)
 - Assistant pull request: https://github.com/Moana-star/payproof-ai/pull/9
 - Reconciliation pull request: https://github.com/Moana-star/payproof-ai/pull/8
 
