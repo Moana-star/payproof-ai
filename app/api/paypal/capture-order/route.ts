@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
-import { isOrderStoreConfigured, saveVerifiedOrder } from "@/lib/order-store";
+import { getOwnedOrderByPayPalId, isOrderStoreConfigured, saveVerifiedOrder } from "@/lib/order-store";
+import { getAuthenticatedUser } from "@/lib/auth-server";
 import { getPayPalAccessToken, paypalRequest } from "@/lib/paypal";
 
 export const runtime = "nodejs";
@@ -74,23 +75,26 @@ function checkOrder(order: PayPalOrder) {
   };
 }
 
-async function resultResponse(order: PayPalOrder) {
+async function resultResponse(order: PayPalOrder, ownerId: string, customerName?: string | null) {
   const checked = checkOrder(order);
   if (!checked.verified || !checked.details || !checked.capture?.id || !order.id) {
     return NextResponse.json({
       verified: false,
       status: "REVIEW_REQUIRED",
+      retryable: false,
       message: "PayPal did not confirm the expected completed order, amount, and currency. Do not fulfil this order.",
       checks: checked.checks
     }, { status: 409 });
   }
 
+  const verifiedAt = new Date().toISOString();
   let persisted = false;
   let persistenceWarning: string | undefined;
   if (isOrderStoreConfigured()) {
     try {
       const result = await saveVerifiedOrder({
         order_number: checked.details.referenceId,
+        customer_name: customerName || null,
         product_id: checked.details.productId,
         product_name: checked.details.product,
         quantity: checked.details.quantity,
@@ -102,8 +106,8 @@ async function resultResponse(order: PayPalOrder) {
         paypal_order_id: order.id,
         paypal_capture_id: checked.capture.id,
         paypal_reference_id: checked.details.referenceId,
-        verified_at: new Date().toISOString()
-      }, checked.capture.id);
+        verified_at: verifiedAt
+      }, checked.capture.id, ownerId);
       persisted = result.persisted;
     } catch {
       // The payment remains verified by PayPal, but do not claim it was saved.
@@ -131,12 +135,17 @@ async function resultResponse(order: PayPalOrder) {
     },
     sandbox: true,
     persisted,
+    verifiedAt,
+    evidenceSource: "PayPal Sandbox server API",
+    expectedAmount: checked.details.amount,
     ...(persistenceWarning ? { persistenceWarning } : {})
   });
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getAuthenticatedUser(request);
+    if (!user) return NextResponse.json({ error: "Sign in to verify a payment for your workspace." }, { status: 401 });
     let body: { orderId?: unknown };
     try {
       body = await request.json();
@@ -149,6 +158,8 @@ export async function POST(request: NextRequest) {
     }
 
     const orderId = body.orderId;
+    const ownedOrder = await getOwnedOrderByPayPalId(orderId, user.id);
+    if (!ownedOrder) return NextResponse.json({ error: "This PayPal order does not belong to your workspace." }, { status: 404 });
     const accessToken = await getPayPalAccessToken();
     const existing = await paypalRequest<PayPalOrder>(
       `/v2/checkout/orders/${encodeURIComponent(orderId)}`,
@@ -167,18 +178,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         verified: false,
         status: "REVIEW_REQUIRED",
+        retryable: false,
         error: "This PayPal order does not match a supported PayProof AI catalogue order. It was not captured."
       }, { status: 409 });
     }
 
     // A repeated browser return is safe: verify an existing capture instead of
     // attempting to capture the same PayPal order again.
-    if (existing.status === "COMPLETED") return resultResponse(existing);
+    if (existing.status === "COMPLETED") return resultResponse(existing, user.id, ownedOrder.customer_name);
 
     if (existing.status !== "APPROVED") {
       return NextResponse.json({
         verified: false,
         status: "REVIEW_REQUIRED",
+        retryable: existing.status === "CREATED",
         message: "The PayPal order is not approved for capture. No capture was attempted."
       }, { status: 409 });
     }
@@ -194,10 +207,10 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({})
       }
     );
-    return resultResponse(captured);
+    return resultResponse(captured, user.id, ownedOrder.customer_name);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to verify the PayPal payment.";
     const status = message.includes("credentials are not configured") ? 503 : 502;
-    return NextResponse.json({ verified: false, status: "REVIEW_REQUIRED", error: message }, { status });
+    return NextResponse.json({ verified: false, status: "REVIEW_REQUIRED", retryable: status === 502, error: message }, { status });
   }
 }
