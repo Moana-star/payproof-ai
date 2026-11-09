@@ -1,13 +1,13 @@
 # PayProof AI — Judge Guide
 
-> **LATEST READY integrated deployment:** [Open PayProof AI](https://payproof-1vebvd9f5-naom6083-2980.vercel.app/)  
+> **LATEST PREVIEW DEPLOYMENT:** [Open PayProof AI](https://payproof-8m20ueg9r-naom6083-2980.vercel.app/)  
 > Deployment commit: `4db20db9c2d4d5bca94c12ae278395a385b9bd91`. This preview contains the integrated conversational assistant and authenticated reconciliation work. PRs #8 and #9 remain open; this preview is not the same as a merged production release.
 
 ## Start here
 
 | Resource | Link | What it represents |
 |---|---|---|
-| Latest READY integrated deployment | [Open application](https://payproof-1vebvd9f5-naom6083-2980.vercel.app/) | Current preview for the assistant and reconciliation feature work |
+| Latest READY integrated deployment | [Open application](https://payproof-8m20ueg9r-naom6083-2980.vercel.app/) | Current preview deployment; verify its status and commit before judging |
 | Source repository | https://github.com/Moana-star/payproof-ai | Public source, documentation, CI and history |
 | Reconciliation PR | https://github.com/Moana-star/payproof-ai/pull/8 | Persistent, owner-scoped reconciliation implementation |
 | Assistant PR | https://github.com/Moana-star/payproof-ai/pull/9 | Conversational AI assistant and structured responses |
