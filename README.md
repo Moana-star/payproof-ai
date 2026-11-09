@@ -12,7 +12,7 @@ PayProof AI is an evidence-led payment operations prototype for small online sel
   <a href="https://github.com/Moana-star/payproof-ai/blob/main/DEMO_SCRIPT.md">Demo script</a>
 </p>
 
-> **LATEST WEBSITE:** [https://payproof-8m20ueg9r-naom6083-2980.vercel.app) — this is the latest READY integrated feature deployment.
+ > **LATEST WEBSITE:** [Open the latest PayProof AI preview](https://payproof-8m20ueg9r-naom6083-2980.vercel.app) — confirm the deployment is READY before recording or judging.
 
 > **Hackathon environment:** The deployed application uses PayPal Sandbox. It is a prototype, not a live-money payment processor, bank integration, fraud-detection service or production accounting system. Use test accounts and synthetic data only.
 
@@ -35,7 +35,7 @@ PayProof AI brings the workflow into one reviewable place and makes the source o
 
 ### Current release and active work
 
-- **Latest integrated feature deployment:** [https://payproof-8m20ueg9r-naom6083-2980.vercel.app).
+- **Latest preview deployment:** [Open PayProof AI](https://payproof-8m20ueg9r-naom6083-2980.vercel.app). Confirm its deployment status before recording or judging.
 - **Reconciliation PR:** [#8 — Build persistent authenticated reconciliation and ledger posting](https://github.com/Moana-star/payproof-ai/pull/8).
 - **Assistant PR:** [#9 — Upgrade PayProof AI assistant to conversational chat](https://github.com/Moana-star/payproof-ai/pull/9). These pull requests remain open; do not assume they have been merged into the default branch.
 
@@ -185,7 +185,7 @@ No score, prize placement or outcome is guaranteed. The strongest submission is 
 
 ## Project links
 
-- [Latest PayProof AI website](https://payproof-8m20ueg9r-naom6083-2980.vercel.app)
+- [Latest PayProof AI preview](https://payproof-8m20ueg9r-naom6083-2980.vercel.app)
 - [Source code](https://github.com/Moana-star/payproof-ai)
 - [Open reconciliation implementation PR](https://github.com/Moana-star/payproof-ai/pull/8)
 
