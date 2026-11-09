@@ -56,22 +56,21 @@ export function AuditTimeline() {
         <button type="button" className="ops-secondary-button" onClick={() => void load()} disabled={loading}>{loading ? "Refreshing…" : "Refresh history"}</button>
       </div>
       {requiresSignIn ? (
-        <div className="ops-empty-state">
-          <strong>Sign in to view your audit history</strong>
-          <p>Payment and reconciliation records are private to the account that created them. No shared sample transactions are shown here.</p>
+        <div className="ops-info-banner">
+          <span className="ops-info-icon">i</span><div><strong>Sign in to view your audit history</strong>
+          <p>Payment and reconciliation records are private to the account that created them. No shared sample transactions are shown here.</p></div>
         </div>
       ) : error ? (
-        <div className="ops-empty-state">
-          <strong>Audit history unavailable</strong><p>{error}</p>
-          <button type="button" className="ops-primary-button" onClick={() => void load()}>Try again</button>
+        <div className="ops-info-banner">
+          <span className="ops-info-icon">!</span><div><strong>Audit history unavailable</strong><p>{error}</p><button type="button" className="ops-primary-button" onClick={() => void load()}>Try again</button></div>
         </div>
       ) : loading ? (
-        <div className="ops-empty-state"><strong>Loading account events…</strong><p>Checking your private payment and reconciliation records.</p></div>
+        <div className="ops-info-banner"><span className="ops-info-icon">…</span><div><strong>Loading account events…</strong><p>Checking your private payment and reconciliation records.</p></div></div>
       ) : events.length === 0 ? (
-        <div className="ops-empty-state">
-          <strong>No audit events yet</strong>
+        <div className="ops-info-banner">
+          <span className="ops-info-icon">i</span><div><strong>No audit events yet</strong>
           <p>Your account has no recorded order or reconciliation events. Start a PayPal Sandbox checkout while signed in. When PayPal returns, the server will record the order, provider reference, capture attempt, verification and persistence outcome here.</p>
-          <p>To create reconciliation events, import a genuine statement CSV, run matching, review an eligible match and explicitly post it to your internal ledger.</p>
+          <p>To create reconciliation events, import a genuine statement CSV, run matching, review an eligible match and explicitly post it to your internal ledger.</p></div>
         </div>
       ) : (
         <div className="ops-timeline">
