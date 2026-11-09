@@ -7,7 +7,7 @@
 
 | Resource | Link | What it represents |
 |---|---|---|
-| Latest READY integrated deployment | [Open application](https://payproof-8m20ueg9r-naom6083-2980.vercel.app/) | Current preview deployment; verify its status and commit before judging |
+| Latest preview deployment | [Open application](https://payproof-8m20ueg9r-naom6083-2980.vercel.app/) | Current preview deployment; verify its status and commit before judging |
 | Source repository | https://github.com/Moana-star/payproof-ai | Public source, documentation, CI and history |
 | Reconciliation PR | https://github.com/Moana-star/payproof-ai/pull/8 | Persistent, owner-scoped reconciliation implementation |
 | Assistant PR | https://github.com/Moana-star/payproof-ai/pull/9 | Conversational AI assistant and structured responses |
