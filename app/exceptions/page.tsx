@@ -143,7 +143,7 @@ export default function ExceptionsPage() {
                   <div>
                     <p className="ops-field-label">SAFE NEXT STEPS</p>
                     <ol>
-                      <li>Check the order's current status in the PayPal Sandbox and the Payment evidence register.</li>
+                      <li>Check the order&apos;s current status in the PayPal Sandbox and the Payment evidence register.</li>
                       <li>If no completed server-verified capture exists, keep the order unpaid and do not fulfil it.</li>
                       <li>After the buyer completes checkout, refresh the account record and confirm the server verification timestamp.</li>
                     </ol>
