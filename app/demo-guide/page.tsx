@@ -34,7 +34,7 @@ export default function DemoGuidePage() {
 
       <section className="ops-panel" style={{ padding: 24, marginBottom: 20, borderColor: "#ded8ff" }}>
         <div className="ops-panel-top"><div><span className="ops-panel-symbol violet">↗</span><div><strong>Try a Sandbox payment</strong><p>Follow the complete test checkout journey</p></div></div><span className="ops-sample-tag">NO REAL MONEY</span></div>
-        <p style={{ lineHeight: 1.7, color: "var(--muted, #667085)", margin: "12px 0 18px" }}>The sample message helps you start quickly. Completing checkout requires the app's PayPal Sandbox configuration, a PayPal Sandbox test buyer, and working server-side order persistence. Do not use a real PayPal account or real payment details.</p>
+        <p style={{ lineHeight: 1.7, color: "var(--muted, #667085)", margin: "12px 0 18px" }}>The sample message helps you start quickly. Completing checkout requires the app&apos;s PayPal Sandbox configuration, a PayPal Sandbox test buyer, and working server-side order persistence. Do not use a real PayPal account or real payment details.</p>
         <ol style={{ lineHeight: 1.9, paddingLeft: 22, marginBottom: 18 }}>
           <li>Open the <strong>public sample workspace</strong> and choose <em>Load sample message</em> under AI order intake.</li>
           <li>Select <em>Prepare order draft</em>. Review the customer, product and quantity against the original message.</li>
@@ -42,7 +42,7 @@ export default function DemoGuidePage() {
           <li>On PayPal, sign in with a <strong>Sandbox test buyer</strong> from the PayPal Developer Dashboard and approve the test payment.</li>
           <li>Return to PayProof AI and open <em>Payment evidence</em>. Confirm that a server-verified capture and saved order are displayed. If they are not, report the result as unverified.</li>
         </ol>
-        <div className="ops-info-banner"><span className="ops-info-icon">!</span><div><strong>Demo troubleshooting</strong><p>If checkout cannot start, check the Preview environment's PayPal Sandbox client ID, client secret and Sandbox API base URL. Order persistence also needs the server-side Supabase URL and service-role key. If AI draft extraction fails, check the server-side Groq key. Keep every secret server-side; never paste keys or tokens into the page, source code, chat or recording. A return redirect alone is not payment proof.</p></div></div>
+        <div className="ops-info-banner"><span className="ops-info-icon">!</span><div><strong>Demo troubleshooting</strong><p>If checkout cannot start, check the Preview environment&apos;s PayPal Sandbox client ID, client secret and Sandbox API base URL. Order persistence also needs the server-side Supabase URL and service-role key. If AI draft extraction fails, check the server-side Groq key. Keep every secret server-side; never paste keys or tokens into the page, source code, chat or recording. A return redirect alone is not payment proof.</p></div></div>
       </section>
 
       <section className="ops-panel" style={{ padding: 24, marginBottom: 20 }}>
@@ -50,12 +50,12 @@ export default function DemoGuidePage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, marginTop: 18 }}>
           <div style={{ border: "1px solid var(--border, #e5e7eb)", borderRadius: 12, padding: 18 }}>
             <strong>1. Explore the public sample</strong>
-            <p style={{ lineHeight: 1.65, color: "var(--muted, #667085)", margin: "8px 0 14px" }}>No reviewer token is needed to inspect the synthetic, read-only sample reconciliation view. It is illustrative and does not expose another user's private records.</p>
+            <p style={{ lineHeight: 1.65, color: "var(--muted, #667085)", margin: "8px 0 14px" }}>No reviewer token is needed to inspect the synthetic, read-only sample reconciliation view. It is illustrative and does not expose another user&apos;s private records.</p>
             <Link className="ops-secondary-button" href="/#reconciliation">Open public sample review <span>↗</span></Link>
           </div>
           <div style={{ border: "1px solid var(--border, #e5e7eb)", borderRadius: 12, padding: 18 }}>
             <strong>2. Use your own workspace</strong>
-            <p style={{ lineHeight: 1.65, color: "var(--muted, #667085)", margin: "8px 0 14px" }}>Create an account or sign in first. Your saved orders and private workspace should belong to your account, not the project owner's account.</p>
+            <p style={{ lineHeight: 1.65, color: "var(--muted, #667085)", margin: "8px 0 14px" }}>Create an account or sign in first. Your saved orders and private workspace should belong to your account, not the project owner&apos;s account.</p>
             <Link className="ops-primary-button" href="/auth">Create account / Sign in <span>↗</span></Link>
           </div>
           <div style={{ border: "1px solid var(--border, #e5e7eb)", borderRadius: 12, padding: 18 }}>
@@ -94,7 +94,7 @@ export default function DemoGuidePage() {
           <li>Never type or display API keys, reviewer tokens, or credentials.</li>
           <li>Do not describe simulated statement rows as a real bank connection.</li>
           <li>Show reviewer decisions and audit events only after successfully performing those actions.</li>
-          <li>Do not show another user's private workspace or personal customer data.</li>
+          <li>Do not show another user&apos;s private workspace or personal customer data.</li>
           <li>Keep the final video below three minutes and watch the full recording before submission.</li>
         </ul>
         <button className="ops-secondary-button" onClick={() => setShowScript((value) => !value)}>{showScript ? "Hide closing script" : "Show 15-second closing script"}</button>
