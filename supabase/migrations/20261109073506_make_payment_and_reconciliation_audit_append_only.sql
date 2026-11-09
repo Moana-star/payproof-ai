@@ -1,8 +1,7 @@
 create or replace function public.prevent_audit_log_mutation()
 returns trigger
 language plpgsql
-set search_path = pg_catalog
-as $$
+as $
 begin
   raise exception 'Audit records are append-only and cannot be changed or deleted.';
 end;
