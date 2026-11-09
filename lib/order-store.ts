@@ -71,14 +71,20 @@ export async function createPendingOrder(order: StoredOrder, ownerId: string) {
 export async function updateOrderByNumber(orderNumber: string, patch: Partial<StoredOrder>, ownerId: string) {
   if (!isOrderStoreConfigured()) return { persisted: false as const };
 
-  await supabaseRequest<unknown[]>(
-    `orders?order_number=eq.${encodeURIComponent(orderNumber)}&owner_id=eq.${encodeURIComponent(ownerId)}`,
+  // Scope every write to both the order reference and its authenticated owner.
+  // Request the updated row so a zero-row update cannot be mistaken for success.
+  const updated = await supabaseRequest<Array<{ id: string }>>(
+    `orders?order_number=eq.${encodeURIComponent(orderNumber)}&owner_id=eq.${encodeURIComponent(ownerId)}&select=id`,
     {
       method: "PATCH",
-      headers: { Prefer: "return=minimal" },
+      headers: { Prefer: "return=representation" },
       body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() })
     }
   );
+
+  if (!updated.length) {
+    throw new Error("The order was not found in the signed-in owner's workspace; no changes were saved.");
+  }
 
   return { persisted: true as const };
 }
@@ -87,19 +93,28 @@ export async function saveVerifiedOrder(order: StoredOrder, captureId: string, o
   if (!isOrderStoreConfigured()) return { persisted: false as const };
 
   const verifiedAt = order.verified_at || new Date().toISOString();
-  // Upsert on the stable internal order reference makes repeated browser returns
-  // safe; unique PayPal order/capture IDs provide a second duplicate guard.
+
+  // A verified capture may only update the exact pending order already owned
+  // by this account. Do not upsert on order_number: an upsert could reassign
+  // owner_id if a conflicting reference were ever presented.
   const savedOrders = await supabaseRequest<Array<{ id: string }>>(
-    "orders?on_conflict=order_number&select=id",
+    `orders?order_number=eq.${encodeURIComponent(order.order_number)}&owner_id=eq.${encodeURIComponent(ownerId)}&paypal_order_id=eq.${encodeURIComponent(order.paypal_order_id || "")}&select=id`,
     {
-      method: "POST",
-      headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+      method: "PATCH",
+      headers: { Prefer: "return=representation" },
       body: JSON.stringify({
-        ...order,
-        owner_id: ownerId,
-        paypal_capture_id: captureId,
-        payment_status: "paid",
+        customer_name: order.customer_name ?? null,
+        product_id: order.product_id,
+        product_name: order.product_name,
+        quantity: order.quantity,
+        unit_amount: order.unit_amount,
+        total_amount: order.total_amount,
+        currency: order.currency,
         payment_environment: "sandbox",
+        payment_status: "paid",
+        paypal_order_id: order.paypal_order_id,
+        paypal_capture_id: captureId,
+        paypal_reference_id: order.paypal_reference_id,
         verified_at: verifiedAt,
         updated_at: verifiedAt
       })
@@ -108,7 +123,7 @@ export async function saveVerifiedOrder(order: StoredOrder, captureId: string, o
 
   const savedOrderId = savedOrders[0]?.id;
   if (!savedOrderId) {
-    throw new Error("Verified order was not returned by order storage.");
+    throw new Error("The verified capture could not update an order owned by the signed-in account.");
   }
 
   // Keep a relational link to the order and make capture-event retries idempotent.
