@@ -8,7 +8,7 @@ PayProof AI is an evidence-led payment-operations prototype for small online sel
 
 ## Open the project
 
-- **Latest application preview:** [Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com)
+- **Latest application preview:** [Open PayProof AI](https://payproof-8m20ueg9r-naom6083-2980.vercel.app)
 - **Reconciliation implementation:** https://github.com/Moana-star/payproof-ai/pull/8
 - **Conversational assistant:** https://github.com/Moana-star/payproof-ai/pull/9
 - **Judge readiness and release gates:** [JUDGE_READINESS.md](JUDGE_READINESS.md)

@@ -1,6 +1,6 @@
 # Verification Plan
 
-**Latest application preview:** [Open PayProof AI](https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app/?utm_source=chatgpt.com)
+**Latest application preview:** [Open PayProof AI](https://payproof-8m20ueg9r-naom6083-2980.vercel.app)
 
 A passing build does not prove that PayPal, Supabase, AI extraction or reconciliation has passed end-to-end testing. Keep all test credentials local. Never paste passwords, access tokens, PayPal buyer credentials or server secrets into chat, GitHub issues, logs or source control.
 
@@ -20,7 +20,7 @@ The smoke suite checks public route availability, unauthenticated API boundaries
 Use a dedicated PayProof QA account and a PayPal Sandbox buyer. Sign into the same QA account in the browser before opening the PayPal approval link so the return page has the correct session.
 
 ```bash
-export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
+export PAYPROOF_BASE_URL="https://payproof-8m20ueg9r-naom6083-2980.vercel.app"
 export SUPABASE_URL="https://ylswydogvrffzojwnakx.supabase.co"
 export SUPABASE_PUBLIC_KEY="<your Supabase publishable key>"
 export PAYPROOF_TEST_USER_EMAIL="qa-account@example.com"
@@ -44,7 +44,7 @@ Expected: PayPal reports a completed capture; expected and captured amount/curre
 Use a dedicated signed-in QA account with at least one completed, persisted PayPal Sandbox capture. This test imports two clearly marked QA rows referencing that capture, then exercises duplicate import, matching, rejection, approval, ledger posting, idempotent reposting and audit verification.
 
 ```bash
-export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
+export PAYPROOF_BASE_URL="https://payproof-8m20ueg9r-naom6083-2980.vercel.app"
 export SUPABASE_URL="https://ylswydogvrffzojwnakx.supabase.co"
 export SUPABASE_PUBLIC_KEY="<your Supabase publishable key>"
 export PAYPROOF_TEST_USER_EMAIL="qa-account@example.com"
@@ -60,7 +60,7 @@ The test intentionally leaves two `PPQA-` statement rows (one rejected, one post
 Use two different Supabase accounts. Account A must have at least one saved order and one statement row; Account B may be empty. The script authenticates each account locally and tests both private reads and cross-account mutations.
 
 ```bash
-export PAYPROOF_BASE_URL="https://payproof-ai-git-feat-chatgpt-style-payproo-068502-naom6083-2980.vercel.app"
+export PAYPROOF_BASE_URL="https://payproof-8m20ueg9r-naom6083-2980.vercel.app"
 export SUPABASE_URL="https://ylswydogvrffzojwnakx.supabase.co"
 export SUPABASE_PUBLIC_KEY="<your Supabase publishable key>"
 export PAYPROOF_TEST_USER_A_EMAIL="account-a@example.com"
