@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { createPendingOrder, isOrderStoreConfigured, updateOrderByNumber } from "@/lib/order-store";
+import { createPendingOrder, isOrderStoreConfigured, recordPaymentEvent, updateOrderByNumber } from "@/lib/order-store";
 import { getPayPalAccessToken, paypalRequest } from "@/lib/paypal";
 import { getAuthenticatedUser } from "@/lib/auth-server";
 
@@ -77,6 +77,9 @@ export async function POST(request: NextRequest) {
     // Persist the server-priced draft before redirecting to PayPal. If storage
     // is configured but unavailable, fail closed rather than silently losing it.
     const pending = await createPendingOrder(orderRecord, user.id);
+    if (!pending.persisted || !pending.orderId) {
+      throw new Error("The pending order could not be confirmed in your workspace.");
+    }
     // Keep the return on the same host where the signed-in checkout began.
     // This preserves the browser session and returns to the correct workspace.
     const appBaseUrl = request.nextUrl.origin.replace(/\/$/, "");
@@ -121,6 +124,23 @@ export async function POST(request: NextRequest) {
     }
 
     const linked = await updateOrderByNumber(referenceId, { paypal_order_id: order.id }, user.id);
+    let auditRecorded = true;
+    try {
+      await recordPaymentEvent({
+        orderId: pending.orderId,
+        eventType: "paypal.order.created",
+        providerEventId: `payproof:${order.id}:created`,
+        details: {
+          order_number: referenceId,
+          paypal_order_id: order.id,
+          environment: "sandbox",
+          actor: "PayProof AI server",
+          outcome: "PayPal returned a Sandbox order ID and buyer approval link."
+        }
+      });
+    } catch {
+      auditRecorded = false;
+    }
     return NextResponse.json({
       orderId: order.id,
       approvalUrl,
@@ -130,7 +150,8 @@ export async function POST(request: NextRequest) {
       amount,
       currency: CURRENCY,
       sandbox: true,
-      saved: pending.persisted && linked.persisted
+      saved: pending.persisted && linked.persisted,
+      auditRecorded
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to create a PayPal Sandbox order.";
