@@ -52,7 +52,7 @@ async function supabaseRequest<T>(path: string, init: RequestInit = {}): Promise
 }
 
 export async function createPendingOrder(order: StoredOrder, ownerId: string) {
-  if (!isOrderStoreConfigured()) return { persisted: false as const };
+  if (!isOrderStoreConfigured()) return { persisted: false as const, orderId: null };
 
   const inserted = await supabaseRequest<Array<{ id: string }>>("orders", {
     method: "POST",
