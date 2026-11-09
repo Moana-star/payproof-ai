@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type OrderStatus = "Paid" | "Awaiting payment" | "Review needed";
 type Order = {
@@ -69,9 +70,15 @@ export default function Home() {
     setCheckoutLoading(true);
     setNotice("Creating a PayPal Sandbox checkout using the server-priced catalogue. No real money will be processed.");
     try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!session?.access_token) {
+        window.location.assign("/auth");
+        return;
+      }
       const response = await fetch("/api/paypal/create-order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ product, quantity })
       });
       const data = (await response.json()) as { approvalUrl?: string; error?: string };
@@ -168,6 +175,7 @@ export default function Home() {
           <a className="nav-item" href="/assistant"><span className="nav-icon">✳</span> AI assistant</a>
           <a className="nav-item" href="/exceptions"><span className="nav-icon">!</span> Exception review</a>
           <a className="nav-item" href="/audit"><span className="nav-icon">⌁</span> Audit trail</a>
+          <a className="nav-item" href="/auth"><span className="nav-icon">♙</span> Sign in / Account</a>
         </nav>
         <div className="sidebar-bottom">
           <div className="trust-card">

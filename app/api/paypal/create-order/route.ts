@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { createPendingOrder, updateOrderByNumber } from "@/lib/order-store";
+import { createPendingOrder, isOrderStoreConfigured, updateOrderByNumber } from "@/lib/order-store";
 import { getPayPalAccessToken, paypalRequest } from "@/lib/paypal";
+import { getAuthenticatedUser } from "@/lib/auth-server";
 
 export const runtime = "nodejs";
 
@@ -22,7 +23,9 @@ function money(cents: number) {
 }
 
 export async function POST(request: NextRequest) {
-  let body: { product?: unknown; quantity?: unknown };
+  const user = await getAuthenticatedUser(request);
+  if (!user) return NextResponse.json({ error: "Sign in to create and save orders in your own workspace." }, { status: 401 });
+  let body: { product?: unknown; quantity?: unknown; customerName?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -38,6 +41,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Quantity must be a whole number from 1 to ${MAX_QUANTITY}.` }, { status: 400 });
   }
 
+  if (!isOrderStoreConfigured()) return NextResponse.json({ error: "Order storage is not configured. Checkout is disabled until Supabase storage is ready." }, { status: 503 });
+
   const productName = body.product as ProductName;
   const product = CATALOG[productName];
   const quantity = Number(body.quantity);
@@ -50,8 +55,11 @@ export async function POST(request: NextRequest) {
   // selected and calculated here, on the server, never trusted from the client.
   const referenceId = `PP-${randomUUID()}`;
   const amount = money(totalCents);
+  const customerName = typeof body.customerName === "string" ? body.customerName.trim() : "";
+  const safeCustomerName = customerName.length >= 2 && customerName.length <= 100 ? customerName : "";
   const orderRecord = {
     order_number: referenceId,
+    customer_name: safeCustomerName || null,
     product_id: product.id,
     product_name: productName,
     quantity,
@@ -66,14 +74,10 @@ export async function POST(request: NextRequest) {
   try {
     // Persist the server-priced draft before redirecting to PayPal. If storage
     // is configured but unavailable, fail closed rather than silently losing it.
-    const pending = await createPendingOrder(orderRecord);
-    const appBaseUrl = (
-      process.env.APP_URL ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-      "http://localhost:3000"
-    ).replace(/\/$/, "");
+    const pending = await createPendingOrder(orderRecord, user.id);
+    // Keep the return on the same host where the signed-in checkout began.
+    // This preserves the browser session and returns to the correct workspace.
+    const appBaseUrl = request.nextUrl.origin.replace(/\/$/, "");
     const accessToken = await getPayPalAccessToken();
     const order = await paypalRequest<CreatedOrder>("/v2/checkout/orders", accessToken, {
       method: "POST",
@@ -110,11 +114,11 @@ export async function POST(request: NextRequest) {
 
     const approvalUrl = order.links?.find((link) => link.rel === "approve")?.href;
     if (!order.id || !approvalUrl) {
-      await updateOrderByNumber(referenceId, { payment_status: "failed" });
+      await updateOrderByNumber(referenceId, { payment_status: "failed" }, user.id);
       return NextResponse.json({ error: "PayPal did not return a usable approval link." }, { status: 502 });
     }
 
-    const linked = await updateOrderByNumber(referenceId, { paypal_order_id: order.id });
+    const linked = await updateOrderByNumber(referenceId, { paypal_order_id: order.id }, user.id);
     return NextResponse.json({
       orderId: order.id,
       approvalUrl,

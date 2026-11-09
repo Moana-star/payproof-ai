@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type CaptureResult = {
   verified?: boolean;
@@ -28,11 +29,16 @@ function ReturnContent() {
     }
 
     let active = true;
-    fetch("/api/paypal/capture-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId })
-    })
+    (async () => {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!session?.access_token) throw new Error("Your sign-in session is missing. Sign in to your workspace before retrying verification.");
+      return fetch("/api/paypal/capture-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ orderId })
+      });
+    })()
       .then(async (response) => {
         const data = (await response.json()) as CaptureResult;
         if (active) setResult(data);
